@@ -46,6 +46,8 @@
 #include <string>
 #include <system_error>
 
+#include <spdlog/spdlog.h>
+
 #include <gmock/gmock.h>
 
 
@@ -53,6 +55,7 @@ namespace fs = std::filesystem;
 
 using namespace testing;
 
+#include "DDecDouble.h"
 
 // some specific files for Testing.
 
@@ -73,12 +76,12 @@ struct line_only_whitespace : std::ctype<char>
 };
 
 
-class IdentifyXMLFilesToUse : public Test
+class DecimalBasicFunctionality : public Test
 {
 
 };
 
-TEST_F(IdentifyXMLFilesToUse, FileNameHasForm)
+TEST_F(DecimalBasicFunctionality, FileNameHasForm)
 {
 }
 
@@ -90,6 +93,7 @@ TEST_F(IdentifyXMLFilesToUse, FileNameHasForm)
  */
 void InitLogging ()
 {
+    spdlog::set_level(spdlog::level::debug);
 //    logging::core::get()->set_filter
 //    (
 //        logging::trivial::severity >= logging::trivial::trace
@@ -103,36 +107,4 @@ int main(int argc, char** argv)
 
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
-//    auto file_content_10K = LoadDataFileForUse(XLS_SHEET_1);
-//    EM::FileContent file_content{file_content_10K};
-//
-//    const auto document_sections_10K{LocateDocumentSections(file_content)};
-//
-//    auto xls_content = LocateXLSDocument(document_sections_10K, XLS_SHEET_1);
-//
-//    auto xls_data = ExtractXLSData(xls_content);
-//
-//   XLS_File xls_file{std::move(xls_data)};
-//
-//   int number_of_sheets = rng::distance(xls_file);
-////   int number_of_sheets2 = rng::distance(xls_file);
-//
-//   auto bal_sheets = rng::find_if(xls_file, [] (const auto& x) { return x.GetSheetName() == "balance sheets"; } );
-////   auto bal_sheets2 = rng::find_if(xls_file, [] (const auto& x) { return x.GetSheetName() == "balance sheets"; } );
-//
-////   int rows = rng::distance(*bal_sheets);
-//   for (const auto& row : *bal_sheets)
-//   {
-//       std::cout << row << '\n';
-//   }
-//
-//   auto stmt_of_ops = rng::find_if(xls_file, [] (const auto& x) { return x.GetSheetName() == "statements of operations"; } );
-//
-//   int rows2 = rng::distance(*stmt_of_ops);
-//
-//    return 0;
-//   auto cash_flows = rng::find_if(xls_file, [] (const auto& x) { return x.GetSheetName() == "statements of cash flows"; } );
-//
-//   int rows3 = rng::distance(*cash_flows);
-//
 }
