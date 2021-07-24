@@ -41,6 +41,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <numeric>
 #include <string>
@@ -50,12 +51,15 @@
 
 #include <gmock/gmock.h>
 
+using namespace std::string_literals;
 
 namespace fs = std::filesystem;
 
 using namespace testing;
 
 #include "DDecDouble.h"
+
+using namespace DprDecimal;
 
 // some specific files for Testing.
 
@@ -81,8 +85,30 @@ class DecimalBasicFunctionality : public Test
 
 };
 
-TEST_F(DecimalBasicFunctionality, FileNameHasForm)
+TEST_F(DecimalBasicFunctionality, Constructors)
 {
+//    DDecDouble ();                             // constructor
+//    DDecDouble (const char* number);           // constructor
+//    DDecDouble (const std::string& number);    // constructor
+//    DDecDouble (int32_t number);               // constructor
+//    DDecDouble (uint32_t number);              // constructor
+//
+//    DDecDouble (double number, int dec_digits=2);	 // constructor
+
+    DDecDouble x1;
+    DDecDouble x2{"5"};
+    DDecDouble x3{"1234.3"s};
+
+    DDecDouble x4{1.25678, 3};
+    std::cout << "x4: " << x4 << '\n';
+
+    DDecDouble x5{1.257, 3};
+
+    EXPECT_EQ(x2, 5);
+    EXPECT_EQ(x3, 1234.3);
+    EXPECT_NE(x4, 1.257);
+    EXPECT_EQ(x4, x5);
+        
 }
 
 /* 
