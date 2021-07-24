@@ -1,0 +1,13 @@
+
+# our executabels
+
+Unit_Test
+
+# working directories
+
+Debug_unit/*
+.cache/*
+
+# misc
+
+tags
