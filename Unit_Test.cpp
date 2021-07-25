@@ -87,13 +87,6 @@ class DecimalBasicFunctionality : public Test
 
 TEST_F(DecimalBasicFunctionality, Constructors)
 {
-//    DDecDouble ();                             // constructor
-//    DDecDouble (const char* number);           // constructor
-//    DDecDouble (const std::string& number);    // constructor
-//    DDecDouble (int32_t number);               // constructor
-//    DDecDouble (uint32_t number);              // constructor
-//
-//    DDecDouble (double number, int dec_digits=2);	 // constructor
 
     DDecDouble x1;
     DDecDouble x2{"5"};
@@ -104,11 +97,30 @@ TEST_F(DecimalBasicFunctionality, Constructors)
 
     DDecDouble x5{1.257, 3};
 
+    DDecDouble x6{5.0, 1};
+
     EXPECT_EQ(x2, 5);
     EXPECT_EQ(x3, 1234.3);
-    EXPECT_NE(x4, 1.257);
+    EXPECT_EQ(x4, 1.257);
     EXPECT_EQ(x4, x5);
-        
+    
+    // test that this works
+    EXPECT_EQ(x2, x6);
+
+}
+
+TEST_F(DecimalBasicFunctionality, SimpleArithmetic)
+{
+    DDecDouble x1{5};
+    auto x1_result = x1 + 5;
+    EXPECT_EQ(x1_result, 10);
+
+    DDecDouble x2{1.23457, 5};
+    auto x2_result = x2 * 2;
+    EXPECT_EQ(x2_result, 2.46914);
+    EXPECT_TRUE(x2_result == 2.46914);
+
+
 }
 
 /* 
