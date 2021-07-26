@@ -58,6 +58,7 @@ namespace fs = std::filesystem;
 using namespace testing;
 
 #include "DDecDouble.h"
+#include "p_f_column.h"
 
 using namespace DprDecimal;
 
@@ -119,7 +120,18 @@ TEST_F(DecimalBasicFunctionality, SimpleArithmetic)
     auto x2_result = x2 * 2;
     EXPECT_EQ(x2_result, 2.46914);
     EXPECT_TRUE(x2_result == 2.46914);
+}
 
+class ColumnFunctionality : public Test
+{
+
+};
+
+TEST_F(ColumnFunctionality, Constructors)
+{
+   P_F_Column col;
+
+   ASSERT_EQ(col.GetDirection(), P_F_Column::e_unknown);
 
 }
 
