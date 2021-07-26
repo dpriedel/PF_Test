@@ -39,6 +39,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -46,6 +47,7 @@
 #include <numeric>
 #include <string>
 #include <system_error>
+#include <vector>
 
 #include <spdlog/spdlog.h>
 
@@ -94,7 +96,6 @@ TEST_F(DecimalBasicFunctionality, Constructors)
     DDecDouble x3{"1234.3"s};
 
     DDecDouble x4{1.25678, 3};
-    std::cout << "x4: " << x4 << '\n';
 
     DDecDouble x5{1.257, 3};
 
@@ -131,8 +132,42 @@ TEST_F(ColumnFunctionality, Constructors)
 {
    P_F_Column col;
 
-   ASSERT_EQ(col.GetDirection(), P_F_Column::e_unknown);
+   ASSERT_EQ(col.GetDirection(), P_F_Column::Direction::e_unknown);
 
+}
+
+TEST_F(ColumnFunctionality, InitialColumnConstructionInitialValueAndDirection)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120}; 
+    P_F_Column col{10, 1};
+    
+    auto a_value = prices.begin();
+
+    std::cout << "first value: " << *a_value << '\n';
+    col.AddValue(DprDecimal::DDecDouble{*a_value});
+    EXPECT_EQ(col.GetDirection(), P_F_Column::Direction::e_unknown);
+    EXPECT_EQ(col.GetTop(), 1100);
+    EXPECT_EQ(col.GetBottom(), 1100);
+
+    std::cout << "second value: " << *(++a_value) << '\n';
+    col.AddValue(DprDecimal::DDecDouble{*a_value});
+    EXPECT_EQ(col.GetDirection(), P_F_Column::Direction::e_unknown);
+    EXPECT_EQ(col.GetTop(), 1100);
+    EXPECT_EQ(col.GetBottom(), 1100);
+
+    std::cout << "third value: " << *(++a_value) << '\n';
+    col.AddValue(DprDecimal::DDecDouble{*a_value});
+    EXPECT_EQ(col.GetDirection(), P_F_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1110);
+    EXPECT_EQ(col.GetBottom(), 1100);
+
+    while (++a_value != prices.end())
+    {
+        col.AddValue(DprDecimal::DDecDouble(*a_value));
+    }
+    EXPECT_EQ(col.GetDirection(), P_F_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1120);
+    EXPECT_EQ(col.GetBottom(), 1100);
 }
 
 /* 
