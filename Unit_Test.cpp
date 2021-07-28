@@ -126,12 +126,12 @@ TEST_F(DecimalBasicFunctionality, SimpleArithmetic)
     EXPECT_TRUE(x2_result == 2.46914);
 }
 
-class ColumnFunctionality : public Test
+class ColumnFunctionality10X1 : public Test
 {
 
 };
 
-TEST_F(ColumnFunctionality, Constructors)
+TEST_F(ColumnFunctionality10X1, Constructors)
 {
    P_F_Column col;
 
@@ -139,7 +139,7 @@ TEST_F(ColumnFunctionality, Constructors)
 
 }
 
-TEST_F(ColumnFunctionality, InitialColumnConstructionInitialValueAndDirection)
+TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirection)
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120}; 
     P_F_Column col{10, 1};
@@ -173,20 +173,20 @@ TEST_F(ColumnFunctionality, InitialColumnConstructionInitialValueAndDirection)
     EXPECT_EQ(col.GetBottom(), 1100);
 }
 
-TEST_F(ColumnFunctionality, ContinueUntilFirstReversal)
+TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
     P_F_Column col{10, 1};
 
     P_F_Column::Status status;
-    ranges::for_each(prices, [&col, &status](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price)); });
+    ranges::for_each(prices, [&col, &status](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price)).first; });
     EXPECT_EQ(col.GetDirection(), P_F_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1130);
     EXPECT_EQ(col.GetBottom(), 1100);
     ASSERT_EQ(status, P_F_Column::Status::e_reversal);
 }
 
-TEST_F(ColumnFunctionality, ProcessFirst1BoxReversal)
+TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
     auto col = std::make_unique<P_F_Column>(10, 1);
@@ -195,17 +195,17 @@ TEST_F(ColumnFunctionality, ProcessFirst1BoxReversal)
 
     for (auto price : prices)
     {
-        auto status = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
             col = std::make_unique<P_F_Column>(save_col->GetBoxsize(), save_col->GetReversalboxes(),
-                    save_col->GetDirection() == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up);
+                    save_col->GetDirection() == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up, value, value);
             columns.push_back(*save_col);
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price));
+            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
         }
     }
 
@@ -218,7 +218,7 @@ TEST_F(ColumnFunctionality, ProcessFirst1BoxReversal)
     EXPECT_EQ(col->GetBottom(), 1120);
 }
 
-TEST_F(ColumnFunctionality, ProcessFirst1BoxReversalFollowedByOneStepBack)
+TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139}; 
     auto col = std::make_unique<P_F_Column>(10, 1);
@@ -227,17 +227,17 @@ TEST_F(ColumnFunctionality, ProcessFirst1BoxReversalFollowedByOneStepBack)
 
     for (auto price : prices)
     {
-        auto status = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
             col = std::make_unique<P_F_Column>(save_col->GetBoxsize(), save_col->GetReversalboxes(),
-                    save_col->GetDirection() == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up);
+                    save_col->GetDirection() == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up, value, value);
             columns.push_back(*save_col);
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price));
+            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
         }
     }
 
@@ -245,7 +245,41 @@ TEST_F(ColumnFunctionality, ProcessFirst1BoxReversalFollowedByOneStepBack)
     EXPECT_EQ(col->GetTop(), 1130);
     EXPECT_EQ(col->GetBottom(), 1120);
     EXPECT_EQ(col->GetHadReversal(), true);
+    EXPECT_EQ(columns.size() + 1, 2);
 }
+TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneStepBacks)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111}; 
+    auto col = std::make_unique<P_F_Column>(10, 1);
+
+    std::vector<P_F_Column> columns;
+
+    for (auto price : prices)
+    {
+        std::cout << "price: " << price << '\n';
+        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
+        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
+        if (status == P_F_Column::Status::e_reversal)
+        {
+            auto* save_col = col.release();
+            col = std::make_unique<P_F_Column>(save_col->GetBoxsize(), save_col->GetReversalboxes(),
+                    save_col->GetDirection() == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up, value, value);
+            columns.push_back(*save_col);
+
+            // now continue on processing the value.
+            
+            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
+        }
+    }
+
+    EXPECT_EQ(col->GetDirection(), P_F_Column::Direction::e_down);
+    EXPECT_EQ(col->GetTop(), 1120);
+    EXPECT_EQ(col->GetBottom(), 1120);
+    EXPECT_EQ(col->GetHadReversal(), false);
+    EXPECT_EQ(columns.size() + 1, 4);
+}
+
 
 
 /* 
