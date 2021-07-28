@@ -22,9 +22,9 @@
       "Debug_unit/Unit_Test.o",
       "Unit_Test.cpp"
     ],
-    "directory": "/home/dpriedel/projects/PF_test",
-    "file": "/home/dpriedel/projects/PF_test/Unit_Test.cpp",
-    "output": "/home/dpriedel/projects/PF_test/Debug_unit/Unit_Test.o"
+    "directory": "/home/dpriedel/projects/PF_Test",
+    "file": "/home/dpriedel/projects/PF_Test/Unit_Test.cpp",
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/Unit_Test.o"
   },
   {
     "arguments": [
@@ -49,9 +49,36 @@
       "Debug_unit/DDecDouble.o",
       "../point_figure/src/DDecDouble.cpp"
     ],
-    "directory": "/home/dpriedel/projects/PF_test",
-    "file": "/home/dpriedel/projects/PF_test/../point_figure/src/DDecDouble.cpp",
-    "output": "/home/dpriedel/projects/PF_test/Debug_unit/DDecDouble.o"
+    "directory": "/home/dpriedel/projects/PF_Test",
+    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/DDecDouble.cpp",
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/DDecDouble.o"
+  },
+  {
+    "arguments": [
+      "/extra/gcc/gcc-11/bin/g++",
+      "-c",
+      "-x",
+      "c++",
+      "-O0",
+      "-g3",
+      "-std=c++20",
+      "-DBOOST_ENABLE_ASSERT_HANDLER",
+      "-D_DEBUG",
+      "-DSPDLOG_FMT_EXTERNAL",
+      "-DBOOST_REGEX_STANDALONE",
+      "-fPIC",
+      "-I/home/dpriedel/projects/point_figure/src",
+      "-I/usr/local/include",
+      "-I/extra/boost/boost-1.76_gcc-11",
+      "-I/extra/gcc/decNumber/include",
+      "-march=native",
+      "-o",
+      "Debug_unit/p_f_column.o",
+      "../point_figure/src/p_f_column.cpp"
+    ],
+    "directory": "/home/dpriedel/projects/PF_Test",
+    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/p_f_column.cpp",
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/p_f_column.o"
   },
   {
     "arguments": [
@@ -70,9 +97,9 @@
       "Debug_unit/decDouble.o",
       "/extra/gcc/decNumber/src/decDouble.c"
     ],
-    "directory": "/home/dpriedel/projects/PF_test",
+    "directory": "/home/dpriedel/projects/PF_Test",
     "file": "/extra/gcc/decNumber/src/decDouble.c",
-    "output": "/home/dpriedel/projects/PF_test/Debug_unit/decDouble.o"
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/decDouble.o"
   },
   {
     "arguments": [
@@ -91,9 +118,9 @@
       "Debug_unit/decQuad.o",
       "/extra/gcc/decNumber/src/decQuad.c"
     ],
-    "directory": "/home/dpriedel/projects/PF_test",
+    "directory": "/home/dpriedel/projects/PF_Test",
     "file": "/extra/gcc/decNumber/src/decQuad.c",
-    "output": "/home/dpriedel/projects/PF_test/Debug_unit/decQuad.o"
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/decQuad.o"
   },
   {
     "arguments": [
@@ -112,8 +139,8 @@
       "Debug_unit/decContext.o",
       "/extra/gcc/decNumber/src/decContext.c"
     ],
-    "directory": "/home/dpriedel/projects/PF_test",
+    "directory": "/home/dpriedel/projects/PF_Test",
     "file": "/extra/gcc/decNumber/src/decContext.c",
-    "output": "/home/dpriedel/projects/PF_test/Debug_unit/decContext.o"
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/decContext.o"
   }
 ]
