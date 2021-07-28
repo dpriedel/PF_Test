@@ -282,6 +282,12 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     EXPECT_EQ(col->GetBottom(), 1120);
     EXPECT_EQ(col->GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 4);
+
+    for (const auto& a_col : columns)
+    {
+        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+    }
+    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
@@ -316,6 +322,12 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col->GetBottom(), 1130);
     EXPECT_EQ(col->GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 9);
+
+    for (const auto& a_col : columns)
+    {
+        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+    }
+    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
 }
 
 
