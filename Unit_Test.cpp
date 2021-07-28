@@ -199,18 +199,12 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
 
     for (auto price : prices)
     {
-        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
-            auto save_direction = save_col->GetDirection();
-            col = std::make_unique<P_F_Column>(save_col->GetBoxsize(),
-                    save_col->GetReversalboxes(),
-                    save_direction == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up,
-                    save_direction == P_F_Column::Direction::e_up ? save_col->GetTop() - save_col->GetBoxsize() : value,
-                    save_direction == P_F_Column::Direction::e_up ? value : save_col->GetBottom() + save_col->GetBoxsize()
-                    );
             columns.push_back(*save_col);
+            col = std::move(*new_col);
 
             // now continue on processing the value.
             
@@ -236,18 +230,12 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
 
     for (auto price : prices)
     {
-        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
-            auto save_direction = save_col->GetDirection();
-            col = std::make_unique<P_F_Column>(save_col->GetBoxsize(),
-                    save_col->GetReversalboxes(),
-                    save_direction == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up,
-                    save_direction == P_F_Column::Direction::e_up ? save_col->GetTop() - save_col->GetBoxsize() : value,
-                    save_direction == P_F_Column::Direction::e_up ? value : save_col->GetBottom() + save_col->GetBoxsize()
-                    );
             columns.push_back(*save_col);
+            col = std::move(*new_col);
 
             // now continue on processing the value.
             
@@ -271,19 +259,13 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
-            auto save_direction = save_col->GetDirection();
-            col = std::make_unique<P_F_Column>(save_col->GetBoxsize(),
-                    save_col->GetReversalboxes(),
-                    save_direction == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up,
-                    save_direction == P_F_Column::Direction::e_up ? save_col->GetTop() - save_col->GetBoxsize() : value,
-                    save_direction == P_F_Column::Direction::e_up ? value : save_col->GetBottom() + save_col->GetBoxsize()
-                    );
             columns.push_back(*save_col);
+            col = std::move(*new_col);
 
             // now continue on processing the value.
             
@@ -316,19 +298,13 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
-            auto save_direction = save_col->GetDirection();
-            col = std::make_unique<P_F_Column>(save_col->GetBoxsize(),
-                    save_col->GetReversalboxes(),
-                    save_direction == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up,
-                    save_direction == P_F_Column::Direction::e_up ? save_col->GetTop() - save_col->GetBoxsize() : value,
-                    save_direction == P_F_Column::Direction::e_up ? value : save_col->GetBottom() + save_col->GetBoxsize()
-                    );
             columns.push_back(*save_col);
+            col = std::move(*new_col);
 
             // now continue on processing the value.
             
@@ -412,19 +388,13 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
-            auto save_direction = save_col->GetDirection();
-            col = std::make_unique<P_F_Column>(save_col->GetBoxsize(),
-                    save_col->GetReversalboxes(),
-                    save_direction == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up,
-                    save_direction == P_F_Column::Direction::e_up ? save_col->GetTop() - save_col->GetBoxsize() : value,
-                    save_direction == P_F_Column::Direction::e_up ? value : save_col->GetBottom() + save_col->GetBoxsize()
-                    );
             columns.push_back(*save_col);
+            col = std::move(*new_col);
 
             // now continue on processing the value.
             
@@ -457,19 +427,13 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, value] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
             auto* save_col = col.release();
-            auto save_direction = save_col->GetDirection();
-            col = std::make_unique<P_F_Column>(save_col->GetBoxsize(),
-                    save_col->GetReversalboxes(),
-                    save_direction == P_F_Column::Direction::e_up ? P_F_Column::Direction::e_down : P_F_Column::Direction::e_up,
-                    save_direction == P_F_Column::Direction::e_up ? save_col->GetTop() - save_col->GetBoxsize() : value,
-                    save_direction == P_F_Column::Direction::e_up ? value : save_col->GetBottom() + save_col->GetBoxsize()
-                    );
             columns.push_back(*save_col);
+            col = std::move(*new_col);
 
             // now continue on processing the value.
             
