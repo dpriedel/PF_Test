@@ -64,6 +64,7 @@ using namespace testing;
 
 #include "DDecDouble.h"
 #include "p_f_column.h"
+#include "p_f_data.h"
 
 using namespace DprDecimal;
 
@@ -563,6 +564,21 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     }
     std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
 }
+
+class ChartFunctionality10X2 : public Test
+{
+
+};
+
+TEST_F(ChartFunctionality10X2, Constructors)
+{
+   P_F_Data chart("GOOG", 10, 2);
+
+   ASSERT_EQ(chart.GetCurrentDirection(), P_F_Data::Direction::e_unknown);
+
+}
+
+
 
 /* 
  * ===  FUNCTION  ======================================================================

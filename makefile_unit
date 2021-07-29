@@ -47,7 +47,8 @@ SRCS1 := $(SDIR1)/Unit_Test.cpp
 
 SDIR2 := ../point_figure/src
 SRCS2 := $(SDIR2)/DDecDouble.cpp  \
-		$(SDIR2)/p_f_column.cpp #\
+		$(SDIR2)/p_f_column.cpp \
+		$(SDIR2)/p_f_data.cpp #\
 #		$(SDIR2)/PathNameGenerator.cpp \
 #		$(SDIR2)/DailyIndexFileRetriever.cpp \
 #		$(SDIR2)/FormFileRetriever.cpp
