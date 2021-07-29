@@ -203,9 +203,9 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
@@ -234,9 +234,9 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
@@ -265,9 +265,9 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
@@ -304,9 +304,9 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
@@ -395,9 +395,9 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
@@ -435,9 +435,9 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
@@ -488,9 +488,9 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
@@ -541,9 +541,9 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == P_F_Column::Status::e_reversal)
         {
-            auto* save_col = col.release();
+            auto* save_col = col.get();         // non-owning access
             columns.push_back(*save_col);
-            col = std::move(*new_col);
+            col = std::move(new_col.value());
 
             // now continue on processing the value.
             
