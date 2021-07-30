@@ -47,6 +47,7 @@
 //#include <numeric>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <system_error>
 #include <vector>
 
@@ -574,8 +575,27 @@ TEST_F(ChartFunctionality10X2, Constructors)
 {
    P_F_Data chart("GOOG", 10, 2);
 
-   ASSERT_EQ(chart.GetCurrentDirection(), P_F_Data::Direction::e_unknown);
+   ASSERT_EQ(chart.GetCurrentDirection(), P_F_Column::Direction::e_unknown);
 
+}
+
+TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
+{
+    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
+    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    std::stringstream prices{data}; 
+
+    P_F_Data chart("GOOG", 10, 2);
+    chart.LoadData(&prices);
+
+    EXPECT_EQ(chart.GetCurrentDirection(), P_F_Column::Direction::e_down);
+//    EXPECT_EQ(col->GetTop(), 1140);
+//    EXPECT_EQ(col->GetBottom(), 1130);
+//    EXPECT_EQ(col->GetHadReversal(), false);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+
+    chart.ExportData(&std::cout);
 }
 
 
