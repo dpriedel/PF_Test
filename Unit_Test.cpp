@@ -590,10 +590,11 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     chart.LoadData(&prices);
 
     EXPECT_EQ(chart.GetCurrentDirection(), P_F_Column::Direction::e_down);
-//    EXPECT_EQ(col->GetTop(), 1140);
-//    EXPECT_EQ(col->GetBottom(), 1130);
-//    EXPECT_EQ(col->GetHadReversal(), false);
     EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+
+    EXPECT_EQ(chart[5].GetTop(), 1140);
+    EXPECT_EQ(chart[5].GetBottom(), 1130);
+    EXPECT_EQ(chart[5].GetHadReversal(), false);
 
     chart.ExportData(&std::cout);
 }
