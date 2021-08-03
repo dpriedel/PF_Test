@@ -7,6 +7,7 @@ Unit_Test
 
 Debug_unit/*
 .cache/*
+test_files/*
 
 # misc
 
