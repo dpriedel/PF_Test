@@ -38,7 +38,8 @@ OUTFILE := Unit_Test
 CFG_INC := -I/home/dpriedel/projects/point_figure/src \
 	-I$(GTESTDIR) \
 	-I$(BOOSTDIR) \
-	-I$(DECIMALSRCDIR)/include
+	-I$(DECIMALSRCDIR)/include \
+	-I/usr/local/include/ChartDirector
 
 RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib
 
@@ -79,7 +80,8 @@ CFG_LIB := -lpthread \
 		-lgtest -lgtest_main \
 		-lfmt \
 		-lspdlog \
-		-ldate-tz 
+		-ldate-tz \
+		-lchartdir
 
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
 OBJS2=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS2)))))
