@@ -626,6 +626,10 @@ class PlotChartsWithChartDirector : public Test
 
 TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
 {
+    if (fs::exists("/tmp/candlestick.svg"))
+    {
+        fs::remove("/tmp/candlestick.svg");
+    }
     std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
     data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
@@ -710,14 +714,20 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
     layer->setLineWidth(2);
 
     // Output the chart
-    c->makeChart("/tmp/candlestick.png");
+    c->makeChart("/tmp/candlestick.svg");
 
     //free up resources
     delete c;
+
+    ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
 
 TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
 {
+    if (fs::exists("/tmp/candlestick2.svg"))
+    {
+        fs::remove("/tmp/candlestick2.svg");
+    }
     const fs::path file_name{"./test_files/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
@@ -779,8 +789,10 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     // Add a title to the y axis
     c->yAxis()->setTitle("Universal Stock Index");
 
+    c->yAxis()->setTickDensity(20, 10);
+    c->yAxis2()->copyAxis(c->yAxis());
     // Draw the y axis on the right hand side of the plot area
-    c->setYAxisOnRight(true);
+//    c->setYAxisOnRight(true);
 
     // Add a CandleStick layer to the chart using green (00ff00) for up candles and red (ff0000) for
     // down candles
@@ -792,10 +804,12 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     layer->setLineWidth(2);
 
     // Output the chart
-    c->makeChart("/tmp/candlestick2.png");
+    c->makeChart("/tmp/candlestick2.svg");
 
     //free up resources
     delete c;
+    
+    ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
 
 /* 
