@@ -53,7 +53,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include <chartdir.h>
 #include <gmock/gmock.h>
 
 using namespace std::string_literals;
@@ -610,13 +609,12 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
     chart.LoadData<DDecDouble>(&prices);
 
     EXPECT_EQ(chart.GetCurrentDirection(), P_F_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
 
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
+    EXPECT_EQ(chart[61].GetTop(), 146);
+    EXPECT_EQ(chart[61].GetBottom(), 144);
 
-    chart.ExportData(&std::cout);
+//    chart.ExportData(&std::cout);
 }
 
 class PlotChartsWithChartDirector : public Test
@@ -647,77 +645,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
 
     chart.ExportData(&std::cout);
 
-    // for plotting, need arrays of high, low, open, close, labels.
-    // for each column, if direction is down:
-    //   high and open = top
-    //   low and close = bottom 
-    //
-    // if direction is up:
-    //   low and open = bottom
-    //   high and close = top 
-
-    std::vector<double> highData;
-    std::vector<double> lowData;
-    std::vector<double> openData;
-    std::vector<double> closeData;
-
-    for (const auto& col : chart)
-    {
-        if (col.GetDirection() == P_F_Column::Direction::e_up)
-        {
-            lowData.push_back(col.GetBottom());
-            openData.push_back(col.GetBottom());
-            highData.push_back(col.GetTop());
-            closeData.push_back(col.GetTop());
-        }
-        else
-        {
-            highData.push_back(col.GetTop());
-            openData.push_back(col.GetTop());
-            lowData.push_back(col.GetBottom());
-            closeData.push_back(col.GetBottom());
-        }
-    }
-
-    XYChart* c = new XYChart(600, 350);
-
-    // Set the plotarea at (50, 25) and of size 500 x 250 pixels. Enable both the horizontal and
-    // vertical grids by setting their colors to grey (0xc0c0c0)
-    c->setPlotArea(50, 25, 500, 250)->setGridColor(0xc0c0c0, 0xc0c0c0);
-
-    // Add a title to the chart
-    c->addTitle("Universal Stock Index on Jan 2001");
-
-    // Add a custom text at (50, 25) (the upper left corner of the plotarea). Use 12pt Arial
-    // Bold/blue (4040c0) as the font.
-    c->addText(50, 25, "(c) Global XYZ ABC Company", "Arial Bold", 12, 0x4040c0);
-
-    // Add a title to the x axis
-    c->xAxis()->setTitle("Jan 2001");
-
-    // Set the labels on the x axis. Rotate the labels by 45 degrees.
-//    c->xAxis()->setLabels(StringArray(labels, labels_size))->setFontAngle(45);
-
-    // Add a title to the y axis
-    c->yAxis()->setTitle("Universal Stock Index");
-
-    // Draw the y axis on the right hand side of the plot area
-    c->setYAxisOnRight(true);
-
-    // Add a CandleStick layer to the chart using green (00ff00) for up candles and red (ff0000) for
-    // down candles
-    CandleStickLayer* layer = c->addCandleStickLayer(DoubleArray(highData.data(), highData.size()),
-        DoubleArray(lowData.data(), lowData.size()), DoubleArray(openData.data(), openData.size()), DoubleArray(
-        closeData.data(), closeData.size()), 0x00ff00, 0xff0000);
-
-    // Set the line width to 2 pixels
-    layer->setLineWidth(2);
-
-    // Output the chart
-    c->makeChart("/tmp/candlestick.svg");
-
-    //free up resources
-    delete c;
+    chart.ConstructChartAndWriteToFile("/tmp/candlestick.svg");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
@@ -736,78 +664,14 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     chart.LoadData<DDecDouble>(&prices);
 
     EXPECT_EQ(chart.GetCurrentDirection(), P_F_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
 
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
+    EXPECT_EQ(chart[61].GetTop(), 146);
+    EXPECT_EQ(chart[61].GetBottom(), 144);
 
-    chart.ExportData(&std::cout);
+//    chart.ExportData(&std::cout);
 
-    std::vector<double> highData;
-    std::vector<double> lowData;
-    std::vector<double> openData;
-    std::vector<double> closeData;
-
-    for (const auto& col : chart)
-    {
-        if (col.GetDirection() == P_F_Column::Direction::e_up)
-        {
-            lowData.push_back(col.GetBottom());
-            openData.push_back(col.GetBottom());
-            highData.push_back(col.GetTop());
-            closeData.push_back(col.GetTop());
-        }
-        else
-        {
-            highData.push_back(col.GetTop());
-            openData.push_back(col.GetTop());
-            lowData.push_back(col.GetBottom());
-            closeData.push_back(col.GetBottom());
-        }
-    }
-
-    XYChart* c = new XYChart(600, 350);
-
-    // Set the plotarea at (50, 25) and of size 500 x 250 pixels. Enable both the horizontal and
-    // vertical grids by setting their colors to grey (0xc0c0c0)
-    c->setPlotArea(50, 25, 500, 250)->setGridColor(0xc0c0c0, 0xc0c0c0);
-
-    // Add a title to the chart
-    c->addTitle("Universal Stock Index on Jan 2001");
-
-    // Add a custom text at (50, 25) (the upper left corner of the plotarea). Use 12pt Arial
-    // Bold/blue (4040c0) as the font.
-    c->addText(50, 25, "(c) Global XYZ ABC Company", "Arial Bold", 12, 0x4040c0);
-
-    // Add a title to the x axis
-    c->xAxis()->setTitle("Jan 2001");
-
-    // Set the labels on the x axis. Rotate the labels by 45 degrees.
-//    c->xAxis()->setLabels(StringArray(labels, labels_size))->setFontAngle(45);
-
-    // Add a title to the y axis
-    c->yAxis()->setTitle("Universal Stock Index");
-
-    c->yAxis()->setTickDensity(20, 10);
-    c->yAxis2()->copyAxis(c->yAxis());
-    // Draw the y axis on the right hand side of the plot area
-//    c->setYAxisOnRight(true);
-
-    // Add a CandleStick layer to the chart using green (00ff00) for up candles and red (ff0000) for
-    // down candles
-    CandleStickLayer* layer = c->addCandleStickLayer(DoubleArray(highData.data(), highData.size()),
-        DoubleArray(lowData.data(), lowData.size()), DoubleArray(openData.data(), openData.size()), DoubleArray(
-        closeData.data(), closeData.size()), 0x00ff00, 0xff0000);
-
-    // Set the line width to 2 pixels
-    layer->setLineWidth(2);
-
-    // Output the chart
-    c->makeChart("/tmp/candlestick2.svg");
-
-    //free up resources
-    delete c;
+    chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
