@@ -46,8 +46,10 @@
 #include <iostream>
 //#include <numeric>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <sstream>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -61,16 +63,50 @@ namespace fs = std::filesystem;
 
 #include <range/v3/algorithm/for_each.hpp>
 
+// for boost websocket testing
+
 using namespace testing;
 
 #include "DDecDouble.h"
 #include "p_f_column.h"
 #include "p_f_data.h"
+#include "LiveStream.h"
 
 using namespace DprDecimal;
 
 // some specific files for Testing.
 
+namespace boost
+{
+    // these functions are declared in the library headers but left to the user to define.
+    // so here they are...
+    //
+    /* 
+     * ===  FUNCTION  ======================================================================
+     *         Name:  assertion_failed_mgs
+     *  Description:  
+     *         defined in boost header but left to us to implement.
+     * =====================================================================================
+     */
+
+    void assertion_failed_msg (char const* expr, char const* msg, char const* function, char const* file, long line)
+    {
+        throw std::invalid_argument(fmt::format("\n*** Assertion failed *** test: {} in function: {} from file: {} at line: {} \nassertion msg: {}",
+                    expr, function, file, line,  msg));
+    }		/* -----  end of function assertion_failed_mgs  ----- */
+
+    /* 
+     * ===  FUNCTION  ======================================================================
+     *         Name:  assertion_failed
+     *  Description:  
+     * =====================================================================================
+     */
+    void assertion_failed (char const* expr, char const* function, char const* file, long line )
+    {
+        throw std::invalid_argument(fmt::format("\n*** Assertion failed *** test: {} in function: {} from file: {} at line: {}",
+                    expr, function, file, line));
+    }		/* -----  end of function assertion_failed  ----- */
+} /* end namespace boost */
 // This ctype facet does NOT classify spaces and tabs as whitespace
 // from cppreference example
 
@@ -674,6 +710,35 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
+}
+
+class WebSocketSynchronous : public Test
+{
+    std::string LoadApiKey(std::string file_name)
+    {
+        if (! fs::exists(file_name))
+        {
+            throw std::runtime_error("Can't find key file.");
+        }
+        std::ifstream key_file(file_name);
+        std::string result;
+        key_file >> result;
+        return result;
+    }
+public:
+
+    const std::string api_key = LoadApiKey("./tiingo_key.dat");
+
+};
+
+TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
+{
+    LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso"};
+    quotes.Connect();
+    quotes.StartStreaming();
+    quotes.StopStreaming();
+
+    // ASSERT_TRUE(false);         // we need an actual test here
 }
 
 /* 
