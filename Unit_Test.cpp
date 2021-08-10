@@ -40,25 +40,28 @@
 //#include <algorithm>
 //#include <chrono>
 //#include <cstdint>
+
 #include <filesystem>
 #include <fstream>
+#include <future>
 #include <gtest/gtest.h>
 #include <iostream>
-//#include <numeric>
 #include <memory>
+#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <sstream>
 #include <string_view>
 #include <system_error>
+#include <thread>
 #include <vector>
-
-#include <spdlog/spdlog.h>
+//#include <numeric>
 
 #include <gmock/gmock.h>
 
-using namespace std::string_literals;
+#include <spdlog/spdlog.h>
 
+using namespace std::literals::chrono_literals;
+using namespace std::string_literals;
 namespace fs = std::filesystem;
 
 #include <range/v3/algorithm/for_each.hpp>
@@ -735,7 +738,12 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
 {
     LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
     quotes.Connect();
-    quotes.StreamData();
+    bool time_to_stop = false;
+    auto the_task = std::async(std::launch::async, &LiveStream::StreamData, &quotes, &time_to_stop);
+	std::this_thread::sleep_for(10s);
+    time_to_stop = true;
+//    quotes.StreamData();
+	std::this_thread::sleep_for(1s);
     quotes.Disconnect();
 
     // ASSERT_TRUE(false);         // we need an actual test here
