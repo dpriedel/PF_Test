@@ -77,10 +77,10 @@ CFG_LIB := -lpthread \
 		-lssl -lcrypto \
 		-L$(GCCDIR)/lib64 \
 		-L$(BOOSTDIR)/lib \
-		-lboost_json-mt-x64 \
 		-L/usr/local/lib \
 		-lgtest -lgtest_main \
 		-lfmt \
+		-ljsoncpp \
 		-lspdlog \
 		-ldate-tz \
 		-lchartdir
