@@ -742,8 +742,7 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
     auto the_task = std::async(std::launch::async, &LiveStream::StreamData, &quotes, &time_to_stop);
 	std::this_thread::sleep_for(10s);
     time_to_stop = true;
-//    quotes.StreamData();
-	std::this_thread::sleep_for(1s);
+	the_task.get();
     quotes.Disconnect();
 
     // ASSERT_TRUE(false);         // we need an actual test here
