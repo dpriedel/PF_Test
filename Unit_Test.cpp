@@ -743,9 +743,14 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
 	std::this_thread::sleep_for(10s);
     time_to_stop = true;
 	the_task.get();
+//    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
     quotes.Disconnect();
 
-    // ASSERT_TRUE(false);         // we need an actual test here
+    for (const auto & value: quotes)
+    {
+        std::cout << value << '\n';
+    }
+    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
 }
 
 /* 
