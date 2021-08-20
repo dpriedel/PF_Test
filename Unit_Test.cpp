@@ -368,6 +368,57 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
     std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
 }
 
+class ColumnFunctionalityFractionalBoxes10X1 : public Test
+{
+
+};
+
+TEST_F(ColumnFunctionalityFractionalBoxes10X1, Constructors)
+{
+   PF_Column col{10, 1, PF_Column::FractionalBoxes::e_fractional};
+
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+
+}
+
+TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialValueAndDirection)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120}; 
+    PF_Column col{10, 1, PF_Column::FractionalBoxes::e_fractional};
+    
+    auto a_value = prices.begin();
+
+//    std::cout << "first value: " << *a_value << '\n';
+    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value});
+    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(col.GetTop(), 1100);
+    EXPECT_EQ(col.GetBottom(), 1100);
+
+//    std::cout << "second value: " << *(++a_value) << '\n';
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(col.GetTop(), 1100);
+    EXPECT_EQ(col.GetBottom(), 1100);
+
+//    std::cout << "third value: " << *(++a_value) << '\n';
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1110);
+    EXPECT_EQ(col.GetBottom(), 1100);
+
+    while (++a_value != prices.end())
+    {
+        status = col.AddValue(DprDecimal::DDecDouble(*a_value));
+    }
+    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1120);
+    EXPECT_EQ(col.GetBottom(), 1100);
+}
+
 
 class ColumnFunctionality10X3 : public Test
 {
@@ -644,6 +695,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
 
     std::ifstream prices{file_name};
 
+//    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
     chart.LoadData<DDecDouble>(&prices);
 
