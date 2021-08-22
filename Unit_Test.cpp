@@ -324,9 +324,9 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
 
     for (const auto& a_col : columns)
     {
-        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+        std::cout << a_col << '\n';
     }
-    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
+    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
@@ -363,9 +363,9 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
 
     for (const auto& a_col : columns)
     {
-        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+        std::cout << a_col << '\n';
     }
-    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
+    std::cout << col << '\n';
 }
 
 class ColumnFunctionalityFractionalBoxes10X1 : public Test
@@ -383,7 +383,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, Constructors)
 
 TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialValueAndDirection)
 {
-    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120}; 
+    const std::vector<double> prices = {1100.4, 1105.9, 1110.3, 1112.2, 1118.7, 1120.6}; 
     PF_Column col{10, 1, PF_Column::FractionalBoxes::e_fractional};
     
     auto a_value = prices.begin();
@@ -417,6 +417,8 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1100);
+
+    std:: cout << "col: " << col << '\n';
 }
 
 
@@ -505,9 +507,9 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
 
     for (const auto& a_col : columns)
     {
-        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+        std::cout << a_col << '\n';
     }
-    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
+    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
@@ -545,9 +547,9 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
 
     for (const auto& a_col : columns)
     {
-        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+        std::cout << a_col << '\n';
     }
-    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
+    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X5 : public Test
@@ -598,9 +600,9 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
 
     for (const auto& a_col : columns)
     {
-        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+        std::cout << a_col << '\n';
     }
-    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
+    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X2 : public Test
@@ -651,9 +653,9 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 
     for (const auto& a_col : columns)
     {
-        std::cout << "bottom: " << a_col.GetBottom() << " top: " << a_col.GetTop() << " direction: " << a_col.GetDirection() << (a_col.GetHadReversal() ? " one step back reversal" : "") << '\n';
+        std::cout << a_col << '\n';
     }
-    std::cout << "bottom: " << col->GetBottom() << " top: " << col->GetTop() << " direction: " << col->GetDirection() << (col->GetHadReversal() ? " one step back reversal" : "") << '\n';
+    std::cout << col << '\n';
 }
 
 class ChartFunctionality10X2 : public Test
@@ -686,7 +688,7 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(chart[5].GetBottom(), 1130);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 
-    chart.ExportData(&std::cout);
+    std::cout << chart << '\n';
 }
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
@@ -702,10 +704,10 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.GetNumberOfColumns(), 62);
 
-//    EXPECT_EQ(chart[61].GetTop(), 146);
-//    EXPECT_EQ(chart[61].GetBottom(), 144);
+    EXPECT_EQ(chart[61].GetTop(), 146);
+    EXPECT_EQ(chart[61].GetBottom(), 144);
 
-    chart.ExportData(&std::cout);
+//    std::cout << chart << '\n';
 }
 
 class PlotChartsWithChartDirector : public Test
@@ -734,7 +736,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
     EXPECT_EQ(chart[5].GetBottom(), 1130);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 
-    chart.ExportData(&std::cout);
+    std::cout << chart << '\n';
 
     chart.ConstructChartAndWriteToFile("/tmp/candlestick.svg");
 
@@ -760,7 +762,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     EXPECT_EQ(chart[61].GetTop(), 146);
     EXPECT_EQ(chart[61].GetBottom(), 144);
 
-//    chart.ExportData(&std::cout);
+//    std::cout << chart << '\n';
 
     chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
     
@@ -786,7 +788,7 @@ public:
 
 };
 
-TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
+TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
 {
     LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
     quotes.Connect();
