@@ -38,25 +38,24 @@
 
 
 //#include <algorithm>
-//#include <chrono>
+#include <chrono>
 //#include <cstdint>
 
-#include <filesystem>
-#include <fstream>
-#include <future>
-#include <gtest/gtest.h>
-#include <iostream>
-#include <memory>
-#include <sstream>
-#include <stdexcept>
-#include <string>
-#include <string_view>
-#include <system_error>
+//#include <chrono>
+//#include <filesystem>
+//#include <fstream>
+//#include <future>
+//#include <iostream>
+//#include <memory>
+//#include <sstream>
+//#include <string>
+//#include <string_view>
+//#include <system_error>
 #include <thread>
-#include <vector>
 //#include <numeric>
 
 #include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include <spdlog/spdlog.h>
 
@@ -78,53 +77,6 @@ using namespace testing;
 using namespace DprDecimal;
 
 // some specific files for Testing.
-
-namespace boost
-{
-    // these functions are declared in the library headers but left to the user to define.
-    // so here they are...
-    //
-    /* 
-     * ===  FUNCTION  ======================================================================
-     *         Name:  assertion_failed_mgs
-     *  Description:  
-     *         defined in boost header but left to us to implement.
-     * =====================================================================================
-     */
-
-    void assertion_failed_msg (char const* expr, char const* msg, char const* function, char const* file, long line)
-    {
-        throw std::invalid_argument(fmt::format("\n*** Assertion failed *** test: {} in function: {} from file: {} at line: {} \nassertion msg: {}",
-                    expr, function, file, line,  msg));
-    }		/* -----  end of function assertion_failed_mgs  ----- */
-
-    /* 
-     * ===  FUNCTION  ======================================================================
-     *         Name:  assertion_failed
-     *  Description:  
-     * =====================================================================================
-     */
-    void assertion_failed (char const* expr, char const* function, char const* file, long line )
-    {
-        throw std::invalid_argument(fmt::format("\n*** Assertion failed *** test: {} in function: {} from file: {} at line: {}",
-                    expr, function, file, line));
-    }		/* -----  end of function assertion_failed  ----- */
-} /* end namespace boost */
-// This ctype facet does NOT classify spaces and tabs as whitespace
-// from cppreference example
-
-struct line_only_whitespace : std::ctype<char>
-{
-    static const mask* make_table()
-    {
-        // make a copy of the "C" locale table
-        static std::vector<mask> v(classic_table(), classic_table() + table_size);
-        v['\t'] &= ~space;      // tab will not be classified as whitespace
-        v[' '] &= ~space;       // space will not be classified as whitespace
-        return &v[0];
-    }
-    explicit line_only_whitespace(std::size_t refs = 0) : ctype(make_table(), false, refs) {}
-};
 
 
 class DecimalBasicFunctionality : public Test
@@ -187,30 +139,35 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     
     auto a_value = prices.begin();
 
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
 //    std::cout << "first value: " << *a_value << '\n';
-    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value});
+    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
     while (++a_value != prices.end())
     {
-        status = col.AddValue(DprDecimal::DDecDouble(*a_value));
+        status = col.AddValue(DprDecimal::DDecDouble(*a_value), the_time);
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -224,7 +181,9 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)
     PF_Column col{10, 1};
 
     PF_Column::Status status;
-    ranges::for_each(prices, [&col, &status](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price)).first; });
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1130);
     EXPECT_EQ(col.GetBottom(), 1100);
@@ -238,9 +197,10 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
 
     std::vector<PF_Column> columns;
 
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
     for (auto price : prices)
     {
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -249,7 +209,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -268,10 +228,11 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
     auto col = std::make_unique<PF_Column>(10, 1);
 
     std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
 
     for (auto price : prices)
     {
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -280,7 +241,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -297,11 +258,12 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     auto col = std::make_unique<PF_Column>(10, 1);
 
     std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
 
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -311,7 +273,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
 //            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
@@ -326,7 +288,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     {
         std::cout << a_col << '\n';
     }
-    std::cout << col << '\n';
+    std::cout << *col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
@@ -336,11 +298,12 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
     auto col = std::make_unique<PF_Column>(10, 1);
 
     std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
 
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -350,7 +313,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
 //            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
@@ -365,7 +328,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
     {
         std::cout << a_col << '\n';
     }
-    std::cout << col << '\n';
+    std::cout << *col << '\n';
 }
 
 class ColumnFunctionalityFractionalBoxes10X1 : public Test
@@ -385,33 +348,37 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
 {
     const std::vector<double> prices = {1100.4, 1105.9, 1110.3, 1112.2, 1118.7, 1120.6}; 
     PF_Column col{10, 1, PF_Column::FractionalBoxes::e_fractional};
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
     
     auto a_value = prices.begin();
 
 //    std::cout << "first value: " << *a_value << '\n';
-    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value});
+    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
     while (++a_value != prices.end())
     {
-        status = col.AddValue(DprDecimal::DDecDouble(*a_value));
+        status = col.AddValue(DprDecimal::DDecDouble(*a_value), the_time);
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -442,30 +409,34 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     
     auto a_value = prices.begin();
 
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
 //    std::cout << "first value: " << *a_value << '\n';
-    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value});
+    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)});
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
+    the_time = std::chrono::system_clock::now();
     while (++a_value != prices.end())
     {
-        status = col.AddValue(DprDecimal::DDecDouble(*a_value));
+        status = col.AddValue(DprDecimal::DDecDouble(*a_value), the_time);
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -480,11 +451,12 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
     auto col = std::make_unique<PF_Column>(10, 3);
 
     std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
 
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -494,7 +466,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
 //            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
@@ -509,7 +481,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
     {
         std::cout << a_col << '\n';
     }
-    std::cout << col << '\n';
+    std::cout << *col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
@@ -521,10 +493,11 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
 
     std::vector<PF_Column> columns;
 
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -534,7 +507,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
 //            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
@@ -549,7 +522,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
     {
         std::cout << a_col << '\n';
     }
-    std::cout << col << '\n';
+    std::cout << *col << '\n';
 }
 
 class ColumnFunctionality10X5 : public Test
@@ -573,11 +546,12 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
     auto col = std::make_unique<PF_Column>(10, 5);
 
     std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
 
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -587,7 +561,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
 //            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
@@ -602,7 +576,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
     {
         std::cout << a_col << '\n';
     }
-    std::cout << col << '\n';
+    std::cout << *col << '\n';
 }
 
 class ColumnFunctionality10X2 : public Test
@@ -626,11 +600,12 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     auto col = std::make_unique<PF_Column>(10, 2);
 
     std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
 
     for (auto price : prices)
     {
 //        std::cout << "price: " << price << '\n';
-        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price));
+        auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
 //        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -640,7 +615,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col->AddValue(DprDecimal::DDecDouble(price)).first;
+            status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
 //            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
@@ -655,158 +630,158 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     {
         std::cout << a_col << '\n';
     }
-    std::cout << col << '\n';
+    std::cout << *col << '\n';
 }
 
-class ChartFunctionality10X2 : public Test
-{
-
-};
-
-TEST_F(ChartFunctionality10X2, Constructors)
-{
-   PF_Chart chart("GOOG", 10, 2);
-
-   ASSERT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
-
-}
-
-TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
-{
-    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
-    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-
-    std::stringstream prices{data, std::ios_base::in}; 
-
-    PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData<int32_t>(&prices);
-
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
-
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
-
-    std::cout << chart << '\n';
-}
-
-TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
-{
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
-
-    std::ifstream prices{file_name};
-
-//    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
-    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData<DDecDouble>(&prices);
-
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
-
-    EXPECT_EQ(chart[61].GetTop(), 146);
-    EXPECT_EQ(chart[61].GetBottom(), 144);
-
+//class ChartFunctionality10X2 : public Test
+//{
+//
+//};
+//
+//TEST_F(ChartFunctionality10X2, Constructors)
+//{
+//   PF_Chart chart("GOOG", 10, 2);
+//
+//   ASSERT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
+//
+//}
+//
+//TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
+//{
+//    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
+//    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+//
+//    std::stringstream prices{data, std::ios_base::in}; 
+//
+//    PF_Chart chart("GOOG", 10, 2);
+//    chart.LoadData<int32_t>(&prices);
+//
+//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+//    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+//
+//    EXPECT_EQ(chart[5].GetTop(), 1140);
+//    EXPECT_EQ(chart[5].GetBottom(), 1130);
+//    EXPECT_EQ(chart[5].GetHadReversal(), false);
+//
 //    std::cout << chart << '\n';
-}
-
-class PlotChartsWithChartDirector : public Test
-{
-
-};
-
-TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
-{
-    if (fs::exists("/tmp/candlestick.svg"))
-    {
-        fs::remove("/tmp/candlestick.svg");
-    }
-    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
-    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-
-    std::stringstream prices{data, std::ios_base::in}; 
-
-    PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData<int32_t>(&prices);
-
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
-
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
-
-    std::cout << chart << '\n';
-
-    chart.ConstructChartAndWriteToFile("/tmp/candlestick.svg");
-
-    ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
-}
-
-TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
-{
-    if (fs::exists("/tmp/candlestick2.svg"))
-    {
-        fs::remove("/tmp/candlestick2.svg");
-    }
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
-
-    std::ifstream prices{file_name};
-
-    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData<DDecDouble>(&prices);
-
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
-
-    EXPECT_EQ(chart[61].GetTop(), 146);
-    EXPECT_EQ(chart[61].GetBottom(), 144);
-
+//}
+//
+//TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
+//{
+//    const fs::path file_name{"./test_files/AAPL_close.dat"};
+//
+//    std::ifstream prices{file_name};
+//
+////    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
+//    PF_Chart chart("AAPL", 2, 2);
+//    chart.LoadData<DDecDouble>(&prices);
+//
+//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+//    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
+//
+//    EXPECT_EQ(chart[61].GetTop(), 146);
+//    EXPECT_EQ(chart[61].GetBottom(), 144);
+//
+////    std::cout << chart << '\n';
+//}
+//
+//class PlotChartsWithChartDirector : public Test
+//{
+//
+//};
+//
+//TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
+//{
+//    if (fs::exists("/tmp/candlestick.svg"))
+//    {
+//        fs::remove("/tmp/candlestick.svg");
+//    }
+//    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
+//    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+//
+//    std::stringstream prices{data, std::ios_base::in}; 
+//
+//    PF_Chart chart("GOOG", 10, 2);
+//    chart.LoadData<int32_t>(&prices);
+//
+//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+//    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+//
+//    EXPECT_EQ(chart[5].GetTop(), 1140);
+//    EXPECT_EQ(chart[5].GetBottom(), 1130);
+//    EXPECT_EQ(chart[5].GetHadReversal(), false);
+//
 //    std::cout << chart << '\n';
-
-    chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
-    
-    ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
-}
-
-class WebSocketSynchronous : public Test
-{
-    std::string LoadApiKey(std::string file_name)
-    {
-        if (! fs::exists(file_name))
-        {
-            throw std::runtime_error("Can't find key file.");
-        }
-        std::ifstream key_file(file_name);
-        std::string result;
-        key_file >> result;
-        return result;
-    }
-public:
-
-    const std::string api_key = LoadApiKey("./tiingo_key.dat");
-
-};
-
-TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
-{
-    LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
-    quotes.Connect();
-    bool time_to_stop = false;
-    auto the_task = std::async(std::launch::async, &LiveStream::StreamData, &quotes, &time_to_stop);
-	std::this_thread::sleep_for(10s);
-    time_to_stop = true;
-	the_task.get();
-//    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
-    quotes.Disconnect();
-
-    for (const auto & value: quotes)
-    {
-        std::cout << value << '\n';
-    }
-    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
-}
-
+//
+//    chart.ConstructChartAndWriteToFile("/tmp/candlestick.svg");
+//
+//    ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
+//}
+//
+//TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
+//{
+//    if (fs::exists("/tmp/candlestick2.svg"))
+//    {
+//        fs::remove("/tmp/candlestick2.svg");
+//    }
+//    const fs::path file_name{"./test_files/AAPL_close.dat"};
+//
+//    std::ifstream prices{file_name};
+//
+//    PF_Chart chart("AAPL", 2, 2);
+//    chart.LoadData<DDecDouble>(&prices);
+//
+//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+//    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
+//
+//    EXPECT_EQ(chart[61].GetTop(), 146);
+//    EXPECT_EQ(chart[61].GetBottom(), 144);
+//
+////    std::cout << chart << '\n';
+//
+//    chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
+//    
+//    ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
+//}
+//
+//class WebSocketSynchronous : public Test
+//{
+//    std::string LoadApiKey(std::string file_name)
+//    {
+//        if (! fs::exists(file_name))
+//        {
+//            throw std::runtime_error("Can't find key file.");
+//        }
+//        std::ifstream key_file(file_name);
+//        std::string result;
+//        key_file >> result;
+//        return result;
+//    }
+//public:
+//
+//    const std::string api_key = LoadApiKey("./tiingo_key.dat");
+//
+//};
+//
+//TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
+//{
+//    LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
+//    quotes.Connect();
+//    bool time_to_stop = false;
+//    auto the_task = std::async(std::launch::async, &LiveStream::StreamData, &quotes, &time_to_stop);
+//	std::this_thread::sleep_for(10s);
+//    time_to_stop = true;
+//	the_task.get();
+////    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
+//    quotes.Disconnect();
+//
+//    for (const auto & value: quotes)
+//    {
+//        std::cout << value << '\n';
+//    }
+//    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
+//}
+//
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  InitLogging
