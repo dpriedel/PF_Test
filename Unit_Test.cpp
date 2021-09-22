@@ -691,7 +691,7 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     std::cout << chart << '\n';
 }
 
-TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
+TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
 {
     const fs::path file_name{"./test_files/AAPL_close.dat"};
 
@@ -715,34 +715,45 @@ class PlotChartsWithChartDirector : public Test
 
 };
 
-//TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
-//{
-//    if (fs::exists("/tmp/candlestick.svg"))
-//    {
-//        fs::remove("/tmp/candlestick.svg");
-//    }
-//    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
-//    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-//
-//    std::stringstream prices{data, std::ios_base::in}; 
-//
-//    PF_Chart chart("GOOG", 10, 2);
-//    chart.LoadData<int32_t>(&prices);
-//
-//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
-//
-//    EXPECT_EQ(chart[5].GetTop(), 1140);
-//    EXPECT_EQ(chart[5].GetBottom(), 1130);
-//    EXPECT_EQ(chart[5].GetHadReversal(), false);
-//
-//    std::cout << chart << '\n';
-//
-//    chart.ConstructChartAndWriteToFile("/tmp/candlestick.svg");
-//
-//    ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
-//}
-//
+TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
+{
+    if (fs::exists("/tmp/candlestick.svg"))
+    {
+        fs::remove("/tmp/candlestick.svg");
+    }
+    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
+    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    auto values = split_string<std::string_view>(data, ' ');
+
+    auto dates = ranges::views::generate_n([start_at = date::year_month_day {2015_y/date::March/date::Monday[1]}]()mutable->date::year_month_day
+           { auto a = start_at; auto days = date::sys_days(start_at); start_at = date::year_month_day{++days}; return a; }, values.size());
+
+    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value) { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
+
+    std::string test_data;
+
+    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData<int32_t>(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+
+    EXPECT_EQ(chart[5].GetTop(), 1140);
+    EXPECT_EQ(chart[5].GetBottom(), 1130);
+    EXPECT_EQ(chart[5].GetHadReversal(), false);
+
+    std::cout << chart << '\n';
+
+    chart.ConstructChartAndWriteToFile("/tmp/candlestick.svg");
+
+    ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
+}
+
 TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
 {
     if (fs::exists("/tmp/candlestick2.svg"))
@@ -788,7 +799,7 @@ public:
 
 };
 
-TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
+TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
 {
     LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
     quotes.Connect();
