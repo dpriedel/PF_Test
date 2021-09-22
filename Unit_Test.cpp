@@ -42,9 +42,9 @@
 //#include <cstdint>
 
 //#include <chrono>
-//#include <filesystem>
-//#include <fstream>
-//#include <future>
+#include <filesystem>
+#include <fstream>
+#include <future>
 //#include <iostream>
 //#include <memory>
 //#include <sstream>
@@ -54,7 +54,7 @@
 #include <thread>
 //#include <numeric>
 
-#include <gmock/gmock.h>
+/* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
 #include <spdlog/spdlog.h>
@@ -633,19 +633,19 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     std::cout << *col << '\n';
 }
 
-//class ChartFunctionality10X2 : public Test
-//{
-//
-//};
-//
-//TEST_F(ChartFunctionality10X2, Constructors)
-//{
-//   PF_Chart chart("GOOG", 10, 2);
-//
-//   ASSERT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
-//
-//}
-//
+class ChartFunctionality10X2 : public Test
+{
+
+};
+
+TEST_F(ChartFunctionality10X2, Constructors)
+{
+   PF_Chart chart("GOOG", 10, 2);
+
+   ASSERT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
+
+}
+
 //TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 //{
 //    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
@@ -666,30 +666,30 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 //    std::cout << chart << '\n';
 //}
 //
-//TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
-//{
-//    const fs::path file_name{"./test_files/AAPL_close.dat"};
-//
-//    std::ifstream prices{file_name};
-//
-////    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
-//    PF_Chart chart("AAPL", 2, 2);
-//    chart.LoadData<DDecDouble>(&prices);
-//
-//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
-//
-//    EXPECT_EQ(chart[61].GetTop(), 146);
-//    EXPECT_EQ(chart[61].GetBottom(), 144);
-//
-////    std::cout << chart << '\n';
-//}
-//
-//class PlotChartsWithChartDirector : public Test
-//{
-//
-//};
-//
+TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
+{
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
+
+    std::ifstream prices{file_name};
+
+//    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
+    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
+
+    EXPECT_EQ(chart[61].GetTop(), 146);
+    EXPECT_EQ(chart[61].GetBottom(), 144);
+
+//    std::cout << chart << '\n';
+}
+
+class PlotChartsWithChartDirector : public Test
+{
+
+};
+
 //TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
 //{
 //    if (fs::exists("/tmp/candlestick.svg"))
@@ -718,70 +718,70 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 //    ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 //}
 //
-//TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
-//{
-//    if (fs::exists("/tmp/candlestick2.svg"))
-//    {
-//        fs::remove("/tmp/candlestick2.svg");
-//    }
-//    const fs::path file_name{"./test_files/AAPL_close.dat"};
-//
-//    std::ifstream prices{file_name};
-//
-//    PF_Chart chart("AAPL", 2, 2);
-//    chart.LoadData<DDecDouble>(&prices);
-//
-//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
-//
-//    EXPECT_EQ(chart[61].GetTop(), 146);
-//    EXPECT_EQ(chart[61].GetBottom(), 144);
-//
-////    std::cout << chart << '\n';
-//
-//    chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
-//    
-//    ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
-//}
-//
-//class WebSocketSynchronous : public Test
-//{
-//    std::string LoadApiKey(std::string file_name)
-//    {
-//        if (! fs::exists(file_name))
-//        {
-//            throw std::runtime_error("Can't find key file.");
-//        }
-//        std::ifstream key_file(file_name);
-//        std::string result;
-//        key_file >> result;
-//        return result;
-//    }
-//public:
-//
-//    const std::string api_key = LoadApiKey("./tiingo_key.dat");
-//
-//};
-//
-//TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
-//{
-//    LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
-//    quotes.Connect();
-//    bool time_to_stop = false;
-//    auto the_task = std::async(std::launch::async, &LiveStream::StreamData, &quotes, &time_to_stop);
-//	std::this_thread::sleep_for(10s);
-//    time_to_stop = true;
-//	the_task.get();
-////    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
-//    quotes.Disconnect();
-//
-//    for (const auto & value: quotes)
-//    {
-//        std::cout << value << '\n';
-//    }
-//    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
-//}
-//
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
+{
+    if (fs::exists("/tmp/candlestick2.svg"))
+    {
+        fs::remove("/tmp/candlestick2.svg");
+    }
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
+
+    std::ifstream prices{file_name};
+
+    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
+
+    EXPECT_EQ(chart[61].GetTop(), 146);
+    EXPECT_EQ(chart[61].GetBottom(), 144);
+
+//    std::cout << chart << '\n';
+
+    chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
+    
+    ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
+}
+
+class WebSocketSynchronous : public Test
+{
+    std::string LoadApiKey(std::string file_name)
+    {
+        if (! fs::exists(file_name))
+        {
+            throw std::runtime_error("Can't find key file.");
+        }
+        std::ifstream key_file(file_name);
+        std::string result;
+        key_file >> result;
+        return result;
+    }
+public:
+
+    const std::string api_key = LoadApiKey("./tiingo_key.dat");
+
+};
+
+TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
+{
+    LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
+    quotes.Connect();
+    bool time_to_stop = false;
+    auto the_task = std::async(std::launch::async, &LiveStream::StreamData, &quotes, &time_to_stop);
+	std::this_thread::sleep_for(10s);
+    time_to_stop = true;
+	the_task.get();
+//    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
+    quotes.Disconnect();
+
+    for (const auto & value: quotes)
+    {
+        std::cout << value << '\n';
+    }
+    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
+}
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  InitLogging
