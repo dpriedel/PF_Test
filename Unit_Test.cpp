@@ -47,19 +47,24 @@
 #include <future>
 //#include <iostream>
 //#include <memory>
-//#include <sstream>
+#include <sstream>
 //#include <string>
 //#include <string_view>
 //#include <system_error>
 #include <thread>
 //#include <numeric>
 
+#include <range/v3/view/generate_n.hpp>
+#include <range/v3/view/zip_with.hpp>
+#include <range/v3/view/take.hpp>
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
+#include <date/date.h>
 #include <spdlog/spdlog.h>
 
 using namespace std::literals::chrono_literals;
+using namespace date::literals;
 using namespace std::string_literals;
 namespace fs = std::filesystem;
 
@@ -73,6 +78,8 @@ using namespace testing;
 #include "PF_Column.h"
 #include "PF_Chart.h"
 #include "LiveStream.h"
+
+#include "utilities.h"
 
 using namespace DprDecimal;
 
@@ -646,26 +653,44 @@ TEST_F(ChartFunctionality10X2, Constructors)
 
 }
 
-//TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
-//{
-//    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
-//    data += "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-//
-//    std::stringstream prices{data, std::ios_base::in}; 
-//
-//    PF_Chart chart("GOOG", 10, 2);
-//    chart.LoadData<int32_t>(&prices);
-//
-//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
-//
-//    EXPECT_EQ(chart[5].GetTop(), 1140);
-//    EXPECT_EQ(chart[5].GetBottom(), 1130);
-//    EXPECT_EQ(chart[5].GetHadReversal(), false);
-//
-//    std::cout << chart << '\n';
-//}
-//
+TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
+{
+    std::string data = {"1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 "};
+    data  +=  "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    auto values = split_string<std::string_view>(data, ' ');
+
+    auto dates = ranges::views::generate_n([start_at = date::year_month_day {2015_y/date::March/date::Monday[1]}]()mutable->date::year_month_day
+           { auto a = start_at; auto days = date::sys_days(start_at); start_at = date::year_month_day{++days}; return a; }, values.size());
+
+//    auto sample = dates | ranges::views::take(50);
+//    std::cout << sample << '\n';
+
+    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value) { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
+
+//    auto sample2 = make_test_data | ranges::views::take(30);
+//    std::cout << sample2 << '\n';
+
+    std::string test_data;
+
+    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData<int32_t>(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+
+    EXPECT_EQ(chart[5].GetTop(), 1140);
+    EXPECT_EQ(chart[5].GetBottom(), 1130);
+    EXPECT_EQ(chart[5].GetHadReversal(), false);
+
+    std::cout << chart << '\n';
+}
+
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalData)
 {
     const fs::path file_name{"./test_files/AAPL_close.dat"};
