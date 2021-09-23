@@ -660,13 +660,30 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 
     auto values = split_string<std::string_view>(data, ' ');
 
+    // make some business days (although, not doing holidays)
     auto dates = ranges::views::generate_n([start_at = date::year_month_day {2015_y/date::March/date::Monday[1]}]()mutable->date::year_month_day
-           { auto a = start_at; auto days = date::sys_days(start_at); start_at = date::year_month_day{++days}; return a; }, values.size());
+       {
+            auto a = start_at;
+            auto days = date::sys_days(start_at);
+            date::weekday wd{++days};
+            if (wd == date::Saturday)
+            {
+                ++days;
+                ++days;
+            }
+            else if (wd == date::Sunday)
+            {
+                ++days;
+            }
+            start_at = date::year_month_day{days};
+            return a;
+       }, values.size());
 
 //    auto sample = dates | ranges::views::take(50);
 //    std::cout << sample << '\n';
 
-    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value) { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
+    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value)
+            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
 
 //    auto sample2 = make_test_data | ranges::views::take(30);
 //    std::cout << sample2 << '\n';
@@ -726,10 +743,27 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
 
     auto values = split_string<std::string_view>(data, ' ');
 
+    // make some business days (although, not doing holidays)
     auto dates = ranges::views::generate_n([start_at = date::year_month_day {2015_y/date::March/date::Monday[1]}]()mutable->date::year_month_day
-           { auto a = start_at; auto days = date::sys_days(start_at); start_at = date::year_month_day{++days}; return a; }, values.size());
+       {
+            auto a = start_at;
+            auto days = date::sys_days(start_at);
+            date::weekday wd{++days};
+            if (wd == date::Saturday)
+            {
+                ++days;
+                ++days;
+            }
+            else if (wd == date::Sunday)
+            {
+                ++days;
+            }
+            start_at = date::year_month_day{days};
+            return a;
+       }, values.size());
 
-    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value) { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
+    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value)
+            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
 
     std::string test_data;
 
