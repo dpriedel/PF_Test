@@ -49,14 +49,17 @@
 //#include <memory>
 #include <sstream>
 //#include <string>
-//#include <string_view>
+#include <string_view>
 //#include <system_error>
 #include <thread>
 //#include <numeric>
 
 #include <range/v3/view/generate_n.hpp>
 #include <range/v3/view/zip_with.hpp>
+#include <range/v3/view/split.hpp>
 #include <range/v3/view/take.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/algorithm/for_each.hpp>
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
@@ -85,6 +88,36 @@ using namespace DprDecimal;
 
 // some specific files for Testing.
 
+
+class RangeSplitterBasicFunctionality : public Test
+{
+
+};
+
+TEST_F(RangeSplitterBasicFunctionality, Test1)
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    auto values = split_string<std::string_view>(data, ' ');
+
+    auto items = rng_split_string<std::string_view>(data, ' ');
+
+    // thee loop below demonstrates that this is a 'lazy' split 
+//    int i = 0;
+//    for(const auto& item : items)
+//    {
+//        std::cout <<  "i: " << ++i << " " << item << '\n';
+//    }
+
+    EXPECT_EQ(values.size(), ranges::distance(items));
+
+    std::vector<std::string_view> values2;
+
+    ranges::for_each(items, [&values2](const auto& x) { values2.push_back(x); });
+
+    ASSERT_EQ(values, values2);
+};
 
 class DecimalBasicFunctionality : public Test
 {
