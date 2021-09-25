@@ -169,6 +169,20 @@ TEST_F(ColumnFunctionality10X1, Constructors)
 
 }
 
+TEST_F(ColumnFunctionality10X1, Equality)
+{
+   PF_Column col1;
+
+   EXPECT_EQ(col1.GetDirection(), PF_Column::Direction::e_unknown);
+
+   PF_Column col2;
+   EXPECT_EQ(col1, col2);
+
+   PF_Column col3{5, 5};
+   ASSERT_NE(col3, col2);
+
+}
+
 TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirection)
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120}; 
