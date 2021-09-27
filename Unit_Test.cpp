@@ -48,7 +48,7 @@
 //#include <iostream>
 //#include <memory>
 #include <sstream>
-//#include <string>
+#include <string>
 #include <string_view>
 //#include <system_error>
 #include <thread>
@@ -239,6 +239,41 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)
     EXPECT_EQ(col.GetTop(), 1130);
     EXPECT_EQ(col.GetBottom(), 1100);
     ASSERT_EQ(status, PF_Column::Status::e_reversal);
+}
+
+TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
+    PF_Column col{10, 1};
+
+    PF_Column::Status status;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
+
+    auto json = col.ToJSON();
+    std::cout << json << '\n';
+
+    EXPECT_EQ(json["box_size"], "10");
+
+    // this appears to be the way to convert our stored time to a time_point.
+    // we use nanoseconds because that is what tiingo provides in its 
+    // streaming interface.
+
+    int64_t x = std::stol(json["start_at"].asString());
+    std::chrono::nanoseconds y{x};
+    PF_Column::tpt z{y};
+//    std::cout << DateTimeAsString(the_time) << '\n';
+//    std::cout << DateTimeAsString(z) << '\n';
+    
+    EXPECT_TRUE(z == the_time);
+
+//    std::cout << std::chrono::milliseconds(std::stol(json["start_at"])) << ;\n';
+
+    EXPECT_EQ(json["direction"].asString(), "up");
+    EXPECT_EQ(json["top"].asString(), "1130");
+    EXPECT_EQ(json["bottom"].asString(), "1100");
+//    ASSERT_EQ(status, PF_Column::Status::e_reversal);
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
