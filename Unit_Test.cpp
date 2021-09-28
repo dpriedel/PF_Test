@@ -798,8 +798,6 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(chart[5].GetTop(), 1140);
     EXPECT_EQ(chart[5].GetBottom(), 1130);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
-
-    std::cout << chart << '\n';
 }
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
@@ -817,6 +815,46 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
 
     EXPECT_EQ(chart[61].GetTop(), 146);
     EXPECT_EQ(chart[61].GetBottom(), 144);
+
+//    std::cout << chart << '\n';
+}
+
+TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsThenJSON)
+{
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
+
+    std::ifstream prices{file_name};
+
+//    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
+    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+
+    auto json = chart.ToJSON();
+    std::cout << json << '\n';
+
+    EXPECT_EQ(json["current_direction"].asString(), "down");
+    EXPECT_EQ(json["columns"].size(), 61);
+
+    EXPECT_EQ(json["columns"][60]["top"].asString(), "148");
+    EXPECT_EQ(json["columns"][60]["bottom"].asString(), "144");
+
+//    std::cout << chart << '\n';
+}
+
+TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFromJSON)
+{
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
+
+    std::ifstream prices{file_name};
+
+//    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
+    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+
+    auto json = chart.ToJSON();
+
+    PF_Chart chart2{json};
+    ASSERT_EQ(chart, chart2);
 
 //    std::cout << chart << '\n';
 }
