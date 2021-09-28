@@ -260,9 +260,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)
     // we use nanoseconds because that is what tiingo provides in its 
     // streaming interface.
 
-    int64_t x = std::stol(json["start_at"].asString());
-    std::chrono::nanoseconds y{x};
-    PF_Column::tpt z{y};
+    PF_Column::tpt z{std::chrono::nanoseconds{json["start_at"].asInt64()}};
 //    std::cout << DateTimeAsString(the_time) << '\n';
 //    std::cout << DateTimeAsString(z) << '\n';
     
@@ -274,6 +272,24 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)
     EXPECT_EQ(json["top"].asString(), "1130");
     EXPECT_EQ(json["bottom"].asString(), "1100");
 //    ASSERT_EQ(status, PF_Column::Status::e_reversal);
+}
+
+TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
+    PF_Column col{10, 1};
+
+    PF_Column::Status status;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
+
+    auto json = col.ToJSON();
+    std::cout << json << '\n';
+
+    PF_Column col2{json};
+    EXPECT_EQ(col, col2);
+    EXPECT_EQ(col.GetTimeSpan(), col2.GetTimeSpan());
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
