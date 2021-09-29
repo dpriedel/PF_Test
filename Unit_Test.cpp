@@ -728,6 +728,17 @@ TEST_F(ChartFunctionality10X2, Constructors)
 
 }
 
+TEST_F(ChartFunctionality10X2, EmptyChartToJSON)
+{
+   PF_Chart chart("GOOG", 10, 2);
+
+   EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
+
+   auto json = chart.ToJSON();
+   std::cout << json << '\n';
+
+}
+
 TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 {
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
@@ -770,7 +781,7 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData<int32_t>(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.GetNumberOfColumns(), 6);
@@ -788,7 +799,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
 
 //    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.GetNumberOfColumns(), 62);
@@ -807,7 +818,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsThenJSON
 
 //    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     auto json = chart.ToJSON();
 
@@ -828,7 +839,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
 
 //    PF_Chart chart("AAPL", 2, 2, PF_Column::FractionalBoxes::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     auto json = chart.ToJSON();
 
@@ -883,7 +894,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData<int32_t>(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.GetNumberOfColumns(), 6);
@@ -910,7 +921,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     std::ifstream prices{file_name};
 
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.GetNumberOfColumns(), 62);
