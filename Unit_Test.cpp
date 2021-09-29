@@ -252,17 +252,15 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
 
     auto json = col.ToJSON();
-    std::cout << json << '\n';
+//    std::cout << json << '\n';
 
     EXPECT_EQ(json["box_size"], "10");
 
-    // this appears to be the way to convert our stored time to a time_point.
+    // this is be the way to convert our stored time to a time_point.
     // we use nanoseconds because that is what tiingo provides in its 
     // streaming interface.
 
     PF_Column::tpt z{std::chrono::nanoseconds{json["start_at"].asInt64()}};
-//    std::cout << DateTimeAsString(the_time) << '\n';
-//    std::cout << DateTimeAsString(z) << '\n';
     
     EXPECT_TRUE(z == the_time);
 
@@ -271,7 +269,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)
     EXPECT_EQ(json["direction"].asString(), "up");
     EXPECT_EQ(json["top"].asString(), "1130");
     EXPECT_EQ(json["bottom"].asString(), "1100");
-//    ASSERT_EQ(status, PF_Column::Status::e_reversal);
+    ASSERT_EQ(status, PF_Column::Status::e_reversal);
 }
 
 TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)
@@ -285,7 +283,7 @@ TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
 
     auto json = col.ToJSON();
-    std::cout << json << '\n';
+//    std::cout << json << '\n';
 
     PF_Column col2{json};
     EXPECT_EQ(col, col2);
@@ -364,9 +362,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
 
     for (auto price : prices)
     {
-//        std::cout << "price: " << price << '\n';
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
-//        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -376,7 +372,6 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
             // now continue on processing the value.
             
             status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
-//            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
 
@@ -404,9 +399,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
 
     for (auto price : prices)
     {
-//        std::cout << "price: " << price << '\n';
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
-//        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -416,7 +409,6 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
             // now continue on processing the value.
             
             status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
-//            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
 
@@ -557,9 +549,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
 
     for (auto price : prices)
     {
-//        std::cout << "price: " << price << '\n';
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
-//        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -569,7 +559,6 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
             // now continue on processing the value.
             
             status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
-//            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
 
@@ -598,9 +587,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
     PF_Column::tpt the_time = std::chrono::system_clock::now();
     for (auto price : prices)
     {
-//        std::cout << "price: " << price << '\n';
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
-//        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -610,7 +597,6 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
             // now continue on processing the value.
             
             status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
-//            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
 
@@ -652,9 +638,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
 
     for (auto price : prices)
     {
-//        std::cout << "price: " << price << '\n';
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
-//        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -664,7 +648,6 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
             // now continue on processing the value.
             
             status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
-//            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
 
@@ -706,9 +689,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 
     for (auto price : prices)
     {
-//        std::cout << "price: " << price << '\n';
         auto [status, new_col] = col->AddValue(DprDecimal::DDecDouble(price), the_time);
-//        std::cout << " status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             auto* save_col = col.get();         // non-owning access
@@ -718,7 +699,6 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
             // now continue on processing the value.
             
             status = col->AddValue(DprDecimal::DDecDouble(price), the_time).first;
-//            std::cout << "new column status: " << status << " top: " << col->GetTop() << " bottom: " << col->GetBottom() << " direction: " << col->GetDirection() << '\n';
         }
     }
 
@@ -830,7 +810,6 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsThenJSON
     chart.LoadData<DDecDouble>(&prices, "%Y-%m-%d", ',');
 
     auto json = chart.ToJSON();
-    std::cout << json << '\n';
 
     EXPECT_EQ(json["current_direction"].asString(), "down");
     EXPECT_EQ(json["columns"].size(), 61);
