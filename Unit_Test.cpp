@@ -77,7 +77,7 @@ using namespace testing;
 #include "DDecDouble.h"
 #include "PF_Column.h"
 #include "PF_Chart.h"
-#include "LiveStream.h"
+#include "Tiingo.h"
 
 #include "utilities.h"
 
@@ -115,6 +115,47 @@ TEST_F(RangeSplitterBasicFunctionality, Test1)
 
     ASSERT_EQ(values, values2);
 };
+
+class BusinessDateRange : public Test
+{
+
+};
+
+TEST_F(BusinessDateRange, WithinSingleWeek)
+{
+    date::year_month_day start_here{2021_y/date::October/date::Friday[1]};
+
+    auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Down);
+
+    std::cout << result.first << " : " << result.second << '\n';
+
+    ASSERT_EQ(result.second, date::year_month_day{2021_y/date::September/27});
+
+}
+
+TEST_F(BusinessDateRange, SpanAWeek)
+{
+    date::year_month_day start_here{2021_y/date::October/date::Friday[1]};
+
+    auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Up);
+
+    std::cout << result.first << " : " << result.second << '\n';
+
+    ASSERT_EQ(result.second, date::year_month_day{2021_y/date::October/7});
+
+}
+
+TEST_F(BusinessDateRange, SpanAWeekAndAMonth)
+{
+    date::year_month_day start_here{2021_y/date::September/22};
+
+    auto result = ConstructeBusinessDayRange(start_here, 12, UpOrDown::e_Up);
+
+    std::cout << result.first << " : " << result.second << '\n';
+
+    ASSERT_EQ(result.second, date::year_month_day{2021_y/date::October/7});
+
+}
 
 class DecimalBasicFunctionality : public Test
 {
@@ -966,10 +1007,10 @@ public:
 
 TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
 {
-    LiveStream quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
+    Tiingo quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
     quotes.Connect();
     bool time_to_stop = false;
-    auto the_task = std::async(std::launch::async, &LiveStream::StreamData, &quotes, &time_to_stop);
+    auto the_task = std::async(std::launch::async, &Tiingo::StreamData, &quotes, &time_to_stop);
 	std::this_thread::sleep_for(10s);
     time_to_stop = true;
 	the_task.get();
