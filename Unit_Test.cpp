@@ -1022,21 +1022,21 @@ TEST_F(TiingoATR, RetrievePreviousData)
     EXPECT_EQ(history.size(), 14);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13]["date"].asString()), date::year_month_day{2021_y/date::September/20});
+}
 
-//    quotes.Connect();
-//    bool time_to_stop = false;
-//    auto the_task = std::async(std::launch::async, &Tiingo::StreamData, &quotes, &time_to_stop);
-//	std::this_thread::sleep_for(10s);
-//    time_to_stop = true;
-//	the_task.get();
-////    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
-//    quotes.Disconnect();
-//
-//    for (const auto & value: quotes)
-//    {
-//        std::cout << value << '\n';
-//    }
-//    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
+TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)
+{
+    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+
+    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 5);
+
+    EXPECT_EQ(history.size(), 5);
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4]["date"].asString()), date::year_month_day{2021_y/date::October/1});
+
+    auto atr = ComputeATR("AAPL", history, 4);
+    std::cout << "ATR: " << atr << '\n';
+    EXPECT_TRUE(atr != 0);
 }
 
 class WebSocketSynchronous : public Test
