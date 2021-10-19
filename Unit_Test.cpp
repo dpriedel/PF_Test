@@ -42,6 +42,7 @@
 //#include <cstdint>
 
 //#include <chrono>
+#include <functional>
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -54,10 +55,13 @@
 #include <thread>
 //#include <numeric>
 
+#include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/view/generate_n.hpp>
 #include <range/v3/view/zip_with.hpp>
 #include <range/v3/view/take.hpp>
 #include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/view/reverse.hpp>
+
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
@@ -1028,15 +1032,57 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)
 {
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 5);
+    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15);
 
-    EXPECT_EQ(history.size(), 5);
+//    std::cout << "\nhistory:\n" << history << '\n';
+    EXPECT_EQ(history.size(), 15);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4]["date"].asString()), date::year_month_day{2021_y/date::October/1});
 
     auto atr = ComputeATR("AAPL", history, 4);
-    std::cout << "ATR: " << atr << '\n';
-    EXPECT_TRUE(atr != 0);
+//    std::cout << "ATR: " << atr << '\n';
+    ASSERT_TRUE(atr == DprDecimal::DDecDouble{"3.36875"});
+}
+
+TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
+{
+    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+
+    constexpr int history_size = 20 + 1;
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size);
+
+    auto atr = ComputeATR("AAPL", history, 4);
+//    std::cout << "ATR: " << atr << '\n';
+    EXPECT_TRUE(atr == DprDecimal::DDecDouble{"3.36875"});
+
+    // recompute for rest of test
+
+    atr = ComputeATR("AAPL", history, history_size - 1);
+    // next, I need to compute my average closing price over the interval 
+
+    DprDecimal::DDecDouble sum = ranges::accumulate(history, DprDecimal::DDecDouble{}, std::plus<DprDecimal::DDecDouble>(),
+            [](const Json::Value& e) { return DprDecimal::DDecDouble{e["close"].asString()}; });
+
+    DprDecimal::DDecDouble box_size = atr / sum;
+
+    std::cout << "box size: " << box_size << '\n';
+    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
+
+    // tikcer data retrieved above is in descending order by date, so let's read it backwards
+    // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
+    
+    auto backwards = history | ranges::views::reverse;
+
+    ranges::for_each(backwards, [&chart](const auto& e)
+        {
+            DprDecimal::DDecDouble val{e["close"].asString()};
+            std::string dte{e["date"].asString()};
+            std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
+            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
+            chart.AddValue(val, date::sys_days(the_date));
+        });
+
+    std::cout << chart << '\n';
 }
 
 class WebSocketSynchronous : public Test
