@@ -22,7 +22,8 @@ MAKE=gmake
 BOOSTDIR := /extra/boost/boost-1.77_gcc-11
 GCCDIR := /extra/gcc/gcc-11
 GTESTDIR := /usr/local/include
-DECIMALSRCDIR := /extra/gcc/decNumber
+# DECIMALSRCDIR := /extra/gcc/decNumber
+DECIMALSRCDIR := /extra/gcc/libdecnumber
 UTILITYDIR := /home/dpriedel/projects/common_utilities
 CPP := $(GCCDIR)/bin/g++
 GCC := $(GCCDIR)/bin/gcc
@@ -39,7 +40,7 @@ OUTFILE := Unit_Test
 CFG_INC := -I/home/dpriedel/projects/point_figure/src \
 	-I$(GTESTDIR) \
 	-I$(BOOSTDIR) \
-	-I$(DECIMALSRCDIR)/include \
+	-I$(DECIMALSRCDIR) \
 	-I$(UTILITYDIR)/include \
 	-I/usr/local/include/ChartDirector
 
@@ -49,7 +50,7 @@ SDIR1 := .
 SRCS1 := $(SDIR1)/Unit_Test.cpp
 
 SDIR2 := ../point_figure/src
-SRCS2 := $(SDIR2)/DDecDouble.cpp  \
+SRCS2 := $(SDIR2)/DDecQuad.cpp  \
 		$(SDIR2)/PF_Column.cpp \
 		$(SDIR2)/PF_Chart.cpp \
 		$(SDIR2)/Tiingo.cpp #\
@@ -57,10 +58,13 @@ SRCS2 := $(SDIR2)/DDecDouble.cpp  \
 #		$(SDIR2)/DailyIndexFileRetriever.cpp \
 #		$(SDIR2)/FormFileRetriever.cpp
 
-SDIR3 := $(DECIMALSRCDIR)/src
-SRCS3 := $(SDIR3)/decDouble.c \
-		 $(SDIR3)/decQuad.c \
-		 $(SDIR3)/decContext.c
+SDIR3 := $(DECIMALSRCDIR)
+SRCS3 := $(SDIR3)/decQuad.c 
+# 		 $(SDIR3)/decNumber.c \
+# 		 $(SDIR3)/decContext.c
+
+# SDIR3a := $(DECIMALSRCDIR)/bid
+# SRCS3a := $(SDIR3a)/decimal128.c 
 
 SDIR4 := $(UTILITYDIR)/src
 SRCS4 := $(SDIR4)/utilities.cpp
@@ -79,6 +83,7 @@ OUTDIR := Debug_unit
 # NOTE: use libzip NOT libminizip
 #
 CFG_LIB := -lpthread \
+		-ldecnumber \
 		-lssl -lcrypto \
 		-L$(GCCDIR)/lib64 \
 		-L/usr/local/lib \
@@ -92,6 +97,7 @@ CFG_LIB := -lpthread \
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
 OBJS2=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS2)))))
 OBJS3=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3)))))
+# OBJS3a=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3a)))))
 OBJS4=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS4)))))
 
 OBJS=$(OBJS1) $(OBJS2) $(OBJS3) $(OBJS4)
@@ -100,7 +106,9 @@ DEPS=$(OBJS:.o=.d)
 
 COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++20 -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DSPDLOG_FMT_EXTERNAL -DBOOST_REGEX_STANDALONE  -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
 CCOMPILE=$(GCC) -c  -O0  -g3 -D_DEBUG -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
-LINK := $(CPP)  -g -o $(OUTFILE) $(OBJS) $(CFG_LIB) -Wl,-E $(RPATH_LIB)
+
+# the noinhibit-exec seems to overcome the problem with duplcated symbols in the decimal library
+LINK := $(CPP)  -g -o $(OUTFILE) $(OBJS) $(CFG_LIB) -Wl,-E $(RPATH_LIB) -Wl,--noinhibit-exec
 # COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++20 -D NOCERTTEST -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DSPDLOG_FMT_EXTERNAL -fPIC -fsanitize=address -o $@ $(CFG_INC) $< -march=native -MMD -MP
 # LINK := $(CPP)  -g -fsanitize=address  -o $(OUTFILE) $(OBJS) $(CFG_LIB) -Wl,-E $(RPATH_LIB)
 
