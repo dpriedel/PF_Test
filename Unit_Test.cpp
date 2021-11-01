@@ -1034,7 +1034,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)
 
     auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15);
 
-    std::cout << "\nhistory:\n" << history << '\n';
+//    std::cout << "\nhistory:\n" << history << '\n';
     EXPECT_EQ(history.size(), 15);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4]["date"].asString()), date::year_month_day{2021_y/date::October/1});
@@ -1069,6 +1069,9 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
     DprDecimal::DDecQuad box_size = atr / sum;
 
     std::cout << "box size: " << box_size << '\n';
+    box_size.Rescale(".01234");
+    std::cout << "rescaled box size: " << box_size << '\n';
+
     PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
