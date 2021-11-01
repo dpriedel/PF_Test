@@ -78,7 +78,7 @@ namespace fs = std::filesystem;
 
 using namespace testing;
 
-#include "DDecQuad.h"
+#include "DDecDouble.h"
 #include "PF_Column.h"
 #include "PF_Chart.h"
 #include "Tiingo.h"
@@ -177,15 +177,15 @@ class DecimalBasicFunctionality : public Test
 TEST_F(DecimalBasicFunctionality, Constructors)
 {
 
-    DDecQuad x1;
-    DDecQuad x2{"5"};
-    DDecQuad x3{"1234.3"s};
+    DDecDouble x1;
+    DDecDouble x2{"5"};
+    DDecDouble x3{"1234.3"s};
 
-    DDecQuad x4{1.25678, 3};
+    DDecDouble x4{1.25678, 3};
 
-    DDecQuad x5{1.257, 3};
+    DDecDouble x5{1.257, 3};
 
-    DDecQuad x6{5.0, 1};
+    DDecDouble x6{5.0, 1};
 
     EXPECT_EQ(x2, 5);
     EXPECT_EQ(x3, 1234.3);
@@ -199,11 +199,11 @@ TEST_F(DecimalBasicFunctionality, Constructors)
 
 TEST_F(DecimalBasicFunctionality, SimpleArithmetic)
 {
-    DDecQuad x1{5};
+    DDecDouble x1{5};
     auto x1_result = x1 + 5;
     EXPECT_EQ(x1_result, 10);
 
-    DDecQuad x2{1.23457, 5};
+    DDecDouble x2{1.23457, 5};
     auto x2_result = x2 * 2;
     EXPECT_EQ(x2_result, 2.46914);
     EXPECT_TRUE(x2_result == 2.46914);
@@ -246,7 +246,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     PF_Column::tpt the_time = std::chrono::system_clock::now();
 
 //    std::cout << "first value: " << *a_value << '\n';
-    auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
+    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -254,7 +254,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
 
     the_time = std::chrono::system_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -262,7 +262,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
 
     the_time = std::chrono::system_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
@@ -271,7 +271,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     the_time = std::chrono::system_clock::now();
     while (++a_value != prices.end())
     {
-        status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
+        status = col.AddValue(DprDecimal::DDecDouble(*a_value), the_time);
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -287,7 +287,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)
     PF_Column::Status status;
     PF_Column::tpt the_time = std::chrono::system_clock::now();
 
-    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1130);
     EXPECT_EQ(col.GetBottom(), 1100);
@@ -302,7 +302,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)
     PF_Column::Status status;
     PF_Column::tpt the_time = std::chrono::system_clock::now();
 
-    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
 
     auto json = col.ToJSON();
 //    std::cout << json << '\n';
@@ -333,7 +333,7 @@ TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)
     PF_Column::Status status;
     PF_Column::tpt the_time = std::chrono::system_clock::now();
 
-    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first; });
 
     auto json = col.ToJSON();
 //    std::cout << json << '\n';
@@ -353,7 +353,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
     PF_Column::tpt the_time = std::chrono::system_clock::now();
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -361,7 +361,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -384,7 +384,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
 
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -392,7 +392,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -413,7 +413,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
 
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -421,7 +421,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -449,7 +449,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
 
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -457,7 +457,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -496,7 +496,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     auto a_value = prices.begin();
 
 //    std::cout << "first value: " << *a_value << '\n';
-    auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
+    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -504,7 +504,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
 
     the_time = std::chrono::system_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -512,7 +512,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
 
     the_time = std::chrono::system_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
@@ -521,7 +521,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     the_time = std::chrono::system_clock::now();
     while (++a_value != prices.end())
     {
-        status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
+        status = col.AddValue(DprDecimal::DDecDouble(*a_value), the_time);
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -554,7 +554,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
 
     PF_Column::tpt the_time = std::chrono::system_clock::now();
 //    std::cout << "first value: " << *a_value << '\n';
-    auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
+    auto status = col.AddValue(DprDecimal::DDecDouble{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -562,7 +562,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
 
     the_time = std::chrono::system_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -570,7 +570,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
 
     the_time = std::chrono::system_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
-    status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
+    status = col.AddValue(DprDecimal::DDecDouble{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
@@ -579,7 +579,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     the_time = std::chrono::system_clock::now();
     while (++a_value != prices.end())
     {
-        status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
+        status = col.AddValue(DprDecimal::DDecDouble(*a_value), the_time);
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -598,7 +598,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
 
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -606,7 +606,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -635,7 +635,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
     PF_Column::tpt the_time = std::chrono::system_clock::now();
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -643,7 +643,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -685,7 +685,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
 
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -693,7 +693,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -735,7 +735,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 
     for (auto price : prices)
     {
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecDouble(price), the_time);
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -743,7 +743,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+            status = col.AddValue(DprDecimal::DDecDouble(price), the_time).first;
         }
     }
 
@@ -1041,7 +1041,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)
 
     auto atr = ComputeATR("AAPL", history, 4);
     std::cout << "ATR: " << atr << '\n';
-    ASSERT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
+    ASSERT_TRUE(atr == DprDecimal::DDecDouble{"3.36875"});
 }
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
@@ -1053,7 +1053,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
 
     auto atr = ComputeATR("AAPL", history, 4);
 //    std::cout << "ATR: " << atr << '\n';
-    EXPECT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
+    EXPECT_TRUE(atr == DprDecimal::DDecDouble{"3.36875"});
 
     // recompute for rest of test
 
@@ -1062,11 +1062,11 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
 
-    DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::take(history_size),
-            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
-            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["close"].asString()}; });
+    DprDecimal::DDecDouble sum = ranges::accumulate(history | ranges::views::take(history_size),
+            DprDecimal::DDecDouble{}, std::plus<DprDecimal::DDecDouble>(),
+            [](const Json::Value& e) { return DprDecimal::DDecDouble{e["close"].asString()}; });
 
-    DprDecimal::DDecQuad box_size = atr / sum;
+    DprDecimal::DDecDouble box_size = atr / sum;
 
     std::cout << "box size: " << box_size << '\n';
     box_size.Rescale(".01234");
@@ -1081,7 +1081,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
 
     ranges::for_each(history | ranges::views::take(history_size) | ranges::views::reverse, [&chart](const auto& e)
         {
-            DprDecimal::DDecQuad val{e["close"].asString()};
+            DprDecimal::DDecDouble val{e["close"].asString()};
             std::string dte{e["date"].asString()};
             std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
             date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
