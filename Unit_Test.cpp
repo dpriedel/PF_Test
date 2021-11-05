@@ -48,6 +48,7 @@
 #include <future>
 //#include <iostream>
 //#include <memory>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -181,16 +182,16 @@ TEST_F(DecimalBasicFunctionality, Constructors)
     DDecQuad x2{"5"};
     DDecQuad x3{"1234.3"s};
 
-    DDecQuad x4{1.25678, 3};
+    DDecQuad x4{1.25678};
 
-    DDecQuad x5{1.257, 3};
+    DDecQuad x5{1.257};
 
-    DDecQuad x6{5.0, 1};
+    DDecQuad x6{5.0};
 
     EXPECT_EQ(x2, 5);
     EXPECT_EQ(x3, 1234.3);
-    EXPECT_EQ(x4, 1.257);
-    EXPECT_EQ(x4, x5);
+    EXPECT_NE(x4, 1.257);
+    EXPECT_NE(x4, x5);
     
     // test that this works
     EXPECT_EQ(x2, x6);
@@ -203,7 +204,7 @@ TEST_F(DecimalBasicFunctionality, SimpleArithmetic)
     auto x1_result = x1 + 5;
     EXPECT_EQ(x1_result, 10);
 
-    DDecQuad x2{1.23457, 5};
+    DDecQuad x2{1.23457};
     auto x2_result = x2 * 2;
     EXPECT_EQ(x2_result, 2.46914);
     EXPECT_TRUE(x2_result == 2.46914);
@@ -998,6 +999,87 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
 
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedATR)
+{
+    if (fs::exists("/tmp/candlestick3.svg"))
+    {
+        fs::remove("/tmp/candlestick3.svg");
+    }
+    const fs::path file_name{"./test_files/APPLE.json"};
+
+    std::ifstream prices{file_name, std::ios_base::in | std::ios_base::binary};
+    std::string hist(fs::file_size(file_name), '\0');
+    prices.read(&hist[0], hist.size());
+    prices.close();
+    std::cout << "history length: " << hist.size() << '\n';
+
+    const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
+    const std::string dest{R"***("$1":"$2")***"};
+    auto result1 = std::regex_replace(hist, source, dest);
+    std::cout << "result length: " << result1.size() << '\n';
+//    std::cout.write(result1.data(), 900);
+//    std::cout << " <== data\n";
+
+    JSONCPP_STRING err;
+    Json::Value history;
+
+    Json::CharReaderBuilder builder;
+    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+    if (! reader->parse(result1.data(), result1.data() + result1.size(), &history, &err))
+    {
+        throw std::runtime_error("Problem parsing tiingo response: "s + err);
+    }
+    std::cout << "history length: " << history.size() << '\n';
+
+    auto atr = ComputeATR("AAPL", history, history.size() -1, true);
+
+    std::cout << "ATR: " << atr << '\n';
+
+    // next, I need to compute my average closing price over the interval 
+    // but excluding the 'extra' value included for computing the ATR
+
+    // I'm doing this crazy const casting because the range wants only a const input source
+    // and mine isn't.  Used below also.
+
+    DprDecimal::DDecQuad sum = ranges::accumulate(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1),
+            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
+            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
+
+    DprDecimal::DDecQuad box_size = atr; // / sum;
+
+    std::cout << "box size: " << box_size << '\n';
+//    box_size.Rescale(".01234");
+    std::cout << "rescaled box size: " << box_size << '\n';
+
+    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
+
+    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
+        {
+//            std::cout << "processing: " << e << '\n';
+            DprDecimal::DDecQuad val{e["adjClose"].asString()};
+//            std::cout << "val: " << val << '\n';
+            std::string dte{e["date"].asString()};
+            std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
+            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
+            chart.AddValue(val, date::sys_days(the_date));
+        });
+
+//    PF_Chart chart("AAPL", 2, 2);
+//    chart.LoadData(&prices, "%Y-%m-%d", ',');
+//
+//    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+//    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
+//
+//    EXPECT_EQ(chart[61].GetTop(), 146);
+//    EXPECT_EQ(chart[61].GetBottom(), 144);
+//
+////    std::cout << chart << '\n';
+//
+    chart.ConstructChartAndWriteToFile("/tmp/candlestick3.svg");
+    
+    ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
+}
+
 class TiingoATR : public Test
 {
     std::string LoadApiKey(std::string file_name)
@@ -1055,14 +1137,14 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
 //    std::cout << "ATR: " << atr << '\n';
     EXPECT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
 
-    // recompute for rest of test
+    // recompute using all the data for rest of test
 
     atr = ComputeATR("AAPL", history, history_size);
 
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
 
-    DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::take(history_size),
+    DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
             DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
             [](const Json::Value& e) { return DprDecimal::DDecQuad{e["close"].asString()}; });
 
@@ -1079,7 +1161,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
     
 //    auto backwards = history | ranges::views::reverse;
 
-    ranges::for_each(history | ranges::views::take(history_size) | ranges::views::reverse, [&chart](const auto& e)
+    ranges::for_each(history | ranges::views::reverse | ranges::views::take(history_size), [&chart](const auto& e)
         {
             DprDecimal::DDecQuad val{e["close"].asString()};
             std::string dte{e["date"].asString()};
