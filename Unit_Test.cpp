@@ -90,6 +90,45 @@ using namespace DprDecimal;
 
 // some specific files for Testing.
 
+// some utility code for generating test data
+
+std::string MakeSimpleTestData(const std::string& data, const date::year_month_day& first_day, char delim)
+{
+    auto values = rng_split_string<std::string_view>(data, delim);
+
+    // make some business days (although, not doing holidays)
+    auto dates = ranges::views::generate_n([start_at = first_day]()mutable->date::year_month_day
+       {
+            auto a = start_at;
+            auto days = date::sys_days(start_at);
+            date::weekday wd{++days};
+            if (wd == date::Saturday)
+            {
+                ++days;
+                ++days;
+            }
+            else if (wd == date::Sunday)
+            {
+                ++days;
+            }
+            start_at = date::year_month_day{days};
+            return a;
+       }, ranges::distance(values));
+
+//    auto sample = dates | ranges::views::take(50);
+//    std::cout << sample << '\n';
+
+    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value)
+            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
+
+//    auto sample2 = make_test_data | ranges::views::take(30);
+//    std::cout << sample2 << '\n';
+
+    std::string test_data;
+
+    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+    return test_data;
+}
 
 class RangeSplitterBasicFunctionality : public Test
 {
@@ -807,39 +846,7 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    auto values = rng_split_string<std::string_view>(data, ' ');
-
-    // make some business days (although, not doing holidays)
-    auto dates = ranges::views::generate_n([start_at = date::year_month_day {2015_y/date::March/date::Monday[1]}]()mutable->date::year_month_day
-       {
-            auto a = start_at;
-            auto days = date::sys_days(start_at);
-            date::weekday wd{++days};
-            if (wd == date::Saturday)
-            {
-                ++days;
-                ++days;
-            }
-            else if (wd == date::Sunday)
-            {
-                ++days;
-            }
-            start_at = date::year_month_day{days};
-            return a;
-       }, ranges::distance(values));
-
-//    auto sample = dates | ranges::views::take(50);
-//    std::cout << sample << '\n';
-
-    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value)
-            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
-
-//    auto sample2 = make_test_data | ranges::views::take(30);
-//    std::cout << sample2 << '\n';
-
-    std::string test_data;
-
-    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -853,6 +860,26 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(chart[5].GetBottom(), 1130);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
+TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATR)
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+
+    EXPECT_EQ(chart[5].GetTop(), 1140);
+    EXPECT_EQ(chart[5].GetBottom(), 1130);
+    EXPECT_EQ(chart[5].GetHadReversal(), false);
+}
+
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
 {
@@ -926,33 +953,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    auto values = rng_split_string<std::string_view>(data, ' ');
-
-    // make some business days (although, not doing holidays)
-    auto dates = ranges::views::generate_n([start_at = date::year_month_day {2015_y/date::March/date::Monday[1]}]()mutable->date::year_month_day
-       {
-            auto a = start_at;
-            auto days = date::sys_days(start_at);
-            date::weekday wd{++days};
-            if (wd == date::Saturday)
-            {
-                ++days;
-                ++days;
-            }
-            else if (wd == date::Sunday)
-            {
-                ++days;
-            }
-            start_at = date::year_month_day{days};
-            return a;
-       }, ranges::distance(values));
-
-    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value)
-            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
-
-    std::string test_data;
-
-    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -1027,11 +1028,11 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
     if (! reader->parse(result1.data(), result1.data() + result1.size(), &history, &err))
     {
-        throw std::runtime_error("Problem parsing tiingo response: "s + err);
+        throw std::runtime_error("Problem parsing test data file: "s + err);
     }
     std::cout << "history length: " << history.size() << '\n';
 
-    auto atr = ComputeATR("AAPL", history, history.size() -1, true);
+    auto atr = ComputeATR("AAPL", history, history.size() -1, UseAdjusted::e_Yes);
 
     std::cout << "ATR: " << atr << '\n';
 
