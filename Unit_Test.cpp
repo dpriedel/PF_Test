@@ -860,26 +860,6 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(chart[5].GetBottom(), 1130);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
-TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATR)
-{
-    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
-    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
-
-    std::istringstream prices{test_data}; 
-
-    PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
-
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
-
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
-}
-
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
 {
@@ -937,6 +917,33 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
     ASSERT_EQ(chart, chart2);
 
 //    std::cout << chart << '\n';
+}
+
+// use ATR computed box size instead of predefined box size 
+
+class ChartFunctionalityATRX2 : public Test
+{
+
+};
+
+TEST_F(ChartFunctionalityATRX2, ProcessCompletelyFirstSetOfTestDataWithATR)
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+
+    EXPECT_EQ(chart[5].GetTop(), 1140);
+    EXPECT_EQ(chart[5].GetBottom(), 1130);
+    EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
 
 class PlotChartsWithChartDirector : public Test
