@@ -37,31 +37,34 @@
 // =====================================================================================
 
 
-//#include <algorithm>
-#include <chrono>
-//#include <cstdint>
 
-//#include <chrono>
-#include <functional>
+#include <charconv>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <future>
-//#include <iostream>
-//#include <memory>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
-//#include <system_error>
 #include <thread>
+//#include <algorithm>
+//#include <cstdint>
+//#include <iostream>
+//#include <memory>
 //#include <numeric>
+//#include <system_error>
 
-#include <range/v3/numeric/accumulate.hpp>
-#include <range/v3/view/generate_n.hpp>
-#include <range/v3/view/zip_with.hpp>
-#include <range/v3/view/take.hpp>
 #include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/generate_n.hpp>
+#include <range/v3/view/partial_sum.hpp>
+#include <range/v3/view/sliding.hpp>
 #include <range/v3/view/reverse.hpp>
+#include <range/v3/view/take.hpp>
+#include <range/v3/view/zip_with.hpp>
 
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
@@ -921,22 +924,38 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
 
 // use ATR computed box size instead of predefined box size 
 
-class ChartFunctionalityATRX2 : public Test
+class ChartFunctionalitySimpleATRX2 : public Test
 {
 
 };
 
-TEST_F(ChartFunctionalityATRX2, ProcessCompletelyFirstSetOfTestDataWithATR)
+TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR)
 {
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
+    // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
+
+    auto values = rng_split_string<std::string_view>(data, ' ');
+    auto values_ints = values | ranges::views::transform([](std::string_view a_value){ int result{}; std::from_chars(a_value.data(), a_value.data() + a_value.size(), result); return result; }) | ranges::to<std::vector>();
+//    std::cout << values_ints << '\n';
+    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+
+    DDecQuad simpleATR = double{static_cast<double>(ranges::accumulate(value_differences, double{0.0}))} / double{static_cast<double>(value_differences.size())};
+    DDecQuad average_value = double{static_cast<double>(ranges::accumulate(values_ints, 0))} / double{static_cast<double>(values_ints.size())};
+    DDecQuad box_size = simpleATR / average_value;
+    box_size.Rescale(".01234");
+    std::cout << "box_size: " << box_size << '\n';
     std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
-    PF_Chart chart("GOOG", 10, 2);
+    double factor = (10.0 / box_size).ToDouble();
+
+    PF_Chart chart("GOOG", box_size * factor, 2, PF_Column::FractionalBoxes::e_fractional);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.GetNumberOfColumns(), 6);
@@ -1053,10 +1072,10 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
             DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
             [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
 
-    DprDecimal::DDecQuad box_size = atr; // / sum;
+    DprDecimal::DDecQuad box_size = atr / (sum / (history.size() - 1));
 
     std::cout << "box size: " << box_size << '\n';
-//    box_size.Rescale(".01234");
+    box_size.Rescale(".01234");
     std::cout << "rescaled box size: " << box_size << '\n';
 
     PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
@@ -1156,7 +1175,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
             DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
             [](const Json::Value& e) { return DprDecimal::DDecQuad{e["close"].asString()}; });
 
-    DprDecimal::DDecQuad box_size = atr / sum;
+    DprDecimal::DDecQuad box_size = atr / (sum / history_size);
 
     std::cout << "box size: " << box_size << '\n';
     box_size.Rescale(".01234");
