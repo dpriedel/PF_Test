@@ -229,6 +229,7 @@ TEST_F(DecimalBasicFunctionality, Constructors)
     DDecQuad x5{1.257};
 
     DDecQuad x6{5.0};
+    DDecQuad x7{std::string_view{"5.0"}};
 
     EXPECT_EQ(x2, 5);
     EXPECT_EQ(x3, 1234.3);
@@ -237,7 +238,7 @@ TEST_F(DecimalBasicFunctionality, Constructors)
     
     // test that this works
     EXPECT_EQ(x2, x6);
-
+    EXPECT_EQ(x7, 5);
 }
 
 TEST_F(DecimalBasicFunctionality, SimpleArithmetic)
@@ -950,19 +951,107 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     std::istringstream prices{test_data}; 
 
-    double factor = (10.0 / box_size).ToDouble();
+//    double factor = (10.0 / box_size).ToDouble();
 
-    PF_Chart chart("GOOG", box_size * factor, 2, PF_Column::FractionalBoxes::e_fractional);
+    PF_Chart chart("GOOG", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+//    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+//
+//    EXPECT_EQ(chart[5].GetTop(), 1140);
+//    EXPECT_EQ(chart[5].GetBottom(), 1130);
+//    EXPECT_EQ(chart[5].GetHadReversal(), false);
+}
 
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
+// use ATR computed box size instead of predefined box size with logarithmic charts 
+
+class ColumnFunctionalityLogX1 : public Test
+{
+
+};
+
+TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
+{
+    const std::string data = "500.0 505.0 510.05 515.151 520.320 525.505 530.760";
+
+    // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
+
+    auto values = split_string<std::string>(data, ' ');
+
+    std::vector<DprDecimal::DDecQuad> prices;
+    ranges::for_each(values, [&prices](const auto& a_value){ prices.emplace_back(DDecQuad{a_value}); });
+    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
+    ranges::for_each(prices, [](const auto& x) { std::cout << x << "  "; });
+//    std::cout << values_ints << '\n';
+    const auto value_differences = prices | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return (x[1] - x[0]).abs(); });
+
+    DDecQuad simpleATR = ranges::accumulate(value_differences, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(value_differences.size());
+    DDecQuad average_value = ranges::accumulate(prices, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(prices.size());
+    DDecQuad box_size = simpleATR / average_value;
+    box_size.Rescale(".01234");
+    std::cout << "box_size: " << box_size << '\n';
+    auto col = PF_Column{10, 2};
+
+    std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    for (auto price : prices)
+    {
+        auto [status, new_col] = col.AddValue(price, the_time);
+        if (status == PF_Column::Status::e_reversal)
+        {
+            columns.push_back(col);
+            col = std::move(new_col.value());
+
+            // now continue on processing the value.
+            
+            status = col.AddValue(price, the_time).first;
+        }
+    }
+}
+
+class LogChartFunctionalitySimpleATRX2 : public Test
+{
+
+};
+
+TEST_F(LogChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR)
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
+
+    auto values = rng_split_string<std::string_view>(data, ' ');
+    auto values_ints = values | ranges::views::transform([](std::string_view a_value){ int result{}; std::from_chars(a_value.data(), a_value.data() + a_value.size(), result); return result; }) | ranges::to<std::vector>();
+//    std::cout << values_ints << '\n';
+    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+
+    DDecQuad simpleATR = double{static_cast<double>(ranges::accumulate(value_differences, double{0.0}))} / double{static_cast<double>(value_differences.size())};
+    DDecQuad average_value = double{static_cast<double>(ranges::accumulate(values_ints, 0))} / double{static_cast<double>(values_ints.size())};
+    DDecQuad box_size = simpleATR / average_value;
+    box_size.Rescale(".01234");
+    std::cout << "box_size: " << box_size << '\n';
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+
+    std::istringstream prices{test_data}; 
+
+//    double factor = (10.0 / box_size).ToDouble();
+
+    PF_Chart chart("GOOG", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    std::cout << chart << '\n';
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+//    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+//
+//    EXPECT_EQ(chart[5].GetTop(), 1140);
+//    EXPECT_EQ(chart[5].GetBottom(), 1130);
+//    EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
 
 class PlotChartsWithChartDirector : public Test
