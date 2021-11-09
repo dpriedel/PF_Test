@@ -939,7 +939,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     auto values = rng_split_string<std::string_view>(data, ' ');
     auto values_ints = values | ranges::views::transform([](std::string_view a_value){ int result{}; std::from_chars(a_value.data(), a_value.data() + a_value.size(), result); return result; }) | ranges::to<std::vector>();
-//    std::cout << values_ints << '\n';
+    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
 
     DDecQuad simpleATR = double{static_cast<double>(ranges::accumulate(value_differences, double{0.0}))} / double{static_cast<double>(value_differences.size())};
@@ -979,13 +979,12 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
 
     // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
 
-    auto values = split_string<std::string>(data, ' ');
+    auto values = rng_split_string<std::string>(data, ' ');
 
-    std::vector<DprDecimal::DDecQuad> prices;
-    ranges::for_each(values, [&prices](const auto& a_value){ prices.emplace_back(DDecQuad{a_value}); });
+    auto prices = values | ranges::views::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
     ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
     ranges::for_each(prices, [](const auto& x) { std::cout << x << "  "; });
-//    std::cout << values_ints << '\n';
+
     const auto value_differences = prices | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return (x[1] - x[0]).abs(); });
 
     DDecQuad simpleATR = ranges::accumulate(value_differences, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(value_differences.size());
@@ -1011,6 +1010,8 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
             status = col.AddValue(price, the_time).first;
         }
     }
+
+    std::cout << "Column: " << col << '\n';
 }
 
 class LogChartFunctionalitySimpleATRX2 : public Test
