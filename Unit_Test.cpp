@@ -229,7 +229,7 @@ TEST_F(DecimalBasicFunctionality, Constructors)
     DDecQuad x5{1.257};
 
     DDecQuad x6{5.0};
-    DDecQuad x7{std::string_view{"5.0"}};
+    DDecQuad x7{std::string{"5.0"}};
 
     EXPECT_EQ(x2, 5);
     EXPECT_EQ(x3, 1234.3);
@@ -930,6 +930,37 @@ class ChartFunctionalitySimpleATRX2 : public Test
 
 };
 
+TEST_F(ChartFunctionalitySimpleATRX2, ComputeATRBoxSizeForFirstSetOfTestData)
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
+
+    auto values = rng_split_string<std::string_view>(data, ' ');
+    auto values_ints = values | ranges::views::transform([](std::string_view a_value){ int result{}; std::from_chars(a_value.data(), a_value.data() + a_value.size(), result); return result; }) | ranges::to<std::vector>();
+    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
+    std::cout << '\n';
+
+    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
+    std::cout << '\n';
+
+    EXPECT_EQ(value_differences[0], 5);
+    EXPECT_EQ(value_differences[6], 15);
+    EXPECT_EQ(value_differences[value_differences.size() -1], 9);
+
+    DDecQuad simpleATR = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
+    DDecQuad average_value = static_cast<double>(ranges::accumulate(values_ints, 0)) / static_cast<double>(values_ints.size());
+    DDecQuad box_size = simpleATR / average_value;
+    box_size.Rescale(".01234");
+    std::cout << "box_size: " << box_size << '\n';
+
+    EXPECT_EQ(box_size, 0.01150);
+//    EXPECT_EQ(chart[5].GetBottom(), 1130);
+//    EXPECT_EQ(chart[5].GetHadReversal(), false);
+}
+
 TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR)
 {
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
@@ -940,13 +971,20 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     auto values = rng_split_string<std::string_view>(data, ' ');
     auto values_ints = values | ranges::views::transform([](std::string_view a_value){ int result{}; std::from_chars(a_value.data(), a_value.data() + a_value.size(), result); return result; }) | ranges::to<std::vector>();
     ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
-    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+    std::cout << '\n';
 
-    DDecQuad simpleATR = double{static_cast<double>(ranges::accumulate(value_differences, double{0.0}))} / double{static_cast<double>(value_differences.size())};
-    DDecQuad average_value = double{static_cast<double>(ranges::accumulate(values_ints, 0))} / double{static_cast<double>(values_ints.size())};
+    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
+    std::cout << '\n';
+
+    DDecQuad simpleATR = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
+    DDecQuad average_value = static_cast<double>(ranges::accumulate(values_ints, 0)) / static_cast<double>(values_ints.size());
     DDecQuad box_size = simpleATR / average_value;
     box_size.Rescale(".01234");
     std::cout << "box_size: " << box_size << '\n';
+
+    EXPECT_EQ(box_size, 0.01150);
+
     std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
@@ -959,7 +997,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 36);
 //
 //    EXPECT_EQ(chart[5].GetTop(), 1140);
 //    EXPECT_EQ(chart[5].GetBottom(), 1130);
