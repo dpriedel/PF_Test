@@ -1217,11 +1217,12 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
 
     PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
 
-    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
+//    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
+    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(50), [&chart](const auto& e)
         {
 //            std::cout << "processing: " << e << '\n';
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
-//            std::cout << "val: " << val << '\n';
+            std::cout << "val: " << val << '\n';
             std::string dte{e["date"].asString()};
             std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
             date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
@@ -1237,7 +1238,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
 //    EXPECT_EQ(chart[61].GetTop(), 146);
 //    EXPECT_EQ(chart[61].GetBottom(), 144);
 //
-////    std::cout << chart << '\n';
+    std::cout << chart << '\n';
 //
     chart.ConstructChartAndWriteToFile("/tmp/candlestick3.svg");
     
