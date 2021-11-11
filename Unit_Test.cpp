@@ -1021,16 +1021,21 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
 
     auto prices = values | ranges::views::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
     ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
-    ranges::for_each(prices, [](const auto& x) { std::cout << x << "  "; });
+    std::cout << '\n';
 
     const auto value_differences = prices | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return (x[1] - x[0]).abs(); });
+    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
+    std::cout << '\n';
 
     DDecQuad simpleATR = ranges::accumulate(value_differences, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(value_differences.size());
     DDecQuad average_value = ranges::accumulate(prices, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(prices.size());
+
     DDecQuad box_size = simpleATR / average_value;
     box_size.Rescale(".01234");
     std::cout << "box_size: " << box_size << '\n';
-    auto col = PF_Column{10, 2};
+    EXPECT_EQ(box_size, 0.00995);
+
+    auto col = PF_Column{box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic};
 
     std::vector<PF_Column> columns;
     PF_Column::tpt the_time = std::chrono::system_clock::now();
@@ -1050,6 +1055,10 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
     }
 
     std::cout << "Column: " << col << '\n';
+
+    EXPECT_EQ(col.GetTop().Rescale(".01234"), 6.27401);
+    EXPECT_EQ(col.GetBottom().Rescale(".01234"), 6.21461);
+
 }
 
 class LogChartFunctionalitySimpleATRX2 : public Test
@@ -1206,7 +1215,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     box_size.Rescale(".01234");
     std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
+    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
         {
