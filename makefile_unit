@@ -24,7 +24,7 @@ GCCDIR := /extra/gcc/gcc-11
 GTESTDIR := /usr/local/include
 DECIMALSRCDIR := /extra/gcc/decNumber_old
 # DECIMALSRCDIR := /extra/gcc/libdecnumber
-UTILITYDIR := /home/dpriedel/projects/common_utilities
+UTILITYDIR := ${HOME}/projects/common_utilities
 CPP := $(GCCDIR)/bin/g++
 GCC := $(GCCDIR)/bin/gcc
 
@@ -37,7 +37,7 @@ endif
 
 OUTFILE := Unit_Test
 
-CFG_INC := -I/home/dpriedel/projects/point_figure/src \
+CFG_INC := -I${HOME}/projects/point_figure/src \
 	-I$(GTESTDIR) \
 	-I$(BOOSTDIR) \
 	-I$(DECIMALSRCDIR) \

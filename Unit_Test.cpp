@@ -71,6 +71,7 @@
 
 #include <date/date.h>
 #include <spdlog/spdlog.h>
+#include <fmt/format.h>
 
 using namespace std::literals::chrono_literals;
 using namespace date::literals;
@@ -1215,14 +1216,14 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     box_size.Rescale(".01234");
     std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
+    PF_Chart chart("AAPL", box_size, 3, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
 
-//    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
-    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(50), [&chart](const auto& e)
+//    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(50), [&chart](const auto& e)
+    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
         {
 //            std::cout << "processing: " << e << '\n';
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
-            std::cout << "val: " << val << '\n';
+//            std::cout << "val: " << val << '\n';
             std::string dte{e["date"].asString()};
             std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
             date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
@@ -1337,6 +1338,58 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
 
     std::cout << chart << '\n';
 }
+
+TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUseLogValues)
+{
+    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+
+    constexpr int history_size = 20;
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1);
+
+    auto atr = ComputeATR("AAPL", history, 4, UseAdjusted::e_Yes);
+//    std::cout << "ATR: " << atr << '\n';
+    EXPECT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
+
+    // recompute using all the data for rest of test
+
+    atr = ComputeATR("AAPL", history, history_size);
+
+    // next, I need to compute my average closing price over the interval 
+    // but excluding the 'extra' value included for computing the ATR
+
+    DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
+            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
+            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
+
+    DprDecimal::DDecQuad box_size = atr / (sum / history_size);
+
+    std::cout << "box size: " << box_size << '\n';
+    box_size.Rescale(".01234");
+    std::cout << "rescaled box size: " << box_size << '\n';
+
+    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
+
+    // ticker data retrieved above is in descending order by date, so let's read it backwards
+    // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
+    
+//    auto backwards = history | ranges::views::reverse;
+
+    ranges::for_each(history | ranges::views::reverse | ranges::views::take(history_size), [&chart](const auto& e)
+        {
+            DprDecimal::DDecQuad val{e["adjClose"].asString()};
+            std::string dte{e["date"].asString()};
+            std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
+            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
+            auto status = chart.AddValue(val, date::sys_days(the_date));
+            std::cout << "status: " << status << '\n';
+        });
+
+    std::cout << chart << '\n';
+
+    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << fmt::format("date: {} close: {} adjusted close: {} delta: {} \n",
+                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });
+}
+
 
 class WebSocketSynchronous : public Test
 {
