@@ -1014,7 +1014,7 @@ class ColumnFunctionalityLogX1 : public Test
 
 TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
 {
-    const std::string data = "500.0 505.0 510.05 515.151 520.320 525.505 530.760";
+    const std::string data = "500.0 505.0 510.05 515.151 520.303 525.506 530.761";
 
     // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
 
@@ -1031,10 +1031,11 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
     DDecQuad simpleATR = ranges::accumulate(value_differences, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(value_differences.size());
     DDecQuad average_value = ranges::accumulate(prices, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(prices.size());
 
-    DDecQuad box_size = simpleATR / average_value;
+//    DDecQuad box_size = simpleATR / average_value;
+    DDecQuad box_size = "0.01";
     box_size.Rescale(".01234");
     std::cout << "box_size: " << box_size << '\n';
-    EXPECT_EQ(box_size, 0.00995);
+    EXPECT_EQ(box_size, 0.01);
 
     auto col = PF_Column{box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic};
 
@@ -1044,6 +1045,7 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(price, the_time);
+        std::cout << "value: " << price << " status: " << status << " top: " << col.GetTop_Raw() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -1057,8 +1059,8 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
 
     std::cout << "Column: " << col << '\n';
 
-    EXPECT_EQ(col.GetTop().Rescale(".01234"), 6.27401);
-    EXPECT_EQ(col.GetBottom().Rescale(".01234"), 6.21461);
+    EXPECT_EQ(col.GetTop_Raw().Rescale(".01234"), 6.27431);
+    EXPECT_EQ(col.GetBottom_Raw().Rescale(".01234"), 6.21461);
 
 }
 
@@ -1246,6 +1248,96 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
 
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedATRAndBothArithmeticAndLogarithmic)
+{
+    if (fs::exists("/tmp/candlestick3.svg"))
+    {
+        fs::remove("/tmp/candlestick3.svg");
+    }
+    if (fs::exists("/tmp/candlestick4.svg"))
+    {
+        fs::remove("/tmp/candlestick4.svg");
+    }
+    const fs::path file_name{"./test_files/APPLE.json"};
+
+    std::ifstream prices{file_name, std::ios_base::in | std::ios_base::binary};
+    std::string hist(fs::file_size(file_name), '\0');
+    prices.read(&hist[0], hist.size());
+    prices.close();
+    std::cout << "history length: " << hist.size() << '\n';
+
+    const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
+    const std::string dest{R"***("$1":"$2")***"};
+    auto result1 = std::regex_replace(hist, source, dest);
+
+    JSONCPP_STRING err;
+    Json::Value history;
+
+    Json::CharReaderBuilder builder;
+    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+    if (! reader->parse(result1.data(), result1.data() + result1.size(), &history, &err))
+    {
+        throw std::runtime_error("Problem parsing test data file: "s + err);
+    }
+    std::cout << "history length: " << history.size() << '\n';
+
+    auto atr = ComputeATR("AAPL", history, history.size() -1, UseAdjusted::e_Yes);
+
+    std::cout << "ATR: " << atr << '\n';
+
+    // next, I need to compute my average closing price over the interval 
+    // but excluding the 'extra' value included for computing the ATR
+
+    // I'm doing this crazy const casting because the range wants only a const input source
+    // and mine isn't.  Used below also.
+
+    DprDecimal::DDecQuad sum = ranges::accumulate(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1),
+            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
+            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
+
+    DprDecimal::DDecQuad box_size = atr / (sum / (history.size() - 1));
+
+    std::cout << "box size: " << box_size << '\n';
+    box_size.Rescale(".01234");
+    std::cout << "rescaled box size: " << box_size << '\n';
+
+    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
+
+    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
+        {
+            DprDecimal::DDecQuad val{e["adjClose"].asString()};
+            std::string dte{e["date"].asString()};
+            std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
+            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
+            chart.AddValue(val, date::sys_days(the_date));
+        });
+
+    std::cout << "# of cols: " << chart.GetNumberOfColumns() << '\n';
+
+    chart.ConstructChartAndWriteToFile("/tmp/candlestick3.svg");
+    
+    EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
+
+    PF_Chart chart_log("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
+
+    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart_log](const auto& e)
+        {
+            DprDecimal::DDecQuad val{e["adjClose"].asString()};
+            std::string dte{e["date"].asString()};
+            std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
+            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
+            chart_log.AddValue(val, date::sys_days(the_date));
+        });
+
+    std::cout << chart_log << '\n';
+    std::cout << "# of cols: " << chart_log.GetNumberOfColumns() << '\n';
+
+    chart_log.ConstructChartAndWriteToFile("/tmp/candlestick4.svg");
+    
+    EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
+}
+
+
 class TiingoATR : public Test
 {
     std::string LoadApiKey(std::string file_name)
@@ -1381,13 +1473,13 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUseLogValues)
             std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
             date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
             auto status = chart.AddValue(val, date::sys_days(the_date));
-            std::cout << "status: " << status << '\n';
+            std::cout << "value: " << val << " status: " << status << '\n';
         });
 
     std::cout << chart << '\n';
 
-    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << fmt::format("date: {} close: {} adjusted close: {} delta: {} \n",
-                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });
+//    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << fmt::format("date: {} close: {} adjusted close: {} delta: {} \n",
+//                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });
 }
 
 
