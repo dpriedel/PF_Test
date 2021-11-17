@@ -1258,7 +1258,8 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     {
         fs::remove("/tmp/candlestick4.svg");
     }
-    const fs::path file_name{"./test_files/APPLE.json"};
+//    const fs::path file_name{"./test_files/APPLE.json"};
+    const fs::path file_name{"./test_files/YAHOO.json"};
 
     std::ifstream prices{file_name, std::ios_base::in | std::ios_base::binary};
     std::string hist(fs::file_size(file_name), '\0');
@@ -1281,7 +1282,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     }
     std::cout << "history length: " << history.size() << '\n';
 
-    auto atr = ComputeATR("AAPL", history, history.size() -1, UseAdjusted::e_Yes);
+    auto atr = ComputeATR("YHOO", history, history.size() -1, UseAdjusted::e_Yes);
 
     std::cout << "ATR: " << atr << '\n';
 
@@ -1298,10 +1299,13 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     DprDecimal::DDecQuad box_size = atr / (sum / (history.size() - 1));
 
     std::cout << "box size: " << box_size << '\n';
+    //****
+    box_size = .01;
+    //***
     box_size.Rescale(".01234");
     std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional);
+    PF_Chart chart("YHOO", box_size, 3, PF_Column::FractionalBoxes::e_fractional);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
         {
@@ -1318,7 +1322,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
-    PF_Chart chart_log("AAPL", box_size, 2, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
+    PF_Chart chart_log("YHOO", box_size, 3, PF_Column::FractionalBoxes::e_fractional, PF_Column::ColumnScale::e_logarithmic);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart_log](const auto& e)
         {
