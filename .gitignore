@@ -2,10 +2,12 @@
 # our executabels
 
 Unit_Test
+EndToEnd_Test
 
 # working directories
 
 Debug_unit/*
+Debug_e2e/*
 .cache/*
 test_files/*
 
