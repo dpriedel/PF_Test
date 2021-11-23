@@ -1021,12 +1021,12 @@ TEST_F(ColumnFunctionalityLogX1, SimpleAscendingData)
     auto values = rng_split_string<std::string>(data, ' ');
 
     auto prices = values | ranges::views::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
-    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
-    std::cout << '\n';
+//    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
+//    std::cout << '\n';
 
     const auto value_differences = prices | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return (x[1] - x[0]).abs(); });
-    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
-    std::cout << '\n';
+//    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
+//    std::cout << '\n';
 
     DDecQuad simpleATR = ranges::accumulate(value_differences, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(value_differences.size());
     DDecQuad average_value = ranges::accumulate(prices, DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>()) / static_cast<uint32_t>(prices.size());
@@ -1248,7 +1248,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
 
-TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedATRAndBothArithmeticAndLogarithmic)
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithmeticAndLogarithmic)
 {
     if (fs::exists("/tmp/candlestick3.svg"))
     {
@@ -1282,28 +1282,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     }
     std::cout << "history length: " << history.size() << '\n';
 
-    auto atr = ComputeATR("YHOO", history, history.size() -1, UseAdjusted::e_Yes);
-
-    std::cout << "ATR: " << atr << '\n';
-
-    // next, I need to compute my average closing price over the interval 
-    // but excluding the 'extra' value included for computing the ATR
-
-    // I'm doing this crazy const casting because the range wants only a const input source
-    // and mine isn't.  Used below also.
-
-    DprDecimal::DDecQuad sum = ranges::accumulate(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1),
-            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
-            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
-
-    DprDecimal::DDecQuad box_size = atr / (sum / (history.size() - 1));
-
-    std::cout << "box size: " << box_size << '\n';
-    //****
-    box_size = .01;
-    //***
-    box_size.Rescale(".01234");
-    std::cout << "rescaled box size: " << box_size << '\n';
+    DDecQuad box_size = .01;
 
     PF_Chart chart("YHOO", box_size, 3, PF_Column::FractionalBoxes::e_fractional);
 
