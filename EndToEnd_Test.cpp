@@ -46,16 +46,24 @@ class SingleFileEndToEnd : public Test
 };
 
 
-TEST_F(SingleFileEndToEnd, VerifyCanLoadDataToDBForFileWithXML10Q)
+TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)
 {
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
 
 	std::vector<std::string> tokens{"the_program",
-        "--mode", "XBRL",
-        "--log-level", "debug",
-		"--form", "10-Q",
-		"-f", APPL_EOD_CSV
+        "--symbol", "SPY",
+        "--source", "file",
+        "--input_dir", "./test_files",
+        "--source_format", "csv",
+        "--mode", "load",
+        "--interval", "eod",
+        "--scale", "arithmetic",
+        "--price_fld_name", "Close",
+        "--destination", "file",
+        "--output_dir", "/tmp/test_charts",
+        "--boxsize", "10",
+        "--reversal", "3"
 	};
 
 	try
