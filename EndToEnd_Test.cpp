@@ -27,7 +27,6 @@
 #include <filesystem>
 
 #include <fmt/format.h>
-
 #include <spdlog/spdlog.h>
 
 #include <gmock/gmock.h>
