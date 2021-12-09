@@ -1135,7 +1135,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
 
     std::cout << chart << '\n';
 
-    chart.ConstructChartAndWriteToFile("/tmp/candlestick.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick.svg");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
@@ -1161,7 +1161,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
 
 //    std::cout << chart << '\n';
 
-    chart.ConstructChartAndWriteToFile("/tmp/candlestick2.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick2.svg");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
@@ -1243,7 +1243,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
 //
     std::cout << chart << '\n';
 //
-    chart.ConstructChartAndWriteToFile("/tmp/candlestick3.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
@@ -1297,7 +1297,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
 
     std::cout << "# of cols: " << chart.GetNumberOfColumns() << '\n';
 
-    chart.ConstructChartAndWriteToFile("/tmp/candlestick3.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg");
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
@@ -1315,7 +1315,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     std::cout << chart_log << '\n';
     std::cout << "# of cols: " << chart_log.GetNumberOfColumns() << '\n';
 
-    chart_log.ConstructChartAndWriteToFile("/tmp/candlestick4.svg");
+    chart_log.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg");
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
 }
