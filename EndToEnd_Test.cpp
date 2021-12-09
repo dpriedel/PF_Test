@@ -27,10 +27,10 @@
 #include <filesystem>
 
 #include <fmt/format.h>
+#include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 
 #include <gmock/gmock.h>
-
 
 namespace fs = std::filesystem;
 
@@ -47,20 +47,24 @@ class SingleFileEndToEnd : public Test
 
 TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)
 {
+    if (fs::exists("/tmp/test_charts/SPY.json"))
+    {
+        fs::remove("/tmp/test_charts/SPY.json");
+    }
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
 
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--source", "file",
-        "--input_dir", "./test_files",
+        "--new-data-dir", "./test_files",
         "--source_format", "csv",
         "--mode", "load",
         "--interval", "eod",
         "--scale", "arithmetic",
         "--price_fld_name", "Close",
         "--destination", "file",
-        "--output_dir", "/tmp/test_charts",
+        "--chart-data-dir", "/tmp/test_charts",
         "--boxsize", "10",
         "--reversal", "3"
 	};
@@ -94,7 +98,174 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-//	ASSERT_EQ(CountRows(), 55);
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY.json"));
+}
+
+TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
+{
+    if (fs::exists("/tmp/test_charts/SPY.json"))
+    {
+        fs::remove("/tmp/test_charts/SPY.json");
+    }
+    if (fs::exists("/tmp/test_charts2/SPY.json"))
+    {
+        fs::remove("/tmp/test_charts2/SPY.json");
+    }
+	//	NOTE: the program name 'the_program' in the command line below is ignored in the
+	//	the test program.
+
+    // the first test run constructs the data file all at once 
+
+    PF_Chart whole_chart;
+
+	std::vector<std::string> tokens{"the_program",
+        "--symbol", "SPY",
+        "--source", "file",
+        "--new-data-dir", "./test_files",
+        "--source_format", "csv",
+        "--mode", "load",
+        "--interval", "eod",
+        "--scale", "arithmetic",
+        "--price_fld_name", "Close",
+        "--destination", "file",
+        "--chart-data-dir", "/tmp/test_charts",
+        "--boxsize", "10",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            whole_chart = myApp.GetChart("SPY");
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY.json"));
+
+    // now construct the data file from 2 input files which, together, contain the same 
+    // data as the 1 file used above. 
+
+	std::vector<std::string> tokens2{"the_program",
+        "--symbol", "SPY",
+        "--source", "file",
+        "--new-data-dir", "./test_files2",
+        "--source_format", "csv",
+        "--mode", "load",
+        "--interval", "eod",
+        "--scale", "arithmetic",
+        "--price_fld_name", "Close",
+        "--destination", "file",
+        "--chart-data-dir", "/tmp/test_charts2",
+        "--boxsize", "10",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens2);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY.json"));
+
+    // now continue constructing the data file from 2 input files which, together, contain the same 
+    // data as the 1 file used above. 
+
+    PF_Chart franken_chart;
+
+	std::vector<std::string> tokens3{"the_program",
+        "--symbol", "SPY",
+        "--source", "file",
+        "--new-data-dir", "./test_files3",
+        "--source_format", "csv",
+        "--mode", "update",
+        "--interval", "eod",
+        "--scale", "arithmetic",
+        "--price_fld_name", "Close",
+        "--destination", "file",
+        "--chart-data-dir", "/tmp/test_charts2",
+        "--boxsize", "10",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens3);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            franken_chart = myApp.GetChart("SPY");
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY.json"));
+    ASSERT_TRUE(whole_chart == franken_chart);
 }
 
 void InitLogging ()
