@@ -1485,12 +1485,12 @@ public:
 
 };
 
-TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
+TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
 {
-    Tiingo quotes{"api.tiingo.com", "443", "/iex", api_key, "spy,uso,rsp"};
+    Tiingo quotes{"api.tiingo.com", "443", "/iex", api_key, std::vector<std::string> {"spy","uso","rsp"}};
     quotes.Connect();
     bool time_to_stop = false;
-    auto the_task = std::async(std::launch::async, &Tiingo::StreamData, &quotes, &time_to_stop);
+    auto the_task = std::async(std::launch::async, &Tiingo::StreamDataTest, &quotes, &time_to_stop);
 	std::this_thread::sleep_for(10s);
     time_to_stop = true;
 	the_task.get();
