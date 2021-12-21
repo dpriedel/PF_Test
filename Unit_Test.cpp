@@ -134,6 +134,42 @@ std::string MakeSimpleTestData(const std::string& data, const date::year_month_d
     return test_data;
 }
 
+std::string MakeSimpleTestData(const std::vector<int32_t>& data, const date::year_month_day& first_day)
+{
+    // make some business days (although, not doing holidays)
+    auto dates = ranges::views::generate_n([start_at = first_day]()mutable->date::year_month_day
+       {
+            auto a = start_at;
+            auto days = date::sys_days(start_at);
+            date::weekday wd{++days};
+            if (wd == date::Saturday)
+            {
+                ++days;
+                ++days;
+            }
+            else if (wd == date::Sunday)
+            {
+                ++days;
+            }
+            start_at = date::year_month_day{days};
+            return a;
+       }, ranges::distance(data));
+
+//    auto sample = dates | ranges::views::take(50);
+//    std::cout << sample << '\n';
+
+    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, int32_t a_value)
+            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, data);
+
+//    auto sample2 = make_test_data | ranges::views::take(30);
+//    std::cout << sample2 << '\n';
+
+    std::string test_data;
+
+    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+    return test_data;
+}
+
 class RangeSplitterBasicFunctionality : public Test
 {
 
@@ -933,15 +969,8 @@ class ChartFunctionalitySimpleATRX2 : public Test
 
 TEST_F(ChartFunctionalitySimpleATRX2, ComputeATRBoxSizeForFirstSetOfTestData)
 {
-    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
-    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-
-    // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
-
-    auto values = rng_split_string<std::string_view>(data, ' ');
-    auto values_ints = values | ranges::views::transform([](std::string_view a_value){ int result{}; std::from_chars(a_value.data(), a_value.data() + a_value.size(), result); return result; }) | ranges::to<std::vector>();
-    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
-    std::cout << '\n';
+    const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
     ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
@@ -964,15 +993,8 @@ TEST_F(ChartFunctionalitySimpleATRX2, ComputeATRBoxSizeForFirstSetOfTestData)
 
 TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR)
 {
-    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
-    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-
-    // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
-
-    auto values = rng_split_string<std::string_view>(data, ' ');
-    auto values_ints = values | ranges::views::transform([](std::string_view a_value){ int result{}; std::from_chars(a_value.data(), a_value.data() + a_value.size(), result); return result; }) | ranges::to<std::vector>();
-    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
-    std::cout << '\n';
+    const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
     ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
@@ -986,7 +1008,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     EXPECT_EQ(box_size, 0.01150);
 
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
     std::istringstream prices{test_data}; 
 
