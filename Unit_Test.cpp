@@ -594,7 +594,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -603,7 +603,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)
             // now continue on processing the value.
             
             status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         }
     }
 
@@ -628,7 +628,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -637,7 +637,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)
             // now continue on processing the value.
             
             status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         }
     }
 
@@ -660,7 +660,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -669,7 +669,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
             // now continue on processing the value.
             
             status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         }
     }
 
@@ -678,6 +678,44 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     EXPECT_EQ(col.GetBottom(), 1120);
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 4);
+
+    for (const auto& a_col : columns)
+    {
+        std::cout << a_col << '\n';
+    }
+    std::cout << col << '\n';
+}
+
+TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129}; 
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 1};
+
+    std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    for (auto price : prices)
+    {
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+//        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+        if (status == PF_Column::Status::e_reversal)
+        {
+            columns.push_back(col);
+            col = std::move(new_col.value());
+
+            // now continue on processing the value.
+            
+            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+//            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+        }
+    }
+
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1120);
+    EXPECT_EQ(col.GetBottom(), 1110);
+    EXPECT_EQ(col.GetHadReversal(), false);
+    EXPECT_EQ(columns.size() + 1, 5);
 
     for (const auto& a_col : columns)
     {
@@ -699,7 +737,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -708,7 +746,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
             // now continue on processing the value.
             
             status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//            std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
         }
     }
 
@@ -809,7 +847,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     PF_Column::tpt the_time = std::chrono::system_clock::now();
 //    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
-    std::cout << "first value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//    std::cout << "first value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -818,7 +856,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     the_time = std::chrono::system_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
-    std::cout << "second value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//    std::cout << "second value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -827,7 +865,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     the_time = std::chrono::system_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
-    std::cout << "third value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//    std::cout << "third value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
@@ -837,7 +875,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     while (++a_value != prices.end())
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
-        std::cout << "next value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
+//        std::cout << "next value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -845,179 +883,185 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetBottom(), 1100);
 }
 
-//TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
-//{
-//    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
-//
-//    auto col = PF_Column{10, 3};
-//
-//    std::vector<PF_Column> columns;
-//    PF_Column::tpt the_time = std::chrono::system_clock::now();
-//
-//    for (auto price : prices)
-//    {
-//        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-//        if (status == PF_Column::Status::e_reversal)
-//        {
-//            columns.push_back(col);
-//            col = std::move(new_col.value());
-//
-//            // now continue on processing the value.
-//            
-//            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-//        }
-//    }
-//
-//    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(col.GetTop(), 1120);
-//    EXPECT_EQ(col.GetBottom(), 1100);
-//    EXPECT_EQ(col.GetHadReversal(), false);
-//    EXPECT_EQ(columns.size() + 1, 2);
-//
-//    for (const auto& a_col : columns)
-//    {
-//        std::cout << a_col << '\n';
-//    }
-//    std::cout << col << '\n';
-//}
-//
-//TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
-//{
-//    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
-//        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
-//
-//    auto col = PF_Column{10, 3};
-//
-//    std::vector<PF_Column> columns;
-//
-//    PF_Column::tpt the_time = std::chrono::system_clock::now();
-//    for (auto price : prices)
-//    {
-//        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-//        if (status == PF_Column::Status::e_reversal)
-//        {
-//            columns.push_back(col);
-//            col = std::move(new_col.value());
-//
-//            // now continue on processing the value.
-//            
-//            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-//        }
-//    }
-//
-//    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
-//    EXPECT_EQ(col.GetTop(), 1150);
-//    EXPECT_EQ(col.GetBottom(), 1110);
-//    EXPECT_EQ(col.GetHadReversal(), false);
-//    EXPECT_EQ(columns.size() + 1, 3);
-//
-//    for (const auto& a_col : columns)
-//    {
-//        std::cout << a_col << '\n';
-//    }
-//    std::cout << col << '\n';
-//}
-//
-//class ColumnFunctionality10X5 : public Test
-//{
-//
-//};
-//
-//TEST_F(ColumnFunctionality10X5, Constructors)
-//{
-//   PF_Column col(10, 5);
-//
-//   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
-//
-//}
-//
-//TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
-//{
-//    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
-//        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
-//
-//    auto col = PF_Column{10, 5};
-//
-//    std::vector<PF_Column> columns;
-//    PF_Column::tpt the_time = std::chrono::system_clock::now();
-//
-//    for (auto price : prices)
-//    {
-//        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-//        if (status == PF_Column::Status::e_reversal)
-//        {
-//            columns.push_back(col);
-//            col = std::move(new_col.value());
-//
-//            // now continue on processing the value.
-//            
-//            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-//        }
-//    }
-//
-//    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
-//    EXPECT_EQ(col.GetTop(), 1150);
-//    EXPECT_EQ(col.GetBottom(), 1100);
-//    EXPECT_EQ(col.GetHadReversal(), false);
-//    EXPECT_EQ(columns.size() + 1, 1);
-//
-//    for (const auto& a_col : columns)
-//    {
-//        std::cout << a_col << '\n';
-//    }
-//    std::cout << col << '\n';
-//}
-//
-//class ColumnFunctionality10X2 : public Test
-//{
-//
-//};
-//
-//TEST_F(ColumnFunctionality10X2, Constructors)
-//{
-//   PF_Column col(10, 2);
-//
-//   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
-//
-//}
-//
-//TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
-//{
-//    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
-//        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
-//
-//    auto col = PF_Column{10, 2};
-//
-//    std::vector<PF_Column> columns;
-//    PF_Column::tpt the_time = std::chrono::system_clock::now();
-//
-//    for (auto price : prices)
-//    {
-//        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-//        if (status == PF_Column::Status::e_reversal)
-//        {
-//            columns.push_back(col);
-//            col = std::move(new_col.value());
-//
-//            // now continue on processing the value.
-//            
-//            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
-//        }
-//    }
-//
-//    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(col.GetTop(), 1140);
-//    EXPECT_EQ(col.GetBottom(), 1130);
-//    EXPECT_EQ(col.GetHadReversal(), false);
-//    EXPECT_EQ(columns.size() + 1, 6);
-//
-//    for (const auto& a_col : columns)
-//    {
-//        std::cout << a_col << '\n';
-//    }
-//    std::cout << col << '\n';
-//}
-//
+TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
+
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 3};
+
+    std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    for (auto price : prices)
+    {
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        if (status == PF_Column::Status::e_reversal)
+        {
+            columns.push_back(col);
+            col = std::move(new_col.value());
+
+            // now continue on processing the value.
+            
+            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+        }
+    }
+
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetTop(), 1120);
+    EXPECT_EQ(col.GetBottom(), 1100);
+    EXPECT_EQ(col.GetHadReversal(), false);
+    EXPECT_EQ(columns.size() + 1, 2);
+
+    for (const auto& a_col : columns)
+    {
+        std::cout << a_col << '\n';
+    }
+    std::cout << col << '\n';
+}
+
+TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 3};
+
+    std::vector<PF_Column> columns;
+
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    for (auto price : prices)
+    {
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        if (status == PF_Column::Status::e_reversal)
+        {
+            columns.push_back(col);
+            col = std::move(new_col.value());
+
+            // now continue on processing the value.
+            
+            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+        }
+    }
+
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1150);
+    EXPECT_EQ(col.GetBottom(), 1110);
+    EXPECT_EQ(col.GetHadReversal(), false);
+    EXPECT_EQ(columns.size() + 1, 3);
+
+    for (const auto& a_col : columns)
+    {
+        std::cout << a_col << '\n';
+    }
+    std::cout << col << '\n';
+}
+
+class ColumnFunctionality10X5 : public Test
+{
+
+};
+
+TEST_F(ColumnFunctionality10X5, Constructors)
+{
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 5};
+
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+
+}
+
+TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 5};
+
+    std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    for (auto price : prices)
+    {
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        if (status == PF_Column::Status::e_reversal)
+        {
+            columns.push_back(col);
+            col = std::move(new_col.value());
+
+            // now continue on processing the value.
+            
+            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+        }
+    }
+
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1150);
+    EXPECT_EQ(col.GetBottom(), 1100);
+    EXPECT_EQ(col.GetHadReversal(), false);
+    EXPECT_EQ(columns.size() + 1, 1);
+
+    for (const auto& a_col : columns)
+    {
+        std::cout << a_col << '\n';
+    }
+    std::cout << col << '\n';
+}
+
+class ColumnFunctionality10X2 : public Test
+{
+
+};
+
+TEST_F(ColumnFunctionality10X2, Constructors)
+{
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 2};
+
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+
+}
+
+TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
+{
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 2};
+
+    std::vector<PF_Column> columns;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    for (auto price : prices)
+    {
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
+        if (status == PF_Column::Status::e_reversal)
+        {
+            columns.push_back(col);
+            col = std::move(new_col.value());
+
+            // now continue on processing the value.
+            
+            status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first;
+        }
+    }
+
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetTop(), 1140);
+    EXPECT_EQ(col.GetBottom(), 1130);
+    EXPECT_EQ(col.GetHadReversal(), false);
+    EXPECT_EQ(columns.size() + 1, 6);
+
+    for (const auto& a_col : columns)
+    {
+        std::cout << a_col << '\n';
+    }
+    std::cout << col << '\n';
+}
+
 //class ChartFunctionality10X2 : public Test
 //{
 //
