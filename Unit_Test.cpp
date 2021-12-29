@@ -310,34 +310,63 @@ TEST_F(BoxesBasicFunctionality, GenerateLinearBoxes)
 {
     Boxes boxes{DprDecimal::DDecQuad{10}};
     Boxes::Box box = boxes.FindBox(101);
+    auto howmany = boxes.GetBoxList().size();
+    EXPECT_EQ(howmany, 1);
 
     // default integral, linear rounds down to nearest integer
 
     EXPECT_TRUE(box == 100);
     box = boxes.FindBox(109);
-    EXPECT_TRUE(box == 100);
+    EXPECT_EQ(box, 100);
+    howmany = boxes.GetBoxList().size();
+    EXPECT_EQ(howmany, 2);
 
     box = boxes.FindBox(400);
-    EXPECT_TRUE(box == 400);
-    auto howmany = boxes.GetBoxList().size();
+    EXPECT_EQ(box, 400);
+    howmany = boxes.GetBoxList().size();
 
     box = boxes.FindBox(401);
-    EXPECT_TRUE(box == 400);
+    EXPECT_EQ(box, 400);
     auto howmany2 = boxes.GetBoxList().size();
-    EXPECT_EQ(howmany, howmany2);
+    EXPECT_NE(howmany, howmany2);
 
     Boxes boxes2{10, Boxes::BoxType::e_fractional};
     box = boxes2.FindBox(95.5);
-    EXPECT_TRUE(box == 90);
+    EXPECT_EQ(box, 90);
 
     // test going smaller
 
+    Boxes boxes3{DprDecimal::DDecQuad{10}};
+    box = boxes3.FindBox(100);
+    EXPECT_EQ(box, 100);
+
     box = boxes.FindBox(99);
-    EXPECT_TRUE(box == 90);
+    EXPECT_EQ(box, 90);
 
-    box = boxes.FindBox(90);
-    EXPECT_TRUE(box == 90);
+}
 
+TEST_F(BoxesBasicFunctionality, LinearBoxesNextandPrev)
+{
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    Boxes::Box box = boxes.FindBox(100);
+    EXPECT_EQ(box, 100);
+
+    box = boxes.FindNextBox(100);
+    EXPECT_EQ(box, 110);
+
+    box = boxes.FindNextBox(100);
+    EXPECT_EQ(box, 110);
+
+    Boxes boxes2{DprDecimal::DDecQuad{10}};
+    box = boxes2.FindBox(100);
+    box = boxes2.FindBox(115);
+    EXPECT_EQ(box, 110);
+
+    box = boxes2.FindPrevBox(110);
+    EXPECT_EQ(box, 100);
+
+    box = boxes2.FindPrevBox(100);
+    EXPECT_EQ(box, 90);
 }
 
 TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)
@@ -365,7 +394,34 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)
     box = boxes.FindBox(520);
     EXPECT_EQ(box, 515.151);
 
+    // test going smaller
 
+    Boxes boxes2{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+
+    box = boxes2.FindBox(505);
+    EXPECT_EQ(box, 505);
+
+    box = boxes2.FindBox(500);
+    EXPECT_EQ(box, 499.95);
+
+}
+
+TEST_F(BoxesBasicFunctionality, PercentBoxesNextandPrev)
+{
+    Boxes boxes{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes::Box box = boxes.FindBox(500);
+    EXPECT_EQ(box, 500.00);
+
+    box = boxes.FindNextBox(500);
+    EXPECT_EQ(box, 505);
+
+    Boxes boxes2{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    box = boxes2.FindBox(500);
+    box = boxes2.FindBox(505);
+    EXPECT_EQ(box, 505);
+
+    box = boxes2.FindPrevBox(505);
+    EXPECT_EQ(box, 500);
 }
 
 TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)
