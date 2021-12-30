@@ -53,8 +53,8 @@ SDIR2 := ../point_figure/src
 SRCS2 := $(SDIR2)/DDecQuad.cpp  \
 		$(SDIR2)/Boxes.cpp \
 		$(SDIR2)/PF_Column.cpp \
-		# $(SDIR2)/PF_Chart.cpp \
-		# $(SDIR2)/Tiingo.cpp \
+		$(SDIR2)/PF_Chart.cpp  \
+		$(SDIR2)/Tiingo.cpp # \
 #		$(SDIR2)/PathNameGenerator.cpp \
 #		$(SDIR2)/DailyIndexFileRetriever.cpp \
 #		$(SDIR2)/FormFileRetriever.cpp
