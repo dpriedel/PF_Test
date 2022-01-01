@@ -443,6 +443,32 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)
     ASSERT_EQ(boxes, boxes2);
 }
 
+TEST_F(BoxesBasicFunctionality, BoxesToJsonThenFromJsonThenAddData)
+{
+    // first, construct a Boxes using complete set of data
+
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+
+    ranges::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
+
+    // next, construct using part of the data, save to JSON, then load from JSON and add the remaining data 
+
+    const std::vector<int32_t> prices_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129}; 
+    const std::vector<int32_t> prices_2 = { 1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+
+    Boxes boxes_1{DprDecimal::DDecQuad{10}};
+    ranges::for_each(prices_1, [&boxes_1](const auto& x) { boxes_1.FindBox(x); });
+    const auto json_1 = boxes_1.ToJSON();
+
+    Boxes boxes_2{json_1};
+    ranges::for_each(prices_2, [&boxes_2](const auto& x) { boxes_2.FindBox(x); });
+
+    ASSERT_EQ(boxes, boxes_2);
+}
+
 class ColumnFunctionality10X1 : public Test
 {
 
@@ -563,6 +589,43 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)
     ASSERT_EQ(status, PF_Column::Status::e_reversal);
 }
 
+TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)
+{
+    // first, construct a Boxes using complete set of data
+
+    const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
+    Boxes boxes{DprDecimal::DDecQuad{10}};
+    PF_Column col{&boxes, 1};
+
+    PF_Column::Status status;
+    PF_Column::tpt the_time = std::chrono::system_clock::now();
+
+    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+
+    // next, construct using part of the data, save to JSON, then load from JSON and add the remaining data 
+
+    const std::vector<int32_t> prices_1 = {1100, 1105, 1110, 1112}; 
+    const std::vector<int32_t> prices_2 = {1118, 1120, 1136, 1121, 1129, 1120}; 
+
+    Boxes boxes_1{DprDecimal::DDecQuad{10}};
+    PF_Column col_1{&boxes_1, 1};
+    ranges::for_each(prices_1, [&col_1, &status, &the_time](auto price) { status = col_1.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+
+    const auto json_1 = boxes_1.ToJSON();
+    const auto col_1_json = col_1.ToJSON();
+
+    Boxes boxes_2{json_1};
+    PF_Column col_2 = {&boxes_2, col_1_json};
+    ranges::for_each(prices_2, [&col_2, &status, &the_time](auto price) { status = col_2.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+
+    std::cout << "\n\n col:\n" << col;
+    std::cout << "\n\n col_1:\n" << col_1;
+    std::cout << "\n\n col_2:\n" << col_2 << '\n';;
+
+    EXPECT_EQ(boxes, boxes_2);
+    ASSERT_EQ(col, col_2);
+}
+
 TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
@@ -577,7 +640,7 @@ TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)
     auto json = col.ToJSON();
 //    std::cout << json << '\n';
 
-    PF_Column col2{json};
+    PF_Column col2{&boxes, json};
     EXPECT_EQ(col, col2);
     EXPECT_EQ(col.GetTimeSpan(), col2.GetTimeSpan());
 }
@@ -1181,6 +1244,41 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
 
+TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData)
+{
+    const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+
+    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    const std::vector<int32_t> values_ints_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
+    const std::vector<int32_t> values_ints_2 = {1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+    std::string test_data_1 = MakeSimpleTestData(values_ints_1, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data_2 = MakeSimpleTestData(values_ints_2, date::year_month_day {2015_y/date::March/date::Monday[1]});
+
+    std::istringstream prices_1{test_data_1}; 
+
+    PF_Chart chart_1("GOOG", 10, 2);
+    chart_1.LoadData(&prices_1, "%Y-%m-%d", ',');
+
+    const auto chart_1_json = chart_1.ToJSON();
+
+    PF_Chart chart_2{chart_1_json};
+    std::istringstream prices_2{test_data_2}; 
+    chart_2.LoadData(&prices_2, "%Y-%m-%d", ',');
+
+    std::cout << "\n\n chart:\n" << chart;
+    std::cout << "\n\n chart_1:\n" << chart_1;
+    std::cout << "\n\n chart_2:\n" << chart_2 << '\n';;
+
+    ASSERT_EQ(chart, chart_2);
+}
+
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
 {
     const fs::path file_name{"./test_files/AAPL_close.dat"};
@@ -1714,45 +1812,45 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)
 //                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });
 }
 
-//
-//class WebSocketSynchronous : public Test
-//{
-//    std::string LoadApiKey(std::string file_name)
-//    {
-//        if (! fs::exists(file_name))
-//        {
-//            throw std::runtime_error("Can't find key file.");
-//        }
-//        std::ifstream key_file(file_name);
-//        std::string result;
-//        key_file >> result;
-//        return result;
-//    }
-//public:
-//
-//    const std::string api_key = LoadApiKey("./tiingo_key.dat");
-//
-//};
-//
-//TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
-//{
-//    Tiingo quotes{"api.tiingo.com", "443", "/iex", api_key, std::vector<std::string> {"spy","uso","rsp"}};
-//    quotes.Connect();
-//    bool time_to_stop = false;
-//    auto the_task = std::async(std::launch::async, &Tiingo::StreamDataTest, &quotes, &time_to_stop);
-//	std::this_thread::sleep_for(10s);
-//    time_to_stop = true;
-//	the_task.get();
-////    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
-//    quotes.Disconnect();
-//
-//    for (const auto & value: quotes)
-//    {
-//        std::cout << value << '\n';
-//    }
-//    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
-//}
-//
+
+class WebSocketSynchronous : public Test
+{
+    std::string LoadApiKey(std::string file_name)
+    {
+        if (! fs::exists(file_name))
+        {
+            throw std::runtime_error("Can't find key file.");
+        }
+        std::ifstream key_file(file_name);
+        std::string result;
+        key_file >> result;
+        return result;
+    }
+public:
+
+    const std::string api_key = LoadApiKey("./tiingo_key.dat");
+
+};
+
+TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
+{
+    Tiingo quotes{"api.tiingo.com", "443", "/iex", api_key, std::vector<std::string> {"spy","uso","rsp"}};
+    quotes.Connect();
+    bool time_to_stop = false;
+    auto the_task = std::async(std::launch::async, &Tiingo::StreamDataTest, &quotes, &time_to_stop);
+	std::this_thread::sleep_for(10s);
+    time_to_stop = true;
+	the_task.get();
+//    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
+    quotes.Disconnect();
+
+    for (const auto & value: quotes)
+    {
+        std::cout << value << '\n';
+    }
+    ASSERT_TRUE(! quotes.empty());         // we need an actual test here
+}
+
 
 //===  FUNCTION  ======================================================================
 //        Name:  InitLogging
