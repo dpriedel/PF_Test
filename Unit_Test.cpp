@@ -66,6 +66,10 @@
 #include <range/v3/view/take.hpp>
 #include <range/v3/view/zip_with.hpp>
 
+#include <range/v3/algorithm/equal.hpp>
+#include <range/v3/algorithm/find_if.hpp>
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/view/drop.hpp>
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
@@ -171,6 +175,30 @@ std::string MakeSimpleTestData(const std::vector<int32_t>& data, const date::yea
     ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
     return test_data;
 }
+
+std::optional<int> FindColumnIndex (std::string_view header, std::string_view column_name, char delim)
+{
+    auto fields = rng_split_string<std::string_view>(header, delim);
+    auto do_compare([&column_name](const auto& field_name)
+    {
+        // need case insensitive compare
+        // found this on StackOverflow (but modified for my use)
+        // (https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c)
+
+        if (column_name.size() != field_name.size())
+        {
+            return false;
+        }
+        return ranges::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
+    });
+
+    if (auto found_it = ranges::find_if(fields, do_compare); found_it != ranges::end(fields))
+    {
+        return ranges::distance(ranges::begin(fields), found_it);
+    }
+    return {};
+
+}		// -----  end of method PF_CollectDataApp::FindColumnIndex  ----- 
 
 class RangeSplitterBasicFunctionality : public Test
 {
@@ -618,9 +646,9 @@ TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)
     PF_Column col_2 = {&boxes_2, col_1_json};
     ranges::for_each(prices_2, [&col_2, &status, &the_time](auto price) { status = col_2.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
-    std::cout << "\n\n col:\n" << col;
-    std::cout << "\n\n col_1:\n" << col_1;
-    std::cout << "\n\n col_2:\n" << col_2 << '\n';;
+//    std::cout << "\n\n col:\n" << col;
+//    std::cout << "\n\n col_1:\n" << col_1;
+//    std::cout << "\n\n col_2:\n" << col_2 << '\n';;
 
     EXPECT_EQ(boxes, boxes_2);
     ASSERT_EQ(col, col_2);
@@ -742,11 +770,8 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 4);
 
-    for (const auto& a_col : columns)
-    {
-        std::cout << a_col << '\n';
-    }
-    std::cout << col << '\n';
+    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)
@@ -780,10 +805,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 5);
 
-    for (const auto& a_col : columns)
-    {
-        std::cout << a_col << '\n';
-    }
+    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
     std::cout << col << '\n';
 }
 
@@ -819,10 +841,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 9);
 
-    for (const auto& a_col : columns)
-    {
-        std::cout << a_col << '\n';
-    }
+    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
     std::cout << col << '\n';
 }
 
@@ -976,11 +995,8 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 2);
 
-    for (const auto& a_col : columns)
-    {
-        std::cout << a_col << '\n';
-    }
-    std::cout << col << '\n';
+//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
@@ -1014,11 +1030,8 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 3);
 
-    for (const auto& a_col : columns)
-    {
-        std::cout << a_col << '\n';
-    }
-    std::cout << col << '\n';
+//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X5 : public Test
@@ -1066,11 +1079,8 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 1);
 
-    for (const auto& a_col : columns)
-    {
-        std::cout << a_col << '\n';
-    }
-    std::cout << col << '\n';
+//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X2 : public Test
@@ -1118,11 +1128,8 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 6);
 
-    for (const auto& a_col : columns)
-    {
-        std::cout << a_col << '\n';
-    }
-    std::cout << col << '\n';
+//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 class ColumnFunctionalityPercentX1 : public Test
@@ -1164,7 +1171,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(price, the_time);
-        std::cout << "value: " << price << " status: " << status << " top: " << col.GetTop() << '\n';
+//        std::cout << "value: " << price << " status: " << status << " top: " << col.GetTop() << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -1272,9 +1279,9 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     std::istringstream prices_2{test_data_2}; 
     chart_2.LoadData(&prices_2, "%Y-%m-%d", ',');
 
-    std::cout << "\n\n chart:\n" << chart;
-    std::cout << "\n\n chart_1:\n" << chart_1;
-    std::cout << "\n\n chart_2:\n" << chart_2 << '\n';;
+//    std::cout << "\n\n chart:\n" << chart;
+//    std::cout << "\n\n chart_1:\n" << chart_1;
+//    std::cout << "\n\n chart_2:\n" << chart_2 << '\n';;
 
     ASSERT_EQ(chart, chart_2);
 }
@@ -1396,7 +1403,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     PF_Chart chart("GOOG", box_size, 2, Boxes::BoxType::e_fractional);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.GetNumberOfColumns(), 36);
@@ -1404,6 +1411,53 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 //    EXPECT_EQ(chart[5].GetTop(), 1140);
 //    EXPECT_EQ(chart[5].GetBottom(), 1130);
 //    EXPECT_EQ(chart[5].GetHadReversal(), false);
+}
+
+class MiscChartFunctionality : public Test
+{
+
+};
+
+TEST_F(MiscChartFunctionality, DISABLED_LoadDataFromJSONChartFileThenAddDataFromCSV)
+{
+    fs::path symbol_file_name{"./test_files/SPY_1.json"};
+
+    const std::string file_content = LoadDataFileForUse(symbol_file_name);
+
+    JSONCPP_STRING err;
+    Json::Value saved_data;
+
+    Json::CharReaderBuilder builder;
+    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+    if (! reader->parse(file_content.data(), file_content.data() + file_content.size(), &saved_data, &err))
+    {
+        throw std::runtime_error("Problem parsing test data file: "s + err);
+    }
+
+    PF_Chart new_chart{saved_data};
+    std::cout << new_chart << '\n';
+    
+    fs::path csv_file_name{"./test_files3/SPY.csv"};
+    const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
+
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto header_record = symbol_data_records.front();
+
+    auto date_column = FindColumnIndex(header_record, "date", ',');
+    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    
+    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+
+    std::cout << "new chart at start of adding new data: \n\n" << new_chart << "\n\n";
+    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+        {
+//            std::cout << "len: " << record.size() << "  " << record << '\n';
+            const auto fields = split_string<std::string_view> (record, ',');
+//            std::cout << "close value: " << fields[close_col] << " date value: " << fields[date_col] << " record: \n" << record << '\n';
+            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col]));
+        });
+    std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
 }
 
 // use ATR computed box size instead of predefined box size with logarithmic charts 
@@ -1441,7 +1495,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     PF_Chart chart("GOOG", box_size, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.GetNumberOfColumns(), 5);
@@ -1479,7 +1533,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
     EXPECT_EQ(chart[5].GetBottom(), 1130);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick.svg");
 
@@ -1758,7 +1812,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
             chart.AddValue(val, date::sys_days(the_date));
         });
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 }
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)
@@ -1806,7 +1860,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)
             std::cout << "value: " << val << " status: " << status << '\n';
         });
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
 //    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << fmt::format("date: {} close: {} adjusted close: {} delta: {} \n",
 //                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });

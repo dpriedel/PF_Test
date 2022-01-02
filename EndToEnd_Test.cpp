@@ -57,7 +57,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--source", "file",
-        "--new-data-dir", "./test_files",
+        "--new-data-dir", "./test_files3",
         "--source_format", "csv",
         "--mode", "load",
         "--interval", "eod",
@@ -168,6 +168,8 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
     // now construct the data file from 2 input files which, together, contain the same 
     // data as the 1 file used above. 
 
+    PF_Chart half_chart;
+
 	std::vector<std::string> tokens2{"the_program",
         "--symbol", "SPY",
         "--source", "file",
@@ -194,6 +196,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
         if (startup_OK)
         {
             myApp.Run();
+            half_chart = myApp.GetChart("SPY");
             myApp.Shutdown();
         }
         else
@@ -264,6 +267,11 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
+
+    std::cout << "\n\n whole chart:\n" << whole_chart;
+    std::cout << "\n\n half chart:\n" << half_chart;
+    std::cout << "\n\n franken chart:\n" << franken_chart << '\n';;
+
     EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY.json"));
     ASSERT_TRUE(whole_chart == franken_chart);
 }
