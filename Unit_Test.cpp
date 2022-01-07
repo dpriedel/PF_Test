@@ -235,6 +235,20 @@ class BusinessDateRange : public Test
 
 };
 
+TEST_F(BusinessDateRange, GenerateMarketHolidays1)
+{
+    date::year which_year = 2022_y;
+
+    auto holidays = MakeHolidayList(which_year);
+
+    EXPECT_EQ(holidays.size(), 10);
+
+    for (const auto& [name, date] : holidays)
+    {
+        std::cout << name << '\t' << date << '\n';
+    }
+}
+
 TEST_F(BusinessDateRange, WithinSingleWeek)
 {
     date::year_month_day start_here{2021_y/date::October/date::Friday[1]};

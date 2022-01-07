@@ -70,7 +70,8 @@ SRCS3a := $(SDIR3a)/decimal128.c \
 		  $(SDIR3a)/decimal64.c
 
 SDIR4 := $(UTILITYDIR)/src
-SRCS4 := $(SDIR4)/utilities.cpp
+SRCS4 := $(SDIR4)/utilities.cpp \
+		 $(SDIR4)/calfaq.c
 
 SRCS := $(SRCS1) $(SRCS2) $(SRCS3) $(SRCS3a) $(SRCS4)
 
