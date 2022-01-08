@@ -241,7 +241,18 @@ TEST_F(BusinessDateRange, GenerateMarketHolidays1)
 
     auto holidays = MakeHolidayList(which_year);
 
-    EXPECT_EQ(holidays.size(), 10);
+    EXPECT_EQ(holidays.size(), 9);      // no new years market holiday for 2022
+
+    for (const auto& [name, date] : holidays)
+    {
+        std::cout << name << '\t' << date << '\n';
+    }
+
+    which_year = 2021_y;
+
+    holidays = MakeHolidayList(which_year);
+
+    EXPECT_EQ(holidays.size(), 9);      // no new years market holiday for 2022
 
     for (const auto& [name, date] : holidays)
     {
