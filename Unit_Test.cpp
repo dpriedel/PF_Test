@@ -281,7 +281,6 @@ TEST_F(BusinessDateRange, SpanAWeek)
     std::cout << result.first << " : " << result.second << '\n';
 
     ASSERT_EQ(result.second, date::year_month_day{2021_y/date::October/7});
-
 }
 
 TEST_F(BusinessDateRange, SpanAWeekAndAMonth)
@@ -302,6 +301,51 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonth)
 
     ASSERT_EQ(result.second, date::year_month_day{2021_y/date::September/20});
 
+}
+
+TEST_F(BusinessDateRange, WithinSingleWeekWithHoliday)
+{
+    auto holidays = MakeHolidayList(2022_y);
+    date::year_month_day start_here{2022_y/date::January/16};
+
+    auto result = ConstructeBusinessDayRange(start_here, 4, UpOrDown::e_Up, &holidays);
+
+    std::cout << result.first << " : " << result.second << '\n';
+
+    EXPECT_EQ(result.first, date::year_month_day{2022_y/date::January/18});
+    ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/21});
+}
+
+TEST_F(BusinessDateRange, SpanAWeekWithHoliday)
+{
+    auto holidays = MakeHolidayList(2022_y);
+    date::year_month_day start_here{2022_y/date::January/19};
+
+    auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Down, &holidays);
+
+    std::cout << result.first << " : " << result.second << '\n';
+
+    EXPECT_EQ(result.first, date::year_month_day{2022_y/date::January/19});
+    ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/12});
+}
+
+TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays)
+{
+    // this test spans prior to Thanksgiving till after MLK day
+    // but Christmas and New Years are not observed because they 
+    // fall on weekends
+
+    auto holidays = MakeHolidayList(2021_y);
+    ranges::for_each(MakeHolidayList(2022_y), [&holidays](const auto& e) { holidays.push_back(e); });
+
+    date::year_month_day start_here{2021_y/date::November/22};
+
+    auto result = ConstructeBusinessDayRange(start_here, 43, UpOrDown::e_Up, &holidays);
+
+    std::cout << result.first << " : " << result.second << '\n';
+
+    EXPECT_EQ(result.first, date::year_month_day{2021_y/date::November/22});
+    ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/24});
 }
 
 class DecimalBasicFunctionality : public Test
@@ -1768,9 +1812,12 @@ public:
 
 TEST_F(TiingoATR, RetrievePreviousData)
 {
+    date::year which_year = 2021_y;
+    auto holidays = MakeHolidayList(which_year);
+
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14);
+    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, &holidays);
 
     EXPECT_EQ(history.size(), 14);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
@@ -1779,9 +1826,12 @@ TEST_F(TiingoATR, RetrievePreviousData)
 
 TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)
 {
+    date::year which_year = 2021_y;
+    auto holidays = MakeHolidayList(which_year);
+
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15);
+    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15, &holidays);
 
 //    std::cout << "\nhistory:\n" << history << '\n';
     EXPECT_EQ(history.size(), 15);
@@ -1795,10 +1845,13 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
 {
+    date::year which_year = 2021_y;
+    auto holidays = MakeHolidayList(which_year);
+
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     constexpr int history_size = 20;
-    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1);
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
 
     auto atr = ComputeATR("AAPL", history, 4);
 //    std::cout << "ATR: " << atr << '\n';
@@ -1842,10 +1895,13 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)
 {
+    date::year which_year = 2021_y;
+    auto holidays = MakeHolidayList(which_year);
+
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     constexpr int history_size = 20;
-    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1);
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
 
     auto atr = ComputeATR("AAPL", history, 4, UseAdjusted::e_Yes);
 //    std::cout << "ATR: " << atr << '\n';
