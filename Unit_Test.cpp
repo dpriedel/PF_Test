@@ -1371,7 +1371,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)
     EXPECT_EQ(chart[47].GetTop(), 148);
     EXPECT_EQ(chart[47].GetBottom(), 146);
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 }
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsThenJSON)
@@ -1643,10 +1643,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     }
     const fs::path file_name{"./test_files/APPLE.json"};
 
-    std::ifstream prices{file_name, std::ios_base::in | std::ios_base::binary};
-    std::string hist(fs::file_size(file_name), '\0');
-    prices.read(&hist[0], hist.size());
-    prices.close();
+    const std::string hist = LoadDataFileForUse("./test_files/APPLE.json");
     std::cout << "history length: " << hist.size() << '\n';
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
@@ -1671,20 +1668,22 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
 
     std::cout << "ATR: " << atr << '\n';
 
-    // next, I need to compute my average closing price over the interval 
-    // but excluding the 'extra' value included for computing the ATR
+//    // next, I need to compute my average closing price over the interval 
+//    // but excluding the 'extra' value included for computing the ATR
+//
+//    // I'm doing this crazy const casting because the range wants only a const input source
+//    // and mine isn't.  Used below also.
+//
+//    DprDecimal::DDecQuad sum = ranges::accumulate(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1),
+//            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
+//            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
 
-    // I'm doing this crazy const casting because the range wants only a const input source
-    // and mine isn't.  Used below also.
+    // compute box size as a percent of ATR, eg. 0.1
 
-    DprDecimal::DDecQuad sum = ranges::accumulate(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1),
-            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
-            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
-
-    DprDecimal::DDecQuad box_size = atr / (sum / (history.size() - 1));
+//    DprDecimal::DDecQuad box_size = atr / (sum / (history.size() - 1));
+    DprDecimal::DDecQuad box_size = atr * 0.1;
 
     std::cout << "box size: " << box_size << '\n';
-//    box_size.Rescale(".01234");
     box_size.Rescale(-5);
     std::cout << "rescaled box size: " << box_size << '\n';
 
@@ -1718,7 +1717,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
 
-TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithmeticAndLogarithmic)
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithmeticAndPercent)
 {
     if (fs::exists("/tmp/candlestick3.svg"))
     {
@@ -1728,13 +1727,8 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     {
         fs::remove("/tmp/candlestick4.svg");
     }
-//    const fs::path file_name{"./test_files/APPLE.json"};
-    const fs::path file_name{"./test_files/YAHOO.json"};
 
-    std::ifstream prices{file_name, std::ios_base::in | std::ios_base::binary};
-    std::string hist(fs::file_size(file_name), '\0');
-    prices.read(&hist[0], hist.size());
-    prices.close();
+    const std::string hist = LoadDataFileForUse("./test_files/YAHOO.json");
     std::cout << "history length: " << hist.size() << '\n';
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
@@ -1782,7 +1776,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
             chart_percent.AddValue(val, date::sys_days(the_date));
         });
 
-    std::cout << chart_percent << '\n';
+//    std::cout << chart_percent << '\n';
     std::cout << "# of cols: " << chart_percent.GetNumberOfColumns() << '\n';
 
     chart_percent.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg");
