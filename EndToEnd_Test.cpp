@@ -47,9 +47,9 @@ class SingleFileEndToEnd : public Test
 
 TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)
 {
-    if (fs::exists("/tmp/test_charts/SPY.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear.json"))
     {
-        fs::remove("/tmp/test_charts/SPY.json");
+        fs::remove("/tmp/test_charts/SPY_10X3_linear.json");
     }
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
@@ -98,18 +98,18 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
 }
 
 TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
 {
-    if (fs::exists("/tmp/test_charts/SPY.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear.json"))
     {
-        fs::remove("/tmp/test_charts/SPY.json");
+        fs::remove("/tmp/test_charts/SPY_10X3_linear.json");
     }
-    if (fs::exists("/tmp/test_charts2/SPY.json"))
+    if (fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"))
     {
-        fs::remove("/tmp/test_charts2/SPY.json");
+        fs::remove("/tmp/test_charts2/SPY_10X3_linear.json");
     }
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
@@ -163,7 +163,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
 
     // now construct the data file from 2 input files which, together, contain the same 
     // data as the 1 file used above. 
@@ -215,7 +215,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"));
 
     // now continue constructing the data file from 2 input files which, together, contain the same 
     // data as the 1 file used above. 
@@ -272,7 +272,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
     std::cout << "\n\n half chart:\n" << half_chart;
     std::cout << "\n\n franken chart:\n" << franken_chart << '\n';;
 
-    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"));
     ASSERT_TRUE(whole_chart == franken_chart);
 }
 
@@ -327,7 +327,7 @@ TEST_F(StreamData, DISABLED_VerifyConnectAndDisconnect)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X3_linear.json"));
 }
 
 TEST_F(StreamData, VerifySignalHandling)
@@ -381,10 +381,10 @@ TEST_F(StreamData, VerifySignalHandling)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY.svg"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X3_linear.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.005X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.005X3_linear.svg"));
 }
 
 TEST_F(StreamData, TryLogarithmicCharts)
@@ -438,10 +438,10 @@ TEST_F(StreamData, TryLogarithmicCharts)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/SPY.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/SPY.svg"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/SPY_0.01%X3_percent.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/SPY_0.01%X3_percent.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X3_percent.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X3_percent.svg"));
 }
 
 
