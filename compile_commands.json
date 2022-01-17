@@ -15,7 +15,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -44,7 +44,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -54,7 +54,7 @@
       "../point_figure/src/DDecQuad.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/DDecQuad.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/DDecQuad.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_unit/DDecQuad.o"
   },
   {
@@ -73,7 +73,36 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
+      "-I/extra/gcc/decNumber_old",
+      "-I/home/dpriedel/projects/common_utilities/include",
+      "-I/usr/local/include/ChartDirector",
+      "-march=native",
+      "-o",
+      "Debug_unit/Boxes.o",
+      "../point_figure/src/Boxes.cpp"
+    ],
+    "directory": "/home/dpriedel/projects/PF_Test",
+    "file": "/home/dpriedel/projects/point_figure/src/Boxes.cpp",
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/Boxes.o"
+  },
+  {
+    "arguments": [
+      "/extra/gcc/gcc-11/bin/g++",
+      "-c",
+      "-x",
+      "c++",
+      "-O0",
+      "-g3",
+      "-std=c++20",
+      "-DBOOST_ENABLE_ASSERT_HANDLER",
+      "-D_DEBUG",
+      "-DSPDLOG_FMT_EXTERNAL",
+      "-DBOOST_REGEX_STANDALONE",
+      "-fPIC",
+      "-I/home/dpriedel/projects/point_figure/src",
+      "-I/usr/local/include",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -83,7 +112,7 @@
       "../point_figure/src/PF_Column.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/PF_Column.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/PF_Column.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_unit/PF_Column.o"
   },
   {
@@ -102,7 +131,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -112,7 +141,7 @@
       "../point_figure/src/PF_Chart.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/PF_Chart.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/PF_Chart.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_unit/PF_Chart.o"
   },
   {
@@ -131,7 +160,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -141,7 +170,7 @@
       "../point_figure/src/Tiingo.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/Tiingo.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/Tiingo.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_unit/Tiingo.o"
   },
   {
@@ -154,7 +183,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -177,7 +206,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -200,7 +229,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -223,7 +252,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -246,7 +275,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -275,7 +304,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -287,6 +316,29 @@
     "directory": "/home/dpriedel/projects/PF_Test",
     "file": "/home/dpriedel/projects/common_utilities/src/utilities.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_unit/utilities.o"
+  },
+  {
+    "arguments": [
+      "/extra/gcc/gcc-11/bin/gcc",
+      "-c",
+      "-O0",
+      "-g3",
+      "-D_DEBUG",
+      "-fPIC",
+      "-I/home/dpriedel/projects/point_figure/src",
+      "-I/usr/local/include",
+      "-I/extra/boost/boost-1.78_gcc-11",
+      "-I/extra/gcc/decNumber_old",
+      "-I/home/dpriedel/projects/common_utilities/include",
+      "-I/usr/local/include/ChartDirector",
+      "-march=native",
+      "-o",
+      "Debug_unit/calfaq.o",
+      "/home/dpriedel/projects/common_utilities/src/calfaq.c"
+    ],
+    "directory": "/home/dpriedel/projects/PF_Test",
+    "file": "/home/dpriedel/projects/common_utilities/src/calfaq.c",
+    "output": "/home/dpriedel/projects/PF_Test/Debug_unit/calfaq.o"
   },
   {
     "arguments": [
@@ -304,7 +356,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -333,7 +385,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -343,7 +395,7 @@
       "../point_figure/src/PF_CollectDataApp.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/PF_CollectDataApp.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/PF_CollectDataApp.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/PF_CollectDataApp.o"
   },
   {
@@ -362,7 +414,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -372,7 +424,7 @@
       "../point_figure/src/DDecQuad.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/DDecQuad.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/DDecQuad.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/DDecQuad.o"
   },
   {
@@ -391,7 +443,36 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
+      "-I/extra/gcc/decNumber_old",
+      "-I/home/dpriedel/projects/common_utilities/include",
+      "-I/usr/local/include/ChartDirector",
+      "-march=native",
+      "-o",
+      "Debug_e2e/Boxes.o",
+      "../point_figure/src/Boxes.cpp"
+    ],
+    "directory": "/home/dpriedel/projects/PF_Test",
+    "file": "/home/dpriedel/projects/point_figure/src/Boxes.cpp",
+    "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/Boxes.o"
+  },
+  {
+    "arguments": [
+      "/extra/gcc/gcc-11/bin/g++",
+      "-c",
+      "-x",
+      "c++",
+      "-O0",
+      "-g3",
+      "-std=c++20",
+      "-D_DEBUG",
+      "-DBOOST_ENABLE_ASSERT_HANDLER",
+      "-DSPDLOG_FMT_EXTERNAL",
+      "-DBOOST_REGEX_STANDALONE",
+      "-fPIC",
+      "-I/home/dpriedel/projects/point_figure/src",
+      "-I/usr/local/include",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -401,7 +482,7 @@
       "../point_figure/src/PF_Column.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/PF_Column.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/PF_Column.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/PF_Column.o"
   },
   {
@@ -420,7 +501,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -430,7 +511,7 @@
       "../point_figure/src/PF_Chart.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/PF_Chart.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/PF_Chart.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/PF_Chart.o"
   },
   {
@@ -449,7 +530,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -459,7 +540,7 @@
       "../point_figure/src/Tiingo.cpp"
     ],
     "directory": "/home/dpriedel/projects/PF_Test",
-    "file": "/home/dpriedel/projects/PF_Test/../point_figure/src/Tiingo.cpp",
+    "file": "/home/dpriedel/projects/point_figure/src/Tiingo.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/Tiingo.o"
   },
   {
@@ -472,7 +553,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -495,7 +576,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -518,7 +599,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -541,7 +622,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -564,7 +645,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -593,7 +674,7 @@
       "-fPIC",
       "-I/home/dpriedel/projects/point_figure/src",
       "-I/usr/local/include",
-      "-I/extra/boost/boost-1.77_gcc-11",
+      "-I/extra/boost/boost-1.78_gcc-11",
       "-I/extra/gcc/decNumber_old",
       "-I/home/dpriedel/projects/common_utilities/include",
       "-I/usr/local/include/ChartDirector",
@@ -605,5 +686,28 @@
     "directory": "/home/dpriedel/projects/PF_Test",
     "file": "/home/dpriedel/projects/common_utilities/src/utilities.cpp",
     "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/utilities.o"
+  },
+  {
+    "arguments": [
+      "/extra/gcc/gcc-11/bin/gcc",
+      "-c",
+      "-O0",
+      "-g3",
+      "-D_DEBUG",
+      "-fPIC",
+      "-I/home/dpriedel/projects/point_figure/src",
+      "-I/usr/local/include",
+      "-I/extra/boost/boost-1.78_gcc-11",
+      "-I/extra/gcc/decNumber_old",
+      "-I/home/dpriedel/projects/common_utilities/include",
+      "-I/usr/local/include/ChartDirector",
+      "-march=native",
+      "-o",
+      "Debug_e2e/calfaq.o",
+      "/home/dpriedel/projects/common_utilities/src/calfaq.c"
+    ],
+    "directory": "/home/dpriedel/projects/PF_Test",
+    "file": "/home/dpriedel/projects/common_utilities/src/calfaq.c",
+    "output": "/home/dpriedel/projects/PF_Test/Debug_e2e/calfaq.o"
   }
 ]
