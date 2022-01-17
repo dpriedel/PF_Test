@@ -106,25 +106,9 @@ std::string MakeSimpleTestData(const std::string& data, const date::year_month_d
 {
     auto values = rng_split_string<std::string_view>(data, delim);
 
-    // make some business days (although, not doing holidays)
-    auto dates = ranges::views::generate_n([start_at = first_day]()mutable->date::year_month_day
-       {
-            auto a = start_at;
-            auto days = date::sys_days(start_at);
-            date::weekday wd{++days};
-            if (wd == date::Saturday)
-            {
-                ++days;
-                ++days;
-            }
-            else if (wd == date::Sunday)
-            {
-                ++days;
-            }
-            start_at = date::year_month_day{days};
-            return a;
-       }, ranges::distance(values));
-
+    auto holidays = MakeHolidayList(first_day.year());
+    ranges::for_each(MakeHolidayList(++(first_day.year())), [&holidays](const auto& e) { holidays.push_back(e); });
+    const auto dates = ConstructeBusinessDayList(first_day, ranges::distance(values), UpOrDown::e_Up, &holidays); 
 //    auto sample = dates | ranges::views::take(50);
 //    std::cout << sample << '\n';
 
@@ -143,29 +127,16 @@ std::string MakeSimpleTestData(const std::string& data, const date::year_month_d
 std::string MakeSimpleTestData(const std::vector<int32_t>& data, const date::year_month_day& first_day)
 {
     // make some business days (although, not doing holidays)
-    auto dates = ranges::views::generate_n([start_at = first_day]()mutable->date::year_month_day
-       {
-            auto a = start_at;
-            auto days = date::sys_days(start_at);
-            date::weekday wd{++days};
-            if (wd == date::Saturday)
-            {
-                ++days;
-                ++days;
-            }
-            else if (wd == date::Sunday)
-            {
-                ++days;
-            }
-            start_at = date::year_month_day{days};
-            return a;
-       }, ranges::distance(data));
+    auto holidays = MakeHolidayList(first_day.year());
+    ranges::for_each(MakeHolidayList(++(first_day.year())), [&holidays](const auto& e) { holidays.push_back(e); });
+    const auto dates = ConstructeBusinessDayList(first_day, ranges::distance(data), UpOrDown::e_Up, &holidays); 
 
 //    auto sample = dates | ranges::views::take(50);
 //    std::cout << sample << '\n';
 
     auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, int32_t a_value)
             { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, data);
+
 
 //    auto sample2 = make_test_data | ranges::views::take(30);
 //    std::cout << sample2 << '\n';
