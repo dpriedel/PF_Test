@@ -1458,7 +1458,7 @@ class MiscChartFunctionality : public Test
 
 };
 
-TEST_F(MiscChartFunctionality, DISABLED_LoadDataFromJSONChartFileThenAddDataFromCSV)
+TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)
 {
     fs::path symbol_file_name{"./test_files/SPY_1.json"};
 
