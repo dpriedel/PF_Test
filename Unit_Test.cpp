@@ -1810,68 +1810,24 @@ TEST_F(PlotChartsWithMatplotLib, Plot10X1Chart)
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 9);
 
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
+    EXPECT_EQ(chart[7].GetTop(), 1150);
+    EXPECT_EQ(chart[7].GetBottom(), 1120);
+    EXPECT_EQ(chart[7].GetHadReversal(), true);
 
 //    std::cout << chart << '\n';
 
-    {
-        py::scoped_interpreter guard{}; // start the interpreter and keep it alive
+    py::scoped_interpreter guard{}; // start the interpreter and keep it alive
 
-        py::print("Hello, World!"); // use the Python API
-        chart.MPL_ConstructChartGraphAndWriteToFile("/tmp/mpl_candlestick1.svg");
+    py::print("Hello, World!"); // use the Python API
 
-        py::exec(R"(
-            import pandas as pd 
-            import matplotlib.pyplot as plt
-            import mplfinance as mpf)"
-        );
-        chart.MPL_ConstructChartGraphAndWriteToFile("/tmp/mpl_candlestick.svg");
-
-        auto locals = py::dict{};
-
-        py::exec(R"(
-        test_data = pd.read_csv("/tmp/data_for_python.csv",
-                header=None,
-                names=["Date", "Open", "High", "Low", "Close", "Is_up", "step_back"],
-                parse_dates=["Date"],
-                index_col="Date",
-                dtype={"Is_up": bool, "step_back": bool},
-                )
-        #data['Date'] = pd.to_datetime(data['Date'])
-
-        print(test_data)
-        # print(test_data.dtypes)
-
-        def func (x,y) : 
-            if x:
-                if y:
-                    return "blue"
-            if not x:
-                if y:
-                    return "yellow"
-            return None
-        is_up = test_data["Is_up"].tolist()
-        step_back = test_data["step_back"].tolist()
-
-        mco = []
-        for i in range(len(is_up)):
-            mco.append(func(is_up[i], step_back[i]))
-
-        # print(mco)
-        mc = mpf.make_marketcolors(up='g',down='r')
-        s  = mpf.make_mpf_style(marketcolors=mc, gridstyle="dashed")
-
-        fig, axlist = mpf.plot(test_data, type="candle", style=s, marketcolor_overrides=mco, returnfig=True)
-        axlist[0].tick_params(which='both', left=True, right=True, labelright=True)
-
-         
-        plt.savefig("/tmp/mpl_candlestick1.svg"))", py::globals(), locals
-        );
-    }
+    py::exec(R"(
+        import pandas as pd 
+        import matplotlib.pyplot as plt
+        import mplfinance as mpf)"
+    );
+    chart.MPL_ConstructChartGraphAndWriteToFile("/tmp/mpl_candlestick1.svg");
     ASSERT_TRUE(fs::exists("/tmp/mpl_candlestick1.svg"));
 }
 
