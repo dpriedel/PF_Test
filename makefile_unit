@@ -87,7 +87,14 @@ OUTDIR := Debug_unit
 
 # NOTE: use libzip NOT libminizip
 #
-CFG_LIB := -lpthread \
+# for embedding Python, get the appropriate link flags
+# python3-config --ldflags
+# -L/usr/lib  -lcrypt -lpthread -ldl  -lutil -lm -lm
+#
+CFG_LIB := -L/usr/lib \
+		-lcrypt \
+		-lpthread \
+		-ldl -lutil -lm -lm \
 		-lssl -lcrypto \
 		-lpython3.10 \
 		-L$(GCCDIR)/lib64 \
