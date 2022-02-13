@@ -1789,77 +1789,6 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
 }
 
-class PlotChartsWithMatplotLib : public Test
-{
-};
-
-TEST_F(PlotChartsWithMatplotLib, Plot10X1Chart)
-{
-    if (fs::exists("/tmp/mpl_candlestick1.svg"))
-    {
-        fs::remove("/tmp/mpl_candlestick1.svg");
-    }
-    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
-    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
-
-    std::istringstream prices{test_data}; 
-
-    PF_Chart chart("GOOG", 10, 1);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
-
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 9);
-
-    EXPECT_EQ(chart[7].GetTop(), 1150);
-    EXPECT_EQ(chart[7].GetBottom(), 1120);
-    EXPECT_EQ(chart[7].GetHadReversal(), true);
-
-//    std::cout << chart << '\n';
-
-    py::scoped_interpreter guard{}; // start the interpreter and keep it alive
-
-    py::print("Hello, World!"); // use the Python API
-
-    py::exec(R"(
-        import pandas as pd 
-        import matplotlib.pyplot as plt
-        import mplfinance as mpf)"
-    );
-    chart.MPL_ConstructChartGraphAndWriteToFile("/tmp/mpl_candlestick1.svg");
-    ASSERT_TRUE(fs::exists("/tmp/mpl_candlestick1.svg"));
-}
-
-TEST_F(PlotChartsWithMatplotLib, Plot10X2Chart)
-{
-    if (fs::exists("/tmp/mpl_candlestick.svg"))
-    {
-        fs::remove("/tmp/mpl_candlestick.svg");
-    }
-    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
-    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
-
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
-
-    std::istringstream prices{test_data}; 
-
-    PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
-
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
-
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
-
-//    std::cout << chart << '\n';
-
-    ASSERT_TRUE(fs::exists("/tmp/mpl_candlestick.svg"));
-}
-
-
 class TiingoATR : public Test
 {
     std::string LoadApiKey(std::string file_name)
@@ -2075,6 +2004,16 @@ int main(int argc, char** argv)
 
     InitLogging();
 
+    py::scoped_interpreter guard{false}; // start the interpreter and keep it alive
+
+    py::print("Hello, World!"); // use the Python API
+
+    py::exec(R"(
+        import pandas as pd 
+        import matplotlib.pyplot as plt
+        import mplfinance as mpf
+        )"
+    );
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
