@@ -43,7 +43,7 @@ CFG_INC := -I${HOME}/projects/point_figure/src \
 	-I$(DECIMALSRCDIR) \
 	-I$(UTILITYDIR)/include \
 	-I/usr/include/python3.10 \
-	-I/usr/lib/python3.10/site-packages/pybind11/include/pybind11
+	-I/usr/lib/python3.10/site-packages/pybind11/include
 
 RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib
 
@@ -91,19 +91,19 @@ OUTDIR := Debug_unit
 # python3-config --ldflags
 # -L/usr/lib  -lcrypt -lpthread -ldl  -lutil -lm -lm
 #
-CFG_LIB := -L/usr/lib \
-		-lcrypt \
-		-lpthread \
-		-ldl -lutil -lm -lm \
-		-lssl -lcrypto \
-		-lpython3.10 \
-		-L$(GCCDIR)/lib64 \
-		-L/usr/local/lib \
+CFG_LIB := -L/usr/local/lib \
 		-lgtest -lgtest_main \
 		-lfmt \
-		-ljsoncpp \
 		-lspdlog \
-		-ldate-tz 
+		-ldate-tz \
+		-L/usr/lib \
+		-lcrypt \
+		-lpthread \
+		-lpython3.10 \
+		-ldl -lutil -lm -lm \
+		-lssl -lcrypto \
+		-ljsoncpp \
+		-L$(GCCDIR)/lib64 
 
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
 OBJS2=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS2)))))

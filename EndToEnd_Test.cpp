@@ -32,6 +32,10 @@
 
 #include <gmock/gmock.h>
 
+#include <pybind11/embed.h> // everything needed for embedding
+namespace py = pybind11;
+using namespace py::literals;
+
 namespace fs = std::filesystem;
 
 const fs::path APPL_EOD_CSV{"./test_files/AAPL_close.dat"};
@@ -461,6 +465,14 @@ int main(int argc, char** argv)
 
     InitLogging();
 
+    py::scoped_interpreter guard{false}; // start the interpreter and keep it alive
+
+    py::print("Hello, World!"); // use the Python API
+
+    py::exec(R"(
+        import PF_DrawChart
+        )"
+    );
 	InitGoogleTest(&argc, argv);
    return RUN_ALL_TESTS();
 }
