@@ -1571,11 +1571,11 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 9);
 
-    EXPECT_EQ(chart[5].GetTop(), 1140);
-    EXPECT_EQ(chart[5].GetBottom(), 1130);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
+    EXPECT_EQ(chart[5].GetTop(), 1120);
+    EXPECT_EQ(chart[5].GetBottom(), 1110);
+    EXPECT_EQ(chart[7].GetHadReversal(), true);
 
 //    std::cout << chart << '\n';
 
@@ -2009,9 +2009,7 @@ int main(int argc, char** argv)
     py::print("Hello, World!"); // use the Python API
 
     py::exec(R"(
-        import pandas as pd 
-        import matplotlib.pyplot as plt
-        import mplfinance as mpf
+        import PF_DrawChart
         )"
     );
     InitGoogleTest(&argc, argv);
