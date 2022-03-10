@@ -66,6 +66,7 @@
 #include <range/v3/view/take.hpp>
 #include <range/v3/view/zip_with.hpp>
 
+#include <range/v3/algorithm/copy.hpp>
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/algorithm/for_each.hpp>
@@ -76,6 +77,7 @@
 #include <date/date.h>
 #include <spdlog/spdlog.h>
 #include <fmt/format.h>
+#include <fmt/chrono.h>
 
 #include <pybind11/embed.h> // everything needed for embedding
 namespace py = pybind11;
@@ -111,7 +113,7 @@ std::string MakeSimpleTestData(const std::string& data, const date::year_month_d
     auto values = rng_split_string<std::string_view>(data, delim);
 
     auto holidays = MakeHolidayList(first_day.year());
-    ranges::for_each(MakeHolidayList(++(first_day.year())), [&holidays](const auto& e) { holidays.push_back(e); });
+    ranges::copy(MakeHolidayList(++(first_day.year())), std::back_inserter(holidays));
     const auto dates = ConstructeBusinessDayList(first_day, ranges::distance(values), UpOrDown::e_Up, &holidays); 
 //    auto sample = dates | ranges::views::take(50);
 //    std::cout << sample << '\n';
@@ -132,7 +134,7 @@ std::string MakeSimpleTestData(const std::vector<int32_t>& data, const date::yea
 {
     // make some business days (although, not doing holidays)
     auto holidays = MakeHolidayList(first_day.year());
-    ranges::for_each(MakeHolidayList(++(first_day.year())), [&holidays](const auto& e) { holidays.push_back(e); });
+    ranges::copy(MakeHolidayList(++(first_day.year())), std::back_inserter(holidays));
     const auto dates = ConstructeBusinessDayList(first_day, ranges::distance(data), UpOrDown::e_Up, &holidays); 
 
 //    auto sample = dates | ranges::views::take(50);
@@ -311,7 +313,7 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays)
     // fall on weekends
 
     auto holidays = MakeHolidayList(2021_y);
-    ranges::for_each(MakeHolidayList(2022_y), [&holidays](const auto& e) { holidays.push_back(e); });
+    ranges::copy(MakeHolidayList(2022_y), std::back_inserter(holidays));
 
     date::year_month_day start_here{2021_y/date::November/22};
 
@@ -1549,12 +1551,12 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 //    EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
 
-class PlotChartsWithChartDirector : public Test
+class PlotChartsWithMatplotlib : public Test
 {
 
 };
 
-TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)
+TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)
 {
     if (fs::exists("/tmp/candlestick1.svg"))
     {
@@ -1584,7 +1586,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)
     ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg"));
 }
 
-TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
+TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)
 {
     if (fs::exists("/tmp/candlestick.svg"))
     {
@@ -1614,7 +1616,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
 
-TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
+TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)
 {
     if (fs::exists("/tmp/candlestick2.svg"))
     {
@@ -1640,7 +1642,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
 
-TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedATR)
+TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR)
 {
     if (fs::exists("/tmp/candlestick3.svg"))
     {
@@ -1722,7 +1724,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
 
-TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithmeticAndPercent)
+TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeticAndPercent)
 {
     if (fs::exists("/tmp/candlestick3.svg"))
     {
@@ -1815,6 +1817,44 @@ TEST_F(TiingoATR, RetrievePreviousData)
 
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
+    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, &holidays);
+
+    EXPECT_EQ(history.size(), 14);
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13]["date"].asString()), date::year_month_day{2021_y/date::September/20});
+}
+
+TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)
+{
+    auto today = date::year_month_day{floor<date::days>(std::chrono::system_clock::now())};
+    date::year which_year = today.year();
+    auto holidays = MakeHolidayList(which_year);
+    ranges::copy(MakeHolidayList(--which_year), std::back_inserter(holidays));
+
+    auto current_time = CurrentLocalZonedTime();
+    auto market_time = date::zoned_time{"America/New_York", current_time};
+
+    auto US_MarketOpen = GetUS_MarketOpen();
+    auto US_MarketClose = GetUS_MarketClose();
+
+    std::cout << "Market Open: " <<  US_MarketOpen << " Market Close: " << US_MarketClose << '\n';
+    std::cout << "current_time: " <<  current_time << " market time: " << market_time << '\n';
+
+    if ( market_time.get_local_time() < US_MarketOpen.get_local_time())
+    {
+        std::cout << "market not open yet.\n";
+    }
+    else if (market_time.get_local_time() > US_MarketClose.get_local_time())
+    {
+        std::cout << "market is closed. streaming not possible any more today.\n";
+    }
+    else
+    {
+        std::cout << "you can stream now\n";
+    }
+    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+
+    const int how_many_days = 2;
     auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, &holidays);
 
     EXPECT_EQ(history.size(), 14);
