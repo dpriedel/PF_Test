@@ -40,6 +40,7 @@
 
 #include <charconv>
 #include <chrono>
+#include <date/tz.h>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -323,6 +324,26 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays)
 
     EXPECT_EQ(result.first, date::year_month_day{2021_y/date::November/22});
     ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/24});
+}
+
+class CanWeStreamNow : public Test
+{
+
+};
+
+TEST_F(CanWeStreamNow, IsTheMarketOpenVariousTimeZones)
+{
+    const auto time1 = date::sys_days{2022_y/date::March/11} + 18h +30min +0s;
+    auto market_status = GetUS_MarketStatus("Australia/Perth", time1);
+    EXPECT_EQ(market_status, US_MarketStatus::e_OpenForTrading);
+
+    const auto time2 = date::sys_days{2022_y/date::March/11} + 8h +30min +0s;
+    market_status = GetUS_MarketStatus("America/Los_Angeles", time2);
+    EXPECT_EQ(market_status, US_MarketStatus::e_NotOpenYet);
+
+    const auto time3 = date::sys_days{2022_y/date::March/11} + 20h +30min +0s;
+    market_status = GetUS_MarketStatus("Europe/London", time3);
+    EXPECT_EQ(market_status, US_MarketStatus::e_ClosedForDay);
 }
 
 class DecimalBasicFunctionality : public Test
@@ -1824,37 +1845,15 @@ TEST_F(TiingoATR, RetrievePreviousData)
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13]["date"].asString()), date::year_month_day{2021_y/date::September/20});
 }
 
-TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)
+TEST_F(TiingoATR, DISABLED_RetrievePreviousCloseAndCurrentOpen)
 {
     auto today = date::year_month_day{floor<date::days>(std::chrono::system_clock::now())};
     date::year which_year = today.year();
     auto holidays = MakeHolidayList(which_year);
     ranges::copy(MakeHolidayList(--which_year), std::back_inserter(holidays));
 
-    auto current_time = CurrentLocalZonedTime();
-    auto market_time = date::zoned_time{"America/New_York", current_time};
-
-    auto US_MarketOpen = GetUS_MarketOpen();
-    auto US_MarketClose = GetUS_MarketClose();
-
-    std::cout << "Market Open: " <<  US_MarketOpen << " Market Close: " << US_MarketClose << '\n';
-    std::cout << "current_time: " <<  current_time << " market time: " << market_time << '\n';
-
-    if ( market_time.get_local_time() < US_MarketOpen.get_local_time())
-    {
-        std::cout << "market not open yet.\n";
-    }
-    else if (market_time.get_local_time() > US_MarketClose.get_local_time())
-    {
-        std::cout << "market is closed. streaming not possible any more today.\n";
-    }
-    else
-    {
-        std::cout << "you can stream now\n";
-    }
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    const int how_many_days = 2;
     auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, &holidays);
 
     EXPECT_EQ(history.size(), 14);
