@@ -333,17 +333,40 @@ class CanWeStreamNow : public Test
 
 TEST_F(CanWeStreamNow, IsTheMarketOpenVariousTimeZones)
 {
-    const auto time1 = date::sys_days{2022_y/date::March/11} + 18h +30min +0s;
+    // we construct our test time using local_days because we are specifying the 
+    // time we want it to be in the given timezone. This is what local_days does.
+
+    // in this test, Perth is 12 hours ahead of New York so it's actually still 
+    // Sunday in NY.
+
+    const auto time1 = date::local_days{2022_y/date::March/14} + 8h +30min +0s;
     auto market_status = GetUS_MarketStatus("Australia/Perth", time1);
+    std::cout << "Perth Australia: " << market_status << '\n';
+    EXPECT_EQ(market_status, US_MarketStatus::e_NonTradingDay);
+
+    const auto time2 = date::local_days{2022_y/date::March/14} + 8h +30min +0s;
+    market_status = GetUS_MarketStatus("America/Los_Angeles", time2);
+    std::cout << "Los Angeles: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_OpenForTrading);
 
-    const auto time2 = date::sys_days{2022_y/date::March/11} + 8h +30min +0s;
-    market_status = GetUS_MarketStatus("America/Los_Angeles", time2);
-    EXPECT_EQ(market_status, US_MarketStatus::e_NotOpenYet);
+    // DST in New York, standard time in London
 
-    const auto time3 = date::sys_days{2022_y/date::March/11} + 20h +30min +0s;
+    const auto time3 = date::local_days{2022_y/date::March/14} + 20h +30min +0s;
     market_status = GetUS_MarketStatus("Europe/London", time3);
+    std::cout << "London: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_ClosedForDay);
+
+    // DST in New York, DST in London
+
+    const auto time3a = date::local_days{2022_y/date::March/29} + 20h +30min +0s;
+    market_status = GetUS_MarketStatus("Europe/London", time3a);
+    std::cout << "London: " << market_status << '\n';
+    EXPECT_EQ(market_status, US_MarketStatus::e_OpenForTrading);
+
+    const auto time4 = date::local_days{2022_y/date::March/14} + 6h + 0min +0s;
+    market_status = GetUS_MarketStatus("America/Chicago", time4);
+    std::cout << "Chicago: " << market_status << '\n';
+    EXPECT_EQ(market_status, US_MarketStatus::e_NotOpenYet);
 }
 
 class DecimalBasicFunctionality : public Test
@@ -2004,8 +2027,17 @@ public:
 
 };
 
-TEST_F(WebSocketSynchronous, DISABLED_ConnectAndDisconnect)
+TEST_F(WebSocketSynchronous, ConnectAndDisconnect)
 {
+    auto current_local_time = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{date::current_zone()->name()}, current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    if (! can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
+
     Tiingo quotes{"api.tiingo.com", "443", "/iex", api_key, std::vector<std::string> {"spy","uso","rsp"}};
     quotes.Connect();
     bool time_to_stop = false;
