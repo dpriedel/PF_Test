@@ -1868,20 +1868,50 @@ TEST_F(TiingoATR, RetrievePreviousData)
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13]["date"].asString()), date::year_month_day{2021_y/date::September/20});
 }
 
-TEST_F(TiingoATR, DISABLED_RetrievePreviousCloseAndCurrentOpen)
+TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)
 {
+    // for streaming, we want to retrieve the previous day's close and, if the markets 
+    // are already open, the day's open.  We do this to capture 'gaps' and to set 
+    // the direction at little sooner.
+
     auto today = date::year_month_day{floor<date::days>(std::chrono::system_clock::now())};
     date::year which_year = today.year();
     auto holidays = MakeHolidayList(which_year);
     ranges::copy(MakeHolidayList(--which_year), std::back_inserter(holidays));
+    
+    auto current_local_time = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto market_status = GetUS_MarketStatus(std::string_view{date::current_zone()->name()}, current_local_time.get_local_time());
 
-    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+    if (market_status != US_MarketStatus::e_NotOpenYet && market_status != US_MarketStatus::e_OpenForTrading)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, &holidays);
+    Tiingo history_getter{"api.tiingo.com", "443", "/iex", api_key, std::vector<std::string> {"spy","uso","rsp"}};
 
-    EXPECT_EQ(history.size(), 14);
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13]["date"].asString()), date::year_month_day{2021_y/date::September/20});
+    if (market_status == US_MarketStatus::e_NotOpenYet)
+    {
+        auto history = history_getter.GetMostRecentTickerData("AAPL", today, 2, &holidays);
+
+        EXPECT_EQ(history.size(), 1);
+        EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{date::sys_days(today) - std::chrono::days{1}});
+    }
+    if (market_status == US_MarketStatus::e_OpenForTrading)
+    {
+        auto history = history_getter.GetTopOfBookAndLastClose();
+        for (const auto& e : history)
+        {
+            const std::string ticker = e["ticker"].asString();
+            const std::string tstmp = e["timestamp"].asString();
+            const auto time_stamp = StringToTimePoint("%FT%T%z", tstmp);
+
+            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " << fmt::format("{}", time_stamp) << '\n';
+        }
+        std::cout << history << '\n';
+        EXPECT_EQ(history.size(), 3);
+    }
+
 }
 
 TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)
