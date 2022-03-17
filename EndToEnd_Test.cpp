@@ -284,7 +284,7 @@ class StreamData : public Test
 {
 };
 
-TEST_F(StreamData, DISABLED_VerifyConnectAndDisconnect)
+TEST_F(StreamData, VerifyConnectAndDisconnect)
 {
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
