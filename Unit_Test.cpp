@@ -854,7 +854,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     EXPECT_EQ(columns.size() + 1, 4);
 
     ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-//    std::cout << col << '\n';
+    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)
@@ -1113,8 +1113,8 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 3);
 
-//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-//    std::cout << col << '\n';
+    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X5 : public Test
@@ -1162,8 +1162,8 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 1);
 
-//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-//    std::cout << col << '\n';
+    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X2 : public Test
@@ -1211,8 +1211,8 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 6);
 
-//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-//    std::cout << col << '\n';
+    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFractionalBoxSize)
