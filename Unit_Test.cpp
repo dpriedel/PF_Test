@@ -66,6 +66,7 @@
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/take.hpp>
 #include <range/v3/view/zip_with.hpp>
+#include <range/v3/view/cartesian_product.hpp>
 
 #include <range/v3/algorithm/copy.hpp>
 #include <range/v3/algorithm/equal.hpp>
@@ -79,6 +80,7 @@
 #include <spdlog/spdlog.h>
 #include <fmt/format.h>
 #include <fmt/chrono.h>
+#include <fmt/ranges.h>
 
 #include <pybind11/embed.h> // everything needed for embedding
 namespace py = pybind11;
@@ -411,10 +413,10 @@ class BoxesBasicFunctionality : public Test
 TEST_F(BoxesBasicFunctionality, Constructors)
 {
     Boxes boxes;
-    EXPECT_TRUE(boxes.GetBoxsize() == -1);
+    EXPECT_TRUE(boxes.GetBoxSize() == -1);
 
     Boxes boxes2{DprDecimal::DDecQuad{10}};
-    EXPECT_TRUE(boxes2.GetBoxsize() == 10);
+    EXPECT_TRUE(boxes2.GetBoxSize() == 10);
 }
 
 TEST_F(BoxesBasicFunctionality, GenerateLinearBoxes)
@@ -578,6 +580,23 @@ TEST_F(BoxesBasicFunctionality, BoxesToJsonThenFromJsonThenAddData)
     ranges::for_each(prices_2, [&boxes_2](const auto& x) { boxes_2.FindBox(x); });
 
     ASSERT_EQ(boxes, boxes_2);
+}
+
+class Combinatorial : public Test
+{
+
+};
+
+TEST_F(Combinatorial, BasicFunctionlity)
+{
+    std::vector<DprDecimal::DDecQuad> a = {1, 2.0, 3.5};
+    std::vector<char> b = {'a', 'c'};
+    std::vector<std::string_view> c = {"def", "hij", "mnop"};
+
+    auto abc = ranges::views::cartesian_product(a, b, c);
+    ranges::for_each(abc, [](const auto& x) {fmt::print("{}\n", x); });
+
+   ASSERT_EQ(ranges::distance(abc), 18);
 }
 
 class ColumnFunctionality10X1 : public Test
@@ -1816,9 +1835,9 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR)
     {
         fs::remove("/tmp/candlestick3.svg");
     }
-    const fs::path file_name{"./test_files/APPLE.json"};
+    const fs::path file_name{"./test_files/AAPL_short.json"};
 
-    const std::string hist = LoadDataFileForUse("./test_files/APPLE.json");
+    const std::string hist = LoadDataFileForUse(file_name);
     std::cout << "history length: " << hist.size() << '\n';
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
