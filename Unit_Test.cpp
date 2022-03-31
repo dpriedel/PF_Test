@@ -203,6 +203,42 @@ TEST_F(RangeSplitterBasicFunctionality, Test1)
     ASSERT_EQ(values, values2);
 };
 
+class Timer : public Test
+{
+
+};
+
+TEST_F(Timer, TestCountDownTimer)
+{
+    // a 10 second count down
+
+    auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto then = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 10s);
+
+    int counter = 0;
+    auto timer = [&counter] (const auto& stop_at)
+        { 
+            while (true)
+            {
+                std::cout << "ding...\n";
+                ++counter;
+                auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                if (now.get_sys_time() >= stop_at.get_sys_time())
+                {
+                    break;
+                }
+                std::this_thread::sleep_for(1s);
+            }
+        };
+
+    auto timer_task = std::async(std::launch::async, timer, then);
+
+	std::this_thread::sleep_for(5s);
+	timer_task.get();
+
+    EXPECT_TRUE(counter >= 9);
+};
+
 class BusinessDateRange : public Test
 {
 
@@ -595,6 +631,8 @@ TEST_F(Combinatorial, BasicFunctionlity)
 
     auto abc = ranges::views::cartesian_product(a, b, c);
     ranges::for_each(abc, [](const auto& x) {fmt::print("{}\n", x); });
+
+    fmt::print("{}\n", abc);
 
    ASSERT_EQ(ranges::distance(abc), 18);
 }

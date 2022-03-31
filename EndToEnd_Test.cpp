@@ -25,6 +25,7 @@
 #include "PF_CollectDataApp.h"
 
 #include <filesystem>
+#include <future>
 
 #include <fmt/format.h>
 #include <gtest/gtest.h>
@@ -35,6 +36,10 @@
 #include <pybind11/embed.h> // everything needed for embedding
 namespace py = pybind11;
 using namespace py::literals;
+
+using namespace std::literals::chrono_literals;
+using namespace date::literals;
+using namespace std::string_literals;
 
 namespace fs = std::filesystem;
 
@@ -371,11 +376,36 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
 
+        auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+
+        int counter = 0;
+        auto timer = [&counter] (const auto& stop_at)
+            { 
+                while (true)
+                {
+                    std::cout << "ding...\n";
+                    ++counter;
+                    auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (now.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
+            // add an external timer here.
+            auto timer_task = std::async(std::launch::async, timer, then);
+
             myApp.Run();
             myApp.Shutdown();
+
+            timer_task.get();
         }
         else
         {
