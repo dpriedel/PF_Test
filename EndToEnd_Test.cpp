@@ -82,7 +82,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -143,7 +143,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -207,7 +207,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -259,7 +259,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
         PF_CollectDataApp myApp(tokens2);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -311,7 +311,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)
         PF_CollectDataApp myApp(tokens3);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -374,7 +374,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
         auto then = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
@@ -454,7 +454,7 @@ TEST_F(StreamData, VerifySignalHandling)
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -512,7 +512,7 @@ TEST_F(StreamData, TryLogarithmicCharts)
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_case_name()));
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)

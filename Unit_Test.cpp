@@ -71,7 +71,6 @@
 #include <range/v3/algorithm/copy.hpp>
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/algorithm/find_if.hpp>
-#include <range/v3/algorithm/for_each.hpp>
 #include <range/v3/view/drop.hpp>
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
@@ -2286,6 +2285,7 @@ int main(int argc, char** argv)
         import PF_DrawChart
         )"
     );
+
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
