@@ -63,7 +63,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)
         "-s", "aapL",
         "--symbol", "IWr",
         "--source", "file",
-        "--new-data-dir", "./test_files3",
+        "--new-data-dir", "./test_files",
         "--source-format", "csv",
         "--mode", "load",
         "--interval", "eod",
@@ -106,7 +106,8 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-//    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
+   EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
+   ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear.json"));
 }
 
 class SingleFileEndToEnd : public Test
