@@ -1531,6 +1531,7 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    // std::cout << "test data: " << test_data << std::endl;
 
     std::istringstream prices{test_data}; 
 
@@ -1540,7 +1541,8 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     const std::vector<int32_t> values_ints_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
     const std::vector<int32_t> values_ints_2 = {1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
     std::string test_data_1 = MakeSimpleTestData(values_ints_1, date::year_month_day {2015_y/date::March/date::Monday[1]});
-    std::string test_data_2 = MakeSimpleTestData(values_ints_2, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    // dates used for second data set need to be non-overlapping with first because Chart code now filters 'old' data.
+    std::string test_data_2 = MakeSimpleTestData(values_ints_2, date::year_month_day {2016_y/date::March/date::Monday[1]});
 
     std::istringstream prices_1{test_data_1}; 
 
@@ -1553,9 +1555,9 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     std::istringstream prices_2{test_data_2}; 
     chart_2.LoadData(&prices_2, "%Y-%m-%d", ',');
 
-//    std::cout << "\n\n chart:\n" << chart;
-//    std::cout << "\n\n chart_1:\n" << chart_1;
-//    std::cout << "\n\n chart_2:\n" << chart_2 << '\n';;
+   // std::cout << "\n\n chart:\n" << chart;
+   // std::cout << "\n\n chart_1:\n" << chart_1;
+   // std::cout << "\n\n chart_2:\n" << chart_2 << '\n';;
 
     ASSERT_EQ(chart, chart_2);
 }
@@ -1652,15 +1654,15 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
 
-    DDecQuad box_size = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
-    box_size.Rescale(-5);
-    std::cout << "box_size: " << box_size << '\n';
+    DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
+    atr.Rescale(-5);
+    std::cout << "atr: " << atr << '\n';
 
-    EXPECT_EQ(box_size, 12.91837);
+    EXPECT_EQ(atr, 12.91837);
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    PF_Chart chart("GOOG", box_size, 2, Boxes::BoxType::e_fractional);
+    PF_Chart chart("GOOG", 1, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear, atr);
     
     // do it manually so can watch chart formation
 
@@ -1730,6 +1732,61 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)
     std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
 }
 
+TEST_F(MiscChartFunctionality, DontReloadOldData)
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+
+    EXPECT_EQ(chart[5].GetTop(), 1140);
+    EXPECT_EQ(chart[5].GetBottom(), 1130);
+    EXPECT_EQ(chart[5].GetHadReversal(), false);
+
+    PF_Chart saved_chart = chart;
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    ASSERT_EQ(chart, saved_chart);
+}
+
+TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)
+{
+    const std::vector<int32_t> values_ints_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
+    std::string test_data_1 = MakeSimpleTestData(values_ints_1, date::year_month_day {2015_y/date::March/date::Monday[1]});
+
+    std::istringstream prices_1{test_data_1}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData(&prices_1, "%Y-%m-%d", ',');
+
+    // EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    // EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    //
+    // EXPECT_EQ(chart[5].GetTop(), 1140);
+    // EXPECT_EQ(chart[5].GetBottom(), 1130);
+    // EXPECT_EQ(chart[5].GetHadReversal(), false);
+
+    PF_Chart saved_chart = chart;
+
+    const std::vector<int32_t> values_ints_2 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+    std::string test_data_2 = MakeSimpleTestData(values_ints_2, date::year_month_day {2015_y/date::March/date::Monday[1]});
+
+    std::istringstream prices_2{test_data_2}; 
+
+    chart.LoadData(&prices_2, "%Y-%m-%d", ',');
+
+    ASSERT_NE(chart, saved_chart);
+}
+
 // use ATR computed box size instead of predefined box size with logarithmic charts 
 
 //class ColumnFunctionalityLogX1 : public Test
@@ -1763,7 +1820,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 
 //    double factor = (10.0 / box_size).ToDouble();
 
-    PF_Chart chart("GOOG", box_size, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent);
+    PF_Chart chart("GOOG", 1, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent, atr);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     std::cout << chart << '\n';
@@ -1899,15 +1956,15 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR)
 
     std::cout << "ATR: " << atr << '\n';
 
-    // compute box size as a percent of ATR, eg. 0.1
+    // // compute box size as a percent of ATR, eg. 0.1
+    //
+    // DprDecimal::DDecQuad box_size = atr * 0.1;
+    //
+    // std::cout << "box size: " << box_size << '\n';
+    // box_size.Rescale(-5);
+    // std::cout << "rescaled box size: " << box_size << '\n';
 
-    DprDecimal::DDecQuad box_size = atr * 0.1;
-
-    std::cout << "box size: " << box_size << '\n';
-    box_size.Rescale(-5);
-    std::cout << "rescaled box size: " << box_size << '\n';
-
-    PF_Chart chart("AAPL", box_size, 3, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear);
+    PF_Chart chart("AAPL", 0.1, 3, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear, atr);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
         {
@@ -2117,7 +2174,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
 
     // recompute using all the data for rest of test
 
-    auto box_size = ComputeATR("AAPL", history, history_size);
+    atr = ComputeATR("AAPL", history, history_size);
 
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
@@ -2127,11 +2184,11 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)
             [](const Json::Value& e) { return DprDecimal::DDecQuad{e["close"].asString()}; });
 
 
-    std::cout << "box size: " << box_size << '\n';
-    box_size.Rescale(-5);
-    std::cout << "rescaled box size: " << box_size << '\n';
+    std::cout << "atr: " << atr << '\n';
+    // box_size.Rescale(-5);
+    // std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxType::e_fractional);
+    PF_Chart chart("AAPL", atr, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear, atr);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
