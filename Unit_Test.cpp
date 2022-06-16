@@ -81,6 +81,7 @@
 #include <fmt/chrono.h>
 #include <fmt/ranges.h>
 
+
 #include <pybind11/embed.h> // everything needed for embedding
 namespace py = pybind11;
 using namespace py::literals;
@@ -1618,6 +1619,26 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
 //    std::cout << chart << '\n';
 }
 
+TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)    //NOLINT
+{
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
+
+    std::ifstream prices{file_name};
+
+    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_integral);
+//    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    auto json = chart.ToJSON();
+
+    chart.StoreChartInChartsDB();
+
+    // PF_Chart chart2{json};
+    // ASSERT_EQ(chart, chart2);
+
+//    std::cout << chart << '\n';
+}
+
 // use ATR computed box size instead of predefined box size 
 
 class ChartFunctionalitySimpleATRX2 : public Test
@@ -1864,7 +1885,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
 
 //    std::cout << chart << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick1.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick1.svg", "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg"));
 }
@@ -1894,7 +1915,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)    //NOLINT
 
 //    std::cout << chart << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick.svg", "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
@@ -1920,7 +1941,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)    //NOLINT
 
 //    std::cout << chart << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick2.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick2.svg", "no");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
@@ -1990,7 +2011,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
 
 //    std::cout << chart << '\n';
 //
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", "no");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
@@ -2040,7 +2061,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 
     std::cout << "# of cols: " << chart.GetNumberOfColumns() << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", "no");
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
@@ -2058,7 +2079,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 //    std::cout << chart_percent << '\n';
     std::cout << "# of cols: " << chart_percent.GetNumberOfColumns() << '\n';
 
-    chart_percent.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg");
+    chart_percent.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg", "no");
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
 }
