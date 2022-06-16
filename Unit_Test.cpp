@@ -81,6 +81,7 @@
 #include <fmt/chrono.h>
 #include <fmt/ranges.h>
 
+#include <pqxx/pqxx>
 
 #include <pybind11/embed.h> // everything needed for embedding
 namespace py = pybind11;
@@ -1580,13 +1581,13 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)    //N
 //    std::cout << chart << '\n';
 }
 
-TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsThenJSON)    //NOLINT
+TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSON)    //NOLINT
 {
     const fs::path file_name{"./test_files/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
-//    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
+    // PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
@@ -1615,26 +1616,6 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
 
     PF_Chart chart2{json};
     ASSERT_EQ(chart, chart2);
-
-//    std::cout << chart << '\n';
-}
-
-TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)    //NOLINT
-{
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
-
-    std::ifstream prices{file_name};
-
-    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_integral);
-//    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
-
-    auto json = chart.ToJSON();
-
-    chart.StoreChartInChartsDB();
-
-    // PF_Chart chart2{json};
-    // ASSERT_EQ(chart, chart2);
 
 //    std::cout << chart << '\n';
 }
@@ -1853,6 +1834,89 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     EXPECT_EQ(chart[5].GetTop(), 1151.4795611);
     EXPECT_EQ(chart[5].GetBottom(), 1125.445475);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
+}
+
+class TestChartDBFunctions : public Test
+{
+	public:
+
+        void SetUp() override
+        {
+		    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+		    pqxx::work trxn{c};
+
+		    // make sure the DB is empty before we start
+
+		    trxn.exec("DELETE FROM point_and_figure.pf_charts");
+		    trxn.commit();
+        }
+
+	int CountRows()
+	{
+	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+	    pqxx::work trxn{c};
+
+	    // make sure the DB is empty before we start
+
+	    auto row = trxn.exec1("SELECT count(*) FROM point_and_figure.pf_charts");
+	    trxn.commit();
+		return row[0].as<int>();
+	}
+
+};
+
+TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)    //NOLINT
+{
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
+
+    std::ifstream prices{file_name};
+
+    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_integral);
+//    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    chart.StoreChartInChartsDB();
+
+    auto how_many = CountRows();
+    ASSERT_EQ(how_many, 1);
+
+//    std::cout << chart << '\n';
+}
+
+TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBThenRetrieveIntoJson)    //NOLINT
+{
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
+
+    std::ifstream prices{file_name};
+
+    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_integral);
+//    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    chart.StoreChartInChartsDB();
+
+	pqxx::connection c{"dbname=finance user=data_updater_pg"};
+	pqxx::work trxn{c};
+
+	// make sure the DB is empty before we start
+
+	auto row = trxn.exec1("SELECT chart_data FROM point_and_figure.pf_charts WHERE symbol = 'AAPL'");
+	trxn.commit();
+    auto the_data =  row[0].as<std::string>();
+
+    JSONCPP_STRING err;
+    Json::Value chart_data;
+
+    Json::CharReaderBuilder builder;
+    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+    if (! reader->parse(the_data.data(), the_data.data() + the_data.size(), &chart_data, &err))
+    {
+        throw std::runtime_error("Problem parsing data from DB: "s + err);
+    }
+    PF_Chart chart2{chart_data};
+    ASSERT_EQ(chart, chart2);
+
+//    std::cout << chart << '\n';
 }
 
 class PlotChartsWithMatplotlib : public Test
