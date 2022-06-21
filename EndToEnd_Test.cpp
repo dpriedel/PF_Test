@@ -501,8 +501,7 @@ TEST_F(StreamData, VerifySignalHandling)    //NOLINT
 	//	the test program.
 
 	std::vector<std::string> tokens{"the_program",
-        "--symbol", "SPY",
-        "--symbol", "AAPL",
+        "--symbol-list", "SPY,aapl",
         "--source", "streaming",
         "--mode", "load",
         "--interval", "live",
