@@ -1875,7 +1875,8 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    chart.StoreChartInChartsDB();
+    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance"};
+    PF_Chart::StoreChartInChartsDB(db_info, chart);
 
     auto how_many = CountRows();
     ASSERT_EQ(how_many, 1);
@@ -1893,27 +1894,35 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    chart.StoreChartInChartsDB();
+    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance"};
+    PF_Chart::StoreChartInChartsDB(db_info, chart);
 
-	pqxx::connection c{"dbname=finance user=data_updater_pg"};
-	pqxx::work trxn{c};
+    // now, let's retrieve the stored data, construct a chart and
+    // see if it's the same as the one we built directly fromt the data.
 
-	// make sure the DB is empty before we start
+    PF_Chart chart2 = PF_Chart::MakeChartFromDB(db_info, chart.GetChartParams());
+    ASSERT_EQ(chart, chart2);
 
-	auto row = trxn.exec1("SELECT chart_data FROM point_and_figure.pf_charts WHERE symbol = 'AAPL'");
-	trxn.commit();
-    auto the_data =  row[0].as<std::string>();
+//    std::cout << chart << '\n';
+}
 
-    JSONCPP_STRING err;
-    Json::Value chart_data;
+TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveIntoJson)    //NOLINT
+{
+    const fs::path file_name{"./test_files/AAPL_close.dat"};
 
-    Json::CharReaderBuilder builder;
-    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    if (! reader->parse(the_data.data(), the_data.data() + the_data.size(), &chart_data, &err))
-    {
-        throw std::runtime_error("Problem parsing data from DB: "s + err);
-    }
-    PF_Chart chart2{chart_data};
+    std::ifstream prices{file_name};
+
+    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
+//    PF_Chart chart("AAPL", 2, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance"};
+    PF_Chart::StoreChartInChartsDB(db_info, chart);
+
+    // now, let's retrieve the stored data, construct a chart and
+    // see if it's the same as the one we built directly fromt the data.
+
+    PF_Chart chart2 = PF_Chart::MakeChartFromDB(db_info, chart.GetChartParams());
     ASSERT_EQ(chart, chart2);
 
 //    std::cout << chart << '\n';
