@@ -9,7 +9,9 @@ EndToEnd_Test
 Debug_unit/*
 Debug_e2e/*
 .cache/*
-test_files/*
+test_files*/*
+collected_charts*/*
+test_charts*/*
 
 # misc
 
