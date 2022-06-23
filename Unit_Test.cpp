@@ -92,7 +92,6 @@ using namespace date::literals;
 using namespace std::string_literals;
 namespace fs = std::filesystem;
 
-
 // for boost websocket testing
 
 using namespace testing;
@@ -1682,8 +1681,8 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.GetNumberOfColumns(), 5);
-    EXPECT_EQ(chart[5].GetTop(), 1151.67348);
-    EXPECT_EQ(chart[5].GetBottom(), 1125.83674);
+    EXPECT_EQ(chart[5].GetTop(), 1151.68);
+    EXPECT_EQ(chart[5].GetBottom(), 1125.84);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
 

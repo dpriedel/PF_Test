@@ -55,6 +55,15 @@ class ProgramOptions : public Test
 
 TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
 {
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear_integers.json"))
+    {
+        fs::remove("/tmp/test_charts/SPY_10X3_linear_integers.json");
+    }
+    if (fs::exists("/tmp/test_charts/SPY_10X1_linear_integers.json"))
+    {
+        fs::remove("/tmp/test_charts/SPY_10X1_linear_integers.json");
+    }
+
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
 
@@ -70,7 +79,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
         "--scale", "linear",
         "--price-fld-name", "Close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts",
+        "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "10",
         "--boxsize", "1",
         "--reversal", "3",
@@ -106,8 +115,8 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-   EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
-   ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear.json"));
+   EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_integers.json"));
+   ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_integers.json"));
 }
 
 class SingleFileEndToEnd : public Test
@@ -117,9 +126,9 @@ class SingleFileEndToEnd : public Test
 
 TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
 {
-    if (fs::exists("/tmp/test_charts/SPY_10X3_linear.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear_integers.json"))
     {
-        fs::remove("/tmp/test_charts/SPY_10X3_linear.json");
+        fs::remove("/tmp/test_charts/SPY_10X3_linear_integers.json");
     }
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
@@ -134,7 +143,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
         "--scale", "linear",
         "--price-fld-name", "Close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts",
+        "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "10",
         "--reversal", "3"
 	};
@@ -168,18 +177,18 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_integers.json"));
 }
 
 TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 {
-    if (fs::exists("/tmp/test_charts/SPY_10X3_linear.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear_integers.json"))
     {
-        fs::remove("/tmp/test_charts/SPY_10X3_linear.json");
+        fs::remove("/tmp/test_charts/SPY_10X3_linear_integers.json");
     }
-    if (fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"))
+    if (fs::exists("/tmp/test_charts2/SPY_10X3_linear_integers.json"))
     {
-        fs::remove("/tmp/test_charts2/SPY_10X3_linear.json");
+        fs::remove("/tmp/test_charts2/SPY_10X3_linear_integers.json");
     }
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
@@ -198,7 +207,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         "--scale", "linear",
         "--price-fld-name", "Close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts",
+        "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "10",
         "--reversal", "3"
 	};
@@ -233,7 +242,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_integers.json"));
 
     // now construct the data file from 2 input files which, together, contain the same 
     // data as the 1 file used above. 
@@ -250,7 +259,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         "--scale", "linear",
         "--price-fld-name", "Close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts2",
+        "--output-chart-dir", "/tmp/test_charts2",
         "--boxsize", "10",
         "--reversal", "3"
 	};
@@ -285,7 +294,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_integers.json"));
 
     // now continue constructing the data file from 2 input files which, together, contain the same 
     // data as the 1 file used above. 
@@ -296,13 +305,14 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         "--symbol", "SPY",
         "--source", "file",
         "--new-data-dir", "./test_files3",
+        "--chart-data-dir", "/tmp/test_charts2",
         "--source-format", "csv",
         "--mode", "update",
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "Close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts2",
+        "--output-chart-dir", "/tmp/test_charts2",
         "--boxsize", "10",
         "--reversal", "3"
 	};
@@ -342,7 +352,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
     std::cout << "\n\n half chart:\n" << half_chart;
     std::cout << "\n\n franken chart:\n" << franken_chart << '\n';;
 
-    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_integers.json"));
     ASSERT_TRUE(whole_chart == franken_chart);
 }
 
@@ -406,8 +416,8 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
         spdlog::error("Something totally unexpected happened.");
 	}
 
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/ADIV_0.1X3_linear.json"));
-    ASSERT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/ADIV_0.1X3_linear_fractions.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear_fractions.svg"));
 }
 
 class StreamData : public Test
@@ -416,6 +426,11 @@ class StreamData : public Test
 
 TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
 {
+    if (fs::exists("/tmp/test_charts"))
+    {
+        fs::remove_all("/tmp/test_charts");
+    }
+
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
 
@@ -428,7 +443,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
         "--scale", "linear",
         "--price-fld-name", "close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts",
+        "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "0.01",
         "--boxsize", "0.005",
         "--reversal", "1"
@@ -488,7 +503,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X3_linear.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X1_linear_fractions.json"));
 }
 
 TEST_F(StreamData, VerifySignalHandling)    //NOLINT
@@ -508,9 +523,9 @@ TEST_F(StreamData, VerifySignalHandling)    //NOLINT
         "--scale", "linear",
         "--price-fld-name", "close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts",
+        "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "0.005",
-        "--reversal", "3"
+        "--reversal", "1"
 	};
 
 	try
@@ -542,10 +557,10 @@ TEST_F(StreamData, VerifySignalHandling)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X3_linear.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X3_linear.svg"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.005X3_linear.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.005X3_linear.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X1_linear_fractions.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X1_linear_fractions.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.005X1_linear_fractions.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.005X1_linear_fractions.svg"));
 }
 
 TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
@@ -558,7 +573,7 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
 	//	the test program.
 
 	std::vector<std::string> tokens{"the_program",
-        "--symbol", "SPY",
+        "--symbol", "GOOG",
         "--symbol", "AAPL",
         "--source", "streaming",
         "--mode", "load",
@@ -566,9 +581,9 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
         "--scale", "percent",
         "--price-fld-name", "close",
         "--destination", "file",
-        "--chart-data-dir", "/tmp/test_charts_log",
+        "--output-chart-dir", "/tmp/test_charts_log",
         "--boxsize", "0.01",
-        "--reversal", "3"
+        "--reversal", "1"
 	};
 
 	try
@@ -579,8 +594,32 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
         spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
+
+        auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+
+        int counter = 0;
+        auto timer = [&counter] (const auto& stop_at)
+            { 
+                while (true)
+                {
+                    std::cout << "ding...\n";
+                    ++counter;
+                    auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (now.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
         if (startup_OK)
         {
+            // add an external timer here.
+            auto timer_task = std::async(std::launch::async, timer, then);
+
             myApp.Run();
             myApp.Shutdown();
         }
@@ -600,10 +639,10 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/SPY_0.01%X3_percent.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/SPY_0.01%X3_percent.svg"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X3_percent.json"));
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X3_percent.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/GOOG_0.01%X1_percent_fractions.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/GOOG_0.01%X1_percent_fractions.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X1_percent_fractions.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X1_percent_fractions.svg"));
 }
 
 
