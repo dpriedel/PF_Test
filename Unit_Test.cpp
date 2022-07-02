@@ -673,32 +673,32 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     
     auto a_value = prices.begin();
 
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
-//    std::cout << "first value: " << *a_value << '\n';
+   std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = std::chrono::system_clock::now();
-//    std::cout << "second value: " << *(++a_value) << '\n';
+    the_time = date::utc_clock::now();
+   // std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = std::chrono::system_clock::now();
-//    std::cout << "third value: " << *(++a_value) << '\n';
+    the_time = date::utc_clock::now();
+   // std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = std::chrono::system_clock::now();
+    the_time = date::utc_clock::now();
     while (++a_value != prices.end())
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
@@ -716,7 +716,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)    //NOLINT
     PF_Column col{&boxes, 1};
 
     PF_Column::Status status;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -732,12 +732,13 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
     PF_Column col{&boxes, 1};
 
     PF_Column::Status status;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
+    std::cout << "time: " << the_time << '\n';
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
     auto json = col.ToJSON();
-//    std::cout << json << '\n';
+   std::cout << json << '\n';
 
 //    EXPECT_EQ(json["box_size"], "10");
 
@@ -745,11 +746,12 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
     // we use nanoseconds because that is what tiingo provides in its 
     // streaming interface.
 
-    PF_Column::tpt z{std::chrono::nanoseconds{json["start_at"].asInt64()}};
+    PF_Column::TmPt z{std::chrono::nanoseconds{json["first_entry"].asInt64()}};
+    std::cout << "z: " << z << '\n';
     
     EXPECT_TRUE(z == the_time);
 
-//    std::cout << std::chrono::milliseconds(std::stol(json["start_at"])) << ;\n';
+//    std::cout << std::chrono::milliseconds(std::stol(json["first_entry"])) << ;\n';
 
     EXPECT_EQ(json["direction"].asString(), "up");
     EXPECT_EQ(json["top"].asString(), "1130");
@@ -766,7 +768,7 @@ TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)    //NOLINT
     PF_Column col{&boxes, 1};
 
     PF_Column::Status status;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
@@ -801,7 +803,7 @@ TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)    /
     PF_Column col{&boxes, 1};
 
     PF_Column::Status status;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
@@ -821,7 +823,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)    //NOLINT
 
     std::vector<PF_Column> columns;
 
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
@@ -854,7 +856,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)  
     PF_Column col{&boxes, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -886,7 +888,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     PF_Column col{&boxes, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -921,7 +923,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLIN
     PF_Column col{&boxes, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -957,7 +959,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     PF_Column col{&boxes, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1004,7 +1006,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     const std::vector<double> prices = {1100.4, 1105.9, 1110.3, 1112.2, 1118.7, 1120.6}; 
     Boxes boxes{DprDecimal::DDecQuad{10}, Boxes::BoxType::e_fractional};
     PF_Column col{&boxes, 1};
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
     
     auto a_value = prices.begin();
 
@@ -1015,7 +1017,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetTop(), 1100.4);
     EXPECT_EQ(col.GetBottom(), 1100.4);
 
-    the_time = std::chrono::system_clock::now();
+    the_time = date::utc_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
@@ -1023,7 +1025,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetTop(), 1100.4);
     EXPECT_EQ(col.GetBottom(), 1100.4);
 
-    the_time = std::chrono::system_clock::now();
+    the_time = date::utc_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
@@ -1031,7 +1033,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetTop(), 1100.4);
     EXPECT_EQ(col.GetBottom(), 1100.4);
 
-    the_time = std::chrono::system_clock::now();
+    the_time = date::utc_clock::now();
     while (++a_value != prices.end())
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
@@ -1066,7 +1068,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     
     auto a_value = prices.begin();
 
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 //    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
 //    std::cout << "first value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
@@ -1075,7 +1077,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = std::chrono::system_clock::now();
+    the_time = date::utc_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
 //    std::cout << "second value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
@@ -1084,7 +1086,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = std::chrono::system_clock::now();
+    the_time = date::utc_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
 //    std::cout << "third value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
@@ -1093,7 +1095,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = std::chrono::system_clock::now();
+    the_time = date::utc_clock::now();
     while (++a_value != prices.end())
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
@@ -1113,7 +1115,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)    //NOLINT
     PF_Column col{&boxes, 3};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1149,7 +1151,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)    //NOLINT
 
     std::vector<PF_Column> columns;
 
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
@@ -1197,7 +1199,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     PF_Column col{&boxes, 5};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1246,7 +1248,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     PF_Column col{&boxes, 2};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1298,7 +1300,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     ranges::for_each(data_values, [&columns, &col, close_col = 1, date_col = 0](const auto record)
     {
         const auto fields = split_string<std::string_view> (record, ',');
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col]));
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 //        std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -1307,7 +1309,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col])).first;
+            status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
 //            std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
         }
     });
@@ -1340,7 +1342,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     ranges::for_each(data_values, [&boxes, &columns, &col, close_col = 1, date_col = 0](const auto record)
     {
         const auto fields = split_string<std::string_view> (record, ',');
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col]));
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 //        std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -1349,7 +1351,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col])).first;
+            status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
 //            std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
     
 //            std::cout << "Boxes: " << boxes << '\n';
@@ -1395,7 +1397,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     ranges::for_each(data_values, [&boxes, &columns, &col, close_col = 1, date_col = 0](const auto record)
     {
         const auto fields = split_string<std::string_view> (record, ',');
-        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col]));
+        auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 //        std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
@@ -1404,7 +1406,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
             // now continue on processing the value.
             
-            status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col])).first;
+            status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
 //            std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
     
 //            std::cout << "Boxes: " << boxes << '\n';
@@ -1439,9 +1441,9 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
     PF_Column col{&boxes, 2};
 
     std::vector<PF_Column> columns;
-    PF_Column::tpt the_time = std::chrono::system_clock::now();
+    PF_Column::TmPt the_time = date::utc_clock::now();
 
-    for (auto price : prices)
+    for (const auto& price : prices)
     {
         auto [status, new_col] = col.AddValue(price, the_time);
 //        std::cout << "value: " << price << " status: " << status << " top: " << col.GetTop() << '\n';
@@ -1673,7 +1675,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 //            std::cout << "len: " << record.size() << "  " << record << '\n';
             const auto fields = split_string<std::string_view> (record, ',');
 //            std::cout << "close value: " << fields[close_col] << " date value: " << fields[date_col] << " record: \n" << record << '\n';
-            auto result = chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col]));
+            auto result = chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 //            std::cout << "value: " << fields[close_col] << " result: " << result << " direction: " << chart.GetCurrentDirection() << '\n';
         });
 
@@ -1728,7 +1730,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)    /
 //            std::cout << "len: " << record.size() << "  " << record << '\n';
             const auto fields = split_string<std::string_view> (record, ',');
 //            std::cout << "close value: " << fields[close_col] << " date value: " << fields[date_col] << " record: \n" << record << '\n';
-            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToTimePoint("%Y-%m-%d", fields[date_col]));
+            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
 }
@@ -1846,7 +1848,7 @@ class TestChartDBFunctions : public Test
 
 		    // make sure the DB is empty before we start
 
-		    trxn.exec("DELETE FROM point_and_figure.pf_charts");
+		    trxn.exec("DELETE FROM test_point_and_figure.pf_charts");
 		    trxn.commit();
         }
 
@@ -1857,7 +1859,7 @@ class TestChartDBFunctions : public Test
 
 	    // make sure the DB is empty before we start
 
-	    auto row = trxn.exec1("SELECT count(*) FROM point_and_figure.pf_charts");
+	    auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
 	    trxn.commit();
 		return row[0].as<int>();
 	}
@@ -1874,7 +1876,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance"};
+    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_Chart::StoreChartInChartsDB(db_info, chart);
 
     auto how_many = CountRows();
@@ -1893,7 +1895,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance"};
+    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_Chart::StoreChartInChartsDB(db_info, chart);
 
     // now, let's retrieve the stored data, construct a chart and
@@ -1915,7 +1917,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance"};
+    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_Chart::StoreChartInChartsDB(db_info, chart);
 
     // now, let's retrieve the stored data, construct a chart and
@@ -2047,7 +2049,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     }
     std::cout << "history length: " << history.size() << '\n';
 
-    auto atr = ComputeATR("AAPL", history, history.size() -1, UseAdjusted::e_Yes);
+    auto atr = ComputeATRUsingJSON("AAPL", history, history.size() -1, UseAdjusted::e_Yes);
 
     std::cout << "ATR: " << atr << '\n';
 
@@ -2068,8 +2070,8 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
 //            std::cout << "val: " << val << '\n';
             std::string dte{e["date"].asString()};
             std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
-            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
-            chart.AddValue(val, date::sys_days(the_date));
+            auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
+            chart.AddValue(val, the_date);
         });
 
 //    PF_Chart chart("AAPL", 2, 2);
@@ -2127,8 +2129,8 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
             std::string dte{e["date"].asString()};
             std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
-            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
-            chart.AddValue(val, date::sys_days(the_date));
+            auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
+            chart.AddValue(val, the_date);
         });
 
     std::cout << "# of cols: " << chart.GetNumberOfColumns() << '\n';
@@ -2144,8 +2146,8 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
             std::string dte{e["date"].asString()};
             std::string_view date{dte.begin(), dte.begin() + dte.find('T')};
-            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
-            chart_percent.AddValue(val, date::sys_days(the_date));
+            auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
+            chart_percent.AddValue(val, the_date);
         });
 
 //    std::cout << chart_percent << '\n';
@@ -2225,7 +2227,7 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
         {
             const std::string ticker = e["ticker"].asString();
             const std::string tstmp = e["timestamp"].asString();
-            const auto time_stamp = StringToTimePoint("%FT%T%z", tstmp);
+            const auto time_stamp = StringToUTCTimePoint("%FT%T%z", tstmp);
 
             std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " << fmt::format("{}", time_stamp) << '\n';
         }
@@ -2249,7 +2251,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4]["date"].asString()), date::year_month_day{2021_y/date::October/1});
 
-    auto atr = ComputeATR("AAPL", history, 4);
+    auto atr = ComputeATRUsingJSON("AAPL", history, 4);
     std::cout << "ATR: " << atr << '\n';
     ASSERT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
 }
@@ -2264,13 +2266,13 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
 
-    auto atr = ComputeATR("AAPL", history, 4);
+    auto atr = ComputeATRUsingJSON("AAPL", history, 4);
 //    std::cout << "ATR: " << atr << '\n';
     EXPECT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
 
     // recompute using all the data for rest of test
 
-    atr = ComputeATR("AAPL", history, history_size);
+    atr = ComputeATRUsingJSON("AAPL", history, history_size);
 
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
@@ -2296,8 +2298,8 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
             DprDecimal::DDecQuad val{e["close"].asString()};
             std::string dte{e["date"].asString()};
             std::string_view date{dte.data(), dte.data() + dte.find('T')};
-            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
-            chart.AddValue(val, date::sys_days{the_date});
+            auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
+            chart.AddValue(val, the_date);
         });
 
 //    std::cout << chart << '\n';
@@ -2314,14 +2316,14 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
     std::cout << "history: " << history << '\n';
 
-    auto atr = ComputeATR("AAPL", history, 4, UseAdjusted::e_Yes);
+    auto atr = ComputeATRUsingJSON("AAPL", history, 4, UseAdjusted::e_Yes);
     atr.Rescale(-5);
 //    std::cout << "ATR: " << atr << '\n';
     EXPECT_EQ(atr, DprDecimal::DDecQuad{"3.36875"});
 
     // recompute using all the data for rest of test
 
-    atr = ComputeATR("AAPL", history, history_size);
+    atr = ComputeATRUsingJSON("AAPL", history, history_size);
     atr.Rescale(-5);
 
     // next, I need to compute my average closing price over the interval 
@@ -2349,8 +2351,8 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
             std::string dte{e["date"].asString()};
             std::string_view date{dte.data(), dte.data() + dte.find('T')};
-            date::year_month_day the_date = StringToDateYMD("%Y-%m-%d", date);
-            auto status = chart.AddValue(val, date::sys_days{the_date});
+            auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
+            auto status = chart.AddValue(val, the_date);
             std::cout << "value: " << val << " status: " << status << '\n';
         });
 
