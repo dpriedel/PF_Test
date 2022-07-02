@@ -31,6 +31,9 @@
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 
+#include <pqxx/pqxx>
+#include <pqxx/transaction.hxx>
+
 #include <gmock/gmock.h>
 
 #include <pybind11/embed.h> // everything needed for embedding
@@ -418,6 +421,98 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
 
     EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/ADIV_0.1X3_linear_fractions.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear_fractions.svg"));
+}
+
+class Database : public Test
+{
+	public:
+
+        void SetUp() override
+        {
+		    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+		    pqxx::work trxn{c};
+
+		    // make sure the DB is empty before we start
+
+		    trxn.exec("DELETE FROM test_point_and_figure.pf_charts");
+		    trxn.commit();
+        }
+
+	int CountRows()
+	{
+	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+	    pqxx::work trxn{c};
+
+	    // make sure the DB is empty before we start
+
+	    auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
+	    trxn.commit();
+		return row[0].as<int>();
+	}
+
+};
+
+TEST_F(Database, LoadDataFromDB)    //NOLINT
+{
+    if (fs::exists("/tmp/test_charts"))
+    {
+        fs::remove_all("/tmp/test_charts");
+    }
+
+	//	NOTE: the program name 'the_program' in the command line below is ignored in the
+	//	the test program.
+
+	std::vector<std::string> tokens{"the_program",
+        "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
+        "--symbol", "AAPL",
+        "--symbol-list", "IWR,iwm,t",
+        "--source", "database",
+        "--mode", "load",
+        "--scale", "linear",
+        "--price-fld-name", "close_p",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_charts",
+        "--boxsize", "25",
+        "--boxsize", "10",
+        "--reversal", "1",
+        "-r", "3",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--db-data-source", "stock_data.current_data",
+        "--begin-date", "2017-01-01",
+        "--max-graphic-cols", "150"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.005X1_linear_fractions.json"));
 }
 
 class StreamData : public Test
