@@ -82,6 +82,7 @@
 #include <fmt/ranges.h>
 
 #include <pqxx/pqxx>
+#include <pqxx/transaction.hxx>
 
 #include <pybind11/embed.h> // everything needed for embedding
 namespace py = pybind11;
@@ -1927,6 +1928,38 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
     ASSERT_EQ(chart, chart2);
 
 //    std::cout << chart << '\n';
+}
+
+TEST_F(TestChartDBFunctions, ComputeATRUsingDB)    //NOLINT
+{
+    // we should get the same result as we do from tiingo, I expect
+
+    DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="stock_data.current_data"};
+
+    constexpr int history_size = 20;
+	pqxx::connection c{fmt::format("dbname={} user={}", db_params.db_name_, db_params.user_name_)};
+	pqxx::nontransaction trxn{c};		// we are read-only for this work
+
+	std::string get_ATR_info_cmd = fmt::format("SELECT date, high, low, close_p FROM {} WHERE symbol = '{}' AND date <= '{}' ORDER BY date DESC LIMIT {}",
+			db_params.db_data_source_,
+			"AAPL",
+            "2021-10-07",
+			history_size + 1		// need an extra row for the algorithm 
+			);
+    DprDecimal::DDecQuad atr;
+
+	try
+	{
+		auto results = trxn.exec(get_ATR_info_cmd);
+		trxn.commit();
+        atr = ComputeATRUsingDB("AAPL", results, history_size);
+    }
+   	catch (const std::exception& e)
+   	{
+		std::cout << "Unable to load data for 'AAPL' because: " << e.what() << std::endl;
+   	}
+
+    EXPECT_EQ(atr, DprDecimal::DDecQuad{"3.36875"});
 }
 
 class PlotChartsWithMatplotlib : public Test
