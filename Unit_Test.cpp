@@ -106,6 +106,8 @@ using namespace testing;
 
 #include "utilities.h"
 
+// NOLINTBEGIN(*-magic-numbers)
+//
 using namespace DprDecimal;
 
 // some specific files for Testing.
@@ -480,9 +482,9 @@ TEST_F(BoxesBasicFunctionality, GenerateLinearBoxes)    //NOLINT
     auto howmany2 = boxes.GetBoxList().size();
     EXPECT_EQ(howmany, howmany2);
 
-    Boxes boxes2{10, Boxes::BoxType::e_fractional};
+    Boxes boxes2{DprDecimal::DDecQuad{10.0}};
     box = boxes2.FindBox(95.5);
-    EXPECT_EQ(box, 95.5);
+    EXPECT_EQ(box, 95);         // box will be integral, so rounds down.
 
     // test going smaller
 
@@ -524,7 +526,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
     // I'm not sure how du Plessis is doing his rounding (p. 492) but 
     // I'm using round half up to 3 decimals.
 
-    Boxes boxes{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
 
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, 500.00);
@@ -546,7 +548,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
 
     // test going smaller
 
-    Boxes boxes2{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes2{0.01, Boxes::BoxScale::e_percent};
 
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -558,14 +560,14 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
 
 TEST_F(BoxesBasicFunctionality, PercentBoxesNextandPrev)    //NOLINT
 {
-    Boxes boxes{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, 500.00);
 
     box = boxes.FindNextBox(500);
     EXPECT_EQ(box, 505);
 
-    Boxes boxes2{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes2{0.01, Boxes::BoxScale::e_percent};
     box = boxes2.FindBox(500);
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -582,7 +584,7 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)    //NOLINT
 
     auto prices = values | ranges::views::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
 
-    Boxes boxes{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
 
     ranges::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
 
@@ -995,7 +997,7 @@ class ColumnFunctionalityFractionalBoxes10X1 : public Test
 
 TEST_F(ColumnFunctionalityFractionalBoxes10X1, Constructors)    //NOLINT
 {
-    Boxes boxes{DprDecimal::DDecQuad{10}, Boxes::BoxType::e_fractional};
+    Boxes boxes{DprDecimal::DDecQuad{10}};
     PF_Column col{&boxes, 1};
 
    ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
@@ -1005,7 +1007,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, Constructors)    //NOLINT
 TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialValueAndDirection)    //NOLINT
 {
     const std::vector<double> prices = {1100.4, 1105.9, 1110.3, 1112.2, 1118.7, 1120.6}; 
-    Boxes boxes{DprDecimal::DDecQuad{10}, Boxes::BoxType::e_fractional};
+    Boxes boxes{DprDecimal::DDecQuad{10}};
     PF_Column col{&boxes, 1};
     PF_Column::TmPt the_time = date::utc_clock::now();
     
@@ -1015,24 +1017,24 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
-    EXPECT_EQ(col.GetTop(), 1100.4);
-    EXPECT_EQ(col.GetBottom(), 1100.4);
+    EXPECT_EQ(col.GetTop(), 1100);
+    EXPECT_EQ(col.GetBottom(), 1100);
 
     the_time = date::utc_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
-    EXPECT_EQ(col.GetTop(), 1100.4);
-    EXPECT_EQ(col.GetBottom(), 1100.4);
+    EXPECT_EQ(col.GetTop(), 1100);
+    EXPECT_EQ(col.GetBottom(), 1100);
 
     the_time = date::utc_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
-    EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
-    EXPECT_EQ(col.GetTop(), 1100.4);
-    EXPECT_EQ(col.GetBottom(), 1100.4);
+    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1110);
+    EXPECT_EQ(col.GetBottom(), 1100);
 
     the_time = date::utc_clock::now();
     while (++a_value != prices.end())
@@ -1041,8 +1043,8 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(col.GetTop(), 1120.4);
-    EXPECT_EQ(col.GetBottom(), 1100.4);
+    EXPECT_EQ(col.GetTop(), 1120);
+    EXPECT_EQ(col.GetBottom(), 1100);
 
     std:: cout << "col: " << col << '\n';
 }
@@ -1292,7 +1294,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    Boxes boxes{box_size, Boxes::BoxType::e_fractional};
+    Boxes boxes{box_size};
     PF_Column col{&boxes, 2};
 
     std::vector<PF_Column> columns;
@@ -1332,7 +1334,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    Boxes boxes{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 2};
 
     std::cout << "Boxes: " << boxes << '\n';
@@ -1387,7 +1389,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    Boxes boxes{box_size, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes{box_size, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 2};
 
 //    std::cout << "Boxes: " << boxes << '\n';
@@ -1438,7 +1440,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
 //    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
 
-    Boxes boxes{0.01, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 2};
 
     std::vector<PF_Column> columns;
@@ -1610,7 +1612,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
 
     std::ifstream prices{file_name};
 
-    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
+    PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
@@ -1666,7 +1668,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    PF_Chart chart("GOOG", 1, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear, atr);
+    PF_Chart chart("GOOG", 1, 2, Boxes::BoxScale::e_linear, atr);
     
     // do it manually so can watch chart formation
 
@@ -1734,6 +1736,96 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)    /
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
+}
+
+TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //NOLINT
+{
+    if (fs::exists("/tmp/candlestick5.svg"))
+    {
+        fs::remove("/tmp/candlestick5.svg");
+    }
+    if (fs::exists("/tmp/candlestick6.svg"))
+    {
+        fs::remove("/tmp/candlestick6.svg");
+    }
+
+    fs::path csv_file_name{"./test_files/SPY.csv"};
+    const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
+
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto header_record = symbol_data_records.front();
+
+    auto date_column = FindColumnIndex(header_record, "date", ',');
+    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    
+    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+
+    PF_Chart new_chart{"SPY", 10, 1};
+
+    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+        {
+            const auto fields = split_string<std::string_view> (record, ',');
+            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+        });
+    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+
+    new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick5.svg", "no");
+
+    // save for comparison
+
+    PF_Chart chart2 = new_chart;
+
+	// load updates from prices DB
+
+	struct DB_data
+	{
+		date::utc_time<date::utc_clock::duration> tp;
+		DprDecimal::DDecQuad price;
+	};
+	std::vector<DB_data> db_data;
+
+	// first, get ready to retrieve our data from DB.  Do this for all our symbols here.
+	// (we know what data to extract because we know what is in our CSV original source above)
+
+	std::string get_symbol_prices_cmd = "SELECT date, close_p FROM stock_data.current_data WHERE symbol = 'SPY' AND date >= '2020-03-26' ORDER BY date ASC";
+
+	try
+	{
+	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+	    pqxx::nontransaction trxn{c};		// we are read-only for this work
+
+		auto stream = pqxx::stream_from::query(trxn, get_symbol_prices_cmd);
+		std::tuple<std::string_view, std::string_view> row;
+
+		// we know our database contains 'date's, but we need timepoints
+
+		std::istringstream time_stream;
+		date::utc_time<date::utc_clock::duration> tp;
+
+   	   	while (stream >> row)
+   	   	{
+			time_stream.clear();
+			time_stream.str(std::string{std::get<0>(row)});
+    		date::from_stream(time_stream, "%F", tp);
+            db_data.emplace_back(tp, DprDecimal::DDecQuad{std::get<1>(row)});
+        }
+   	   	stream.complete();
+    	trxn.commit();
+
+		std::cout << "done retrieving data for symbol SPY. Got: " << db_data.size() << " rows." << std::endl;
+   	}
+   	catch (const std::exception& e)
+   	{
+		std::cout << "Unable to load data for SPY because: " << e.what() << std::endl;
+   	}
+
+	ranges::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
+    std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
+
+    new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick6.svg", "no");
+
+    EXPECT_NE(new_chart, chart2);
 }
 
 TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
@@ -1826,7 +1918,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 
 //    double factor = (10.0 / box_size).ToDouble();
 
-    PF_Chart chart("GOOG", 1, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent, box_size);
+    PF_Chart chart("GOOG", 1, 2, Boxes::BoxScale::e_percent, box_size);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     // std::cout << chart << '\n';
@@ -1873,7 +1965,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
 
     std::ifstream prices{file_name};
 
-    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_integral);
+    PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
@@ -1892,7 +1984,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
 
     std::ifstream prices{file_name};
 
-    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_integral);
+    PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
@@ -1914,7 +2006,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
 
     std::ifstream prices{file_name};
 
-    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
+    PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
@@ -1956,10 +2048,12 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDB)    //NOLINT
     }
    	catch (const std::exception& e)
    	{
-		std::cout << "Unable to load data for 'AAPL' because: " << e.what() << std::endl;
+		std::cout << "Unable to comput ATR from DB for 'AAPL' because: " << e.what() << std::endl;
    	}
 
-    EXPECT_EQ(atr, DprDecimal::DDecQuad{"3.36875"});
+    // results won't be exactly equal due to small differences in least
+    // significant decimal digits of prices between tiingo and EODData
+    EXPECT_EQ(atr.Rescale(-3), DprDecimal::DDecQuad{"3.211"});
 }
 
 class PlotChartsWithMatplotlib : public Test
@@ -2085,6 +2179,8 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     auto atr = ComputeATRUsingJSON("AAPL", history, history.size() -1, UseAdjusted::e_Yes);
 
     std::cout << "ATR: " << atr << '\n';
+    atr.Rescale(-2);
+    std::cout << "ATR: " << atr << '\n';
 
     // // compute box size as a percent of ATR, eg. 0.1
     //
@@ -2094,7 +2190,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     // box_size.Rescale(-5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", 0.1, 3, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear, atr);
+    PF_Chart chart("AAPL", 1, 3, Boxes::BoxScale::e_linear, atr);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
         {
@@ -2152,10 +2248,10 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     }
     std::cout << "history length: " << history.size() << '\n';
 
-    DDecQuad box_size = .01;
+    DDecQuad box_size = .1;
 
     // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
-    PF_Chart chart("YHOO", 1, 3, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear, box_size, 100);
+    PF_Chart chart("YHOO", 1, 3, Boxes::BoxScale::e_linear, box_size, 100);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
         {
@@ -2172,7 +2268,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
-    PF_Chart chart_percent("YHOO", box_size, 3, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent);
+    PF_Chart chart_percent("YHOO", box_size, 3, Boxes::BoxScale::e_percent);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart_percent](const auto& e)
         {
@@ -2299,13 +2395,15 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
 
-    auto atr = ComputeATRUsingJSON("AAPL", history, 4);
-//    std::cout << "ATR: " << atr << '\n';
-    EXPECT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
+//     auto atr = ComputeATRUsingJSON("AAPL", history, 4);
+// //    std::cout << "ATR: " << atr << '\n';
+//     EXPECT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
 
     // recompute using all the data for rest of test
 
-    atr = ComputeATRUsingJSON("AAPL", history, history_size);
+    auto atr = ComputeATRUsingJSON("AAPL", history, history_size);
+    std::cout << "ATR using 20 days: " << atr << '\n';
+    EXPECT_EQ(atr.Rescale(-3), DprDecimal::DDecQuad{"3.211"});
 
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
@@ -2319,7 +2417,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     // box_size.Rescale(-5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_linear, atr);
+    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxScale::e_linear, atr);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
@@ -2372,7 +2470,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     box_size.Rescale(-5);
     std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxType::e_fractional, Boxes::BoxScale::e_percent, atr);
+    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxScale::e_percent, atr);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
@@ -2448,6 +2546,7 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)    //NOLINT
     ASSERT_TRUE(! streamed_data.empty());         // we need an actual test here
 }
 
+// NOLINTEND(*-magic-numbers)
 
 //===  FUNCTION  ======================================================================
 //        Name:  InitLogging
