@@ -1828,6 +1828,40 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
     EXPECT_NE(new_chart, chart2);
 }
 
+TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)    //NOLINT
+{
+    if (fs::exists("/tmp/SPY_chart.csv"))
+    {
+        fs::remove("/tmp/SPY_chart.csv");
+    }
+
+    fs::path csv_file_name{"./test_files/SPY.csv"};
+    const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
+
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto header_record = symbol_data_records.front();
+
+    auto date_column = FindColumnIndex(header_record, "date", ',');
+    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    
+    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+
+    PF_Chart new_chart{"SPY", 10, 1};
+
+    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+        {
+            const auto fields = split_string<std::string_view> (record, ',');
+            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+        });
+    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+
+    std::ofstream processed_data{"/tmp/SPY_chart.csv"};
+    new_chart.ConvertChartToTableAndWriteToStream(processed_data);
+
+    ASSERT_TRUE(fs::exists("/tmp/SPY_chart.csv"));
+}
+
 TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
 {
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
