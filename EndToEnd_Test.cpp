@@ -716,6 +716,73 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
+TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
+{
+    if (fs::exists("/tmp/test_charts3"))
+    {
+        fs::remove_all("/tmp/test_charts3");
+    }
+
+	//	NOTE: the program name 'the_program' in the command line below is ignored in the
+	//	the test program.
+
+	std::vector<std::string> tokens{"the_program",
+        "--symbol-list", "*",
+        // "-s", "ACY",
+        "--new-data-source", "database",
+        "--mode", "load",
+        "--scale", "percent",
+        "--price-fld-name", "close_p",
+        "--destination", "database",
+        "--output-graph-dir", "/tmp/test_charts3",
+        "--graphics-format", "csv",
+        // "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--boxsize", ".001",
+        "--reversal", "1",
+        "-r", "3",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--db-data-source", "stock_data.current_data",
+        "--begin-date", "2022-01-01",
+        // "--use-ATR",
+        "--exchange", "AMEX",
+        "--max-graphic-cols", "150"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.01%X1_percent.csv"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.001%X1_percent.json"));
+}
+
 class StreamData : public Test
 {
 };
