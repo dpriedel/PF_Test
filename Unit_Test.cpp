@@ -2518,7 +2518,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
             std::string_view date{dte.data(), dte.data() + dte.find('T')};
             auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
             auto status = chart.AddValue(val, the_date);
-            std::cout << "value: " << val << " status: " << status << '\n';
+            fmt::print("value: {} status: {}\n", val, status);
         });
 
    std::cout << chart << '\n';
