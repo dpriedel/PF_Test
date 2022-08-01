@@ -716,6 +716,97 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
+TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
+{
+    // construct a chart using some test data and save it.
+    fs::path csv_file_name{SPY_EOD_CSV};
+    const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
+
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto header_record = symbol_data_records.front();
+
+    auto date_column = FindColumnIndex(header_record, "date", ',');
+    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    
+    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+
+    PF_Chart new_chart{"SPY", 10, 1};
+
+    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+        {
+            const auto fields = split_string<std::string_view> (record, ',');
+            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+        });
+    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+
+    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
+    PF_Chart::StoreChartInChartsDB(db_info, new_chart);
+
+	//	NOTE: the program name 'the_program' in the command line below is ignored in the
+	//	the test program.
+
+	std::vector<std::string> tokens{"the_program",
+        "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
+        "--new-data-source", "database",
+        "--mode", "update",
+        "--scale", "linear",
+        "--price-fld-name", "close_p",
+        "--destination", "database",
+        "--chart-data-source", "database",
+        // "--chart-data-dir", "/tmp/test_charts2",
+        // "--output-chart-dir", "/tmp/test_charts2",
+        "--graphics-format", "csv",
+        "--boxsize", "10",
+        "--boxsize", "5",
+        "--reversal", "1",
+        "--reversal", "3",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--db-data-source", "stock_data.current_data",
+        "--begin-date", "2021-11-24",
+        "--max-graphic-cols", "150"
+	};
+
+    PF_Chart updated_chart;
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            updated_chart = myApp.GetCharts()[0].second;
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+
+    std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
+
+    EXPECT_EQ(CountRows(), 4);
+    ASSERT_NE(new_chart, updated_chart);
+}
+
 TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
