@@ -103,7 +103,7 @@ using namespace testing;
 #include "PF_Column.h"
 #include "PF_Chart.h"
 #include "Tiingo.h"
-
+#include "PointAndFigureDB.h"
 #include "utilities.h"
 
 // NOLINTBEGIN(*-magic-numbers)
@@ -1962,6 +1962,67 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     EXPECT_EQ(chart[5].GetTop(), 1151.4795611);
     EXPECT_EQ(chart[5].GetBottom(), 1125.445475);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
+}
+
+class TestDBFunctions : public Test
+{
+	public:
+
+        void SetUp() override
+        {
+		    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+		    pqxx::work trxn{c};
+
+		    // make sure the DB is empty before we start
+
+		    trxn.exec("DELETE FROM test_point_and_figure.pf_charts");
+		    trxn.commit();
+        }
+
+	int CountRows()
+	{
+	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+	    pqxx::nontransaction trxn{c};
+
+	    // make sure the DB is empty before we start
+
+	    auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
+	    trxn.commit();
+		return row[0].as<int>();
+	}
+
+	int CountAMEXSymbols()
+	{
+	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
+	    pqxx::nontransaction trxn{c};
+
+	    // make sure the DB is empty before we start
+
+	    auto row = trxn.exec1("SELECT COUNT(DISTINCT(symbol)) FROM stock_data.current_data WHERE exchange = 'AMEX'");
+	    trxn.commit();
+		return row[0].as<int>();
+	}
+
+};
+
+TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)    //NOLINT
+{
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="stock_data.current_data"};
+    PF_DB pf_db{db_params};
+
+    auto exchanges = pf_db.ListExchanges();
+
+    ASSERT_EQ(exchanges, (std::vector<std::string>{"AMEX", "NASDAQ", "NYSE"}));
+}
+
+TEST_F(TestDBFunctions, TestCountSymbolsOnAMEXExchange)    //NOLINT
+{
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="stock_data.current_data"};
+    PF_DB pf_db{db_params};
+
+    auto symbols = pf_db.ListSymbolsOnExchange("AMEX");
+
+    ASSERT_EQ(symbols.size(), CountAMEXSymbols());
 }
 
 class TestChartDBFunctions : public Test
