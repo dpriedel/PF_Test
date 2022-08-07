@@ -2277,7 +2277,8 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     }
     std::cout << "history length: " << history.size() << '\n';
 
-    auto atr = ComputeATRUsingJSON("AAPL", history, history.size() -1, UseAdjusted::e_Yes);
+    auto converted_history = ConvertJSONPriceHistory("AAPL", history, history.size(), UseAdjusted::e_Yes);
+    auto atr = ComputeATR("AAPL", converted_history, history.size() -1);
 
     std::cout << "ATR: " << atr << '\n';
     atr.Rescale(-2);
@@ -2417,8 +2418,8 @@ TEST_F(TiingoATR, RetrievePreviousData)    //NOLINT
     auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, &holidays);
 
     EXPECT_EQ(history.size(), 14);
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13]["date"].asString()), date::year_month_day{2021_y/date::September/20});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{2021_y/date::October/7});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13].date_), date::year_month_day{2021_y/date::September/20});
 }
 
 TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
@@ -2448,7 +2449,7 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
         auto history = history_getter.GetMostRecentTickerData("AAPL", today, 2, &holidays);
 
         EXPECT_EQ(history.size(), 1);
-        EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{date::sys_days(today) - std::chrono::days{1}});
+        EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{date::sys_days(today) - std::chrono::days{1}});
     }
     if (market_status == US_MarketStatus::e_OpenForTrading)
     {
@@ -2478,10 +2479,11 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
 
 //    std::cout << "\nhistory:\n" << history << '\n';
     EXPECT_EQ(history.size(), 15);
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0]["date"].asString()), date::year_month_day{2021_y/date::October/7});
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4]["date"].asString()), date::year_month_day{2021_y/date::October/1});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{2021_y/date::October/7});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4].date_), date::year_month_day{2021_y/date::October/1});
 
-    auto atr = ComputeATRUsingJSON("AAPL", history, 4);
+    // auto atr = ComputeATRUsingJSON("AAPL", history, 4);
+    auto atr = ComputeATR("AAPL", history, 4);
     std::cout << "ATR: " << atr << '\n';
     ASSERT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
 }
@@ -2502,7 +2504,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
 
     // recompute using all the data for rest of test
 
-    auto atr = ComputeATRUsingJSON("AAPL", history, history_size);
+    auto atr = ComputeATR("AAPL", history, history_size);
     std::cout << "ATR using 20 days: " << atr << '\n';
     EXPECT_EQ(atr.Rescale(-3), DprDecimal::DDecQuad{"3.211"});
 
@@ -2510,8 +2512,8 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     // but excluding the 'extra' value included for computing the ATR
 
     DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
-            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
-            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["close"].asString()}; });
+            DprDecimal::DDecQuad{}, std::plus<>(),
+            [](const PriceDataRecord& e) { return e.close_; });
     DprDecimal::DDecQuad box_size = atr / (sum / history_size);
 
     std::cout << "atr: " << atr << '\n';
@@ -2527,14 +2529,12 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
 
     ranges::for_each(history | ranges::views::reverse | ranges::views::take(history_size), [&chart](const auto& e)
         {
-            DprDecimal::DDecQuad val{e["close"].asString()};
-            std::string dte{e["date"].asString()};
-            std::string_view date{dte.data(), dte.data() + dte.find('T')};
-            auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
-            chart.AddValue(val, the_date);
+            // std::string_view date{e.date_.data(), e.date_.data() + e.date_.find('T')};
+            auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
+            chart.AddValue(e.close_, the_date);
         });
 
-//    std::cout << chart << '\n';
+   std::cout << chart << '\n';
 }
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    //NOLINT
@@ -2546,24 +2546,24 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
 
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
-    std::cout << "history: " << history << '\n';
+    ranges::for_each(history, [](const auto& e) { fmt::print("{}\n", e); });
 
-    auto atr = ComputeATRUsingJSON("AAPL", history, 4, UseAdjusted::e_Yes);
+    auto atr = ComputeATR("AAPL", history, 4);
     atr.Rescale(-5);
 //    std::cout << "ATR: " << atr << '\n';
     EXPECT_EQ(atr, DprDecimal::DDecQuad{"3.36875"});
 
     // recompute using all the data for rest of test
 
-    atr = ComputeATRUsingJSON("AAPL", history, history_size);
+    atr = ComputeATR("AAPL", history, history_size);
     atr.Rescale(-5);
 
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
 
     DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
-            DprDecimal::DDecQuad{}, std::plus<DprDecimal::DDecQuad>(),
-            [](const Json::Value& e) { return DprDecimal::DDecQuad{e["adjClose"].asString()}; });
+            DprDecimal::DDecQuad{}, std::plus<>(),
+            [](const PriceDataRecord& e) { return e.close_; });
 
     DprDecimal::DDecQuad box_size = atr / (sum / history_size);
 
@@ -2580,12 +2580,9 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
 
     ranges::for_each(history | ranges::views::reverse | ranges::views::take(history_size), [&chart](const auto& e)
         {
-            DprDecimal::DDecQuad val{e["adjClose"].asString()};
-            std::string dte{e["date"].asString()};
-            std::string_view date{dte.data(), dte.data() + dte.find('T')};
-            auto the_date = StringToUTCTimePoint("%Y-%m-%d", date);
-            auto status = chart.AddValue(val, the_date);
-            fmt::print("value: {} status: {}\n", val, status);
+            auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
+            auto status = chart.AddValue(e.close_, the_date);
+            fmt::print("value: {} status: {}\n", e.close_, status);
         });
 
    std::cout << chart << '\n';
