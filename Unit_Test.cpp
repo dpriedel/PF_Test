@@ -2415,7 +2415,7 @@ TEST_F(TiingoATR, RetrievePreviousData)    //NOLINT
 
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, &holidays);
+    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, UseAdjusted::e_No, &holidays);
 
     EXPECT_EQ(history.size(), 14);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{2021_y/date::October/7});
@@ -2446,10 +2446,11 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
 
     if (market_status == US_MarketStatus::e_NotOpenYet)
     {
-        auto history = history_getter.GetMostRecentTickerData("AAPL", today, 2, &holidays);
+        auto history = history_getter.GetMostRecentTickerData("AAPL", today, 2, UseAdjusted::e_No, &holidays);
 
         EXPECT_EQ(history.size(), 1);
-        EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{date::sys_days(today) - std::chrono::days{1}});
+        auto business_days = ConstructeBusinessDayRange(today, 2, UpOrDown::e_Down, &holidays);
+        EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), business_days.second);
     }
     if (market_status == US_MarketStatus::e_OpenForTrading)
     {
@@ -2475,9 +2476,9 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
 
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15, &holidays);
+    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15, UseAdjusted::e_No, &holidays);
+    // ranges::for_each(history, [](const auto& e){ fmt::print("{}\n", e); });
 
-//    std::cout << "\nhistory:\n" << history << '\n';
     EXPECT_EQ(history.size(), 15);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{2021_y/date::October/7});
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4].date_), date::year_month_day{2021_y/date::October/1});
@@ -2496,7 +2497,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     constexpr int history_size = 20;
-    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
 
 //     auto atr = ComputeATRUsingJSON("AAPL", history, 4);
 // //    std::cout << "ATR: " << atr << '\n';
@@ -2545,8 +2546,8 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     constexpr int history_size = 20;
-    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, &holidays);
-    ranges::for_each(history, [](const auto& e) { fmt::print("{}\n", e); });
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
+    // ranges::for_each(history, [](const auto& e) { fmt::print("{}\n", e); });
 
     auto atr = ComputeATR("AAPL", history, 4);
     atr.Rescale(-5);
