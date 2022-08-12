@@ -578,7 +578,7 @@ TEST_F(Database, BulkLoadDataFromDB)    //NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--db-data-source", "stock_data.current_data",
-        "--begin-date", "2022-01-01",
+        "--begin-date", "2022-06-01",
         // "--use-ATR",
         "--exchange", "AMEX",
         "--max-graphic-cols", "150"
@@ -660,6 +660,8 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
 
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
+        "--symbol", "AAPL",      // want to use SP500 indicator but need to do more setup first
+        "--symbol", "GOOG",      // want to use SP500 indicator but need to do more setup first
         "--new-data-source", "database",
         "--mode", "update",
         "--scale", "linear",
@@ -740,8 +742,10 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
-    PF_Chart::StoreChartInChartsDB(db_info, new_chart);
+    PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
+    PF_DB pf_db(db_info);
+
+    new_chart.StoreChartInChartsDB(pf_db);
 
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
