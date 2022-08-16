@@ -91,13 +91,13 @@ class ProgramOptions : public Test
 
 TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
 {
-    if (fs::exists("/tmp/test_charts/SPY_10X3_linear.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
-        fs::remove("/tmp/test_charts/SPY_10X3_linear.json");
+        fs::remove("/tmp/test_charts/SPY_10X3_linear_eod.json");
     }
-    if (fs::exists("/tmp/test_charts/SPY_10X1_linear.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"))
     {
-        fs::remove("/tmp/test_charts/SPY_10X1_linear.json");
+        fs::remove("/tmp/test_charts/SPY_10X1_linear_eod.json");
     }
 
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
@@ -151,8 +151,8 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-   EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
-   ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear.json"));
+   EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
+   ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
 }
 
 class SingleFileEndToEnd : public Test
@@ -162,9 +162,9 @@ class SingleFileEndToEnd : public Test
 
 TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
 {
-    if (fs::exists("/tmp/test_charts/SPY_10X3_linear.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
-        fs::remove("/tmp/test_charts/SPY_10X3_linear.json");
+        fs::remove("/tmp/test_charts/SPY_10X3_linear_eod.json");
     }
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
@@ -213,18 +213,18 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
 }
 
 TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 {
-    if (fs::exists("/tmp/test_charts/SPY_10X3_linear.json"))
+    if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
-        fs::remove("/tmp/test_charts/SPY_10X3_linear.json");
+        fs::remove("/tmp/test_charts/SPY_10X3_linear_eod.json");
     }
-    if (fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"))
+    if (fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"))
     {
-        fs::remove("/tmp/test_charts2/SPY_10X3_linear.json");
+        fs::remove("/tmp/test_charts2/SPY_10X3_linear_eod.json");
     }
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
@@ -278,7 +278,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
 
     // now construct the data file from 2 input files which, together, contain the same 
     // data as the 1 file used above. 
@@ -330,7 +330,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"));
 
     // now continue constructing the data file from 2 input files which, together, contain the same 
     // data as the 1 file used above. 
@@ -388,7 +388,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
     std::cout << "\n\n half chart:\n" << half_chart;
     std::cout << "\n\n franken chart:\n" << franken_chart << '\n';;
 
-    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"));
     ASSERT_TRUE(whole_chart == franken_chart);
 }
 
@@ -452,8 +452,8 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
         spdlog::error("Something totally unexpected happened.");
 	}
 
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/ADIV_0.1X3_linear.json"));
-    ASSERT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/ADIV_0.1X3_linear_eod.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear_eod.svg"));
 }
 
 class Database : public Test
@@ -546,8 +546,8 @@ TEST_F(Database, LoadDataFromDB)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_1X3_linear.json"));
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.1X1_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_1X3_linear_eod.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.1X1_linear_eod.json"));
 }
 
 TEST_F(Database, BulkLoadDataFromDB)    //NOLINT
@@ -613,8 +613,8 @@ TEST_F(Database, BulkLoadDataFromDB)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.01%X1_percent.csv"));
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.001%X1_percent.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
 TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
@@ -648,7 +648,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.ChartName("json"));
+    fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.ChartName("eod", "json"));
     std::ofstream new_file{chart_file_path, std::ios::out | std::ios::binary};
     BOOST_ASSERT_MSG(new_file.is_open(), fmt::format("Unable to open file: {} to write updated data.", chart_file_path).c_str());
     new_chart.ConvertChartToJsonAndWriteToStream(new_file);
@@ -714,7 +714,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
 
     std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
 
-    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X1_linear.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X1_linear_eod.json"));
     ASSERT_NE(new_chart, updated_chart);
 }
 
@@ -745,7 +745,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
     PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_DB pf_db(db_info);
 
-    new_chart.StoreChartInChartsDB(pf_db);
+    new_chart.StoreChartInChartsDB(pf_db, "eod");
 
 	//	NOTE: the program name 'the_program' in the command line below is ignored in the
 	//	the test program.
@@ -769,7 +769,8 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         "--db-name", "finance",
         "--db-data-source", "stock_data.current_data",
         "--begin-date", "2021-11-24",
-        "--max-graphic-cols", "150"
+        "--max-graphic-cols", "150",
+        "-l", "debug"
 	};
 
     PF_Chart updated_chart;
@@ -874,8 +875,8 @@ TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
 	{		// handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
 	}
-    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.01%X1_percent.csv"));
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.001%X1_percent.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
 class StreamData : public Test
