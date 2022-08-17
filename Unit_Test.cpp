@@ -2067,7 +2067,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
     PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_DB pf_db{db_params};
 
-    pf_db.StorePFChartDataIntoDB(chart, {});
+    pf_db.StorePFChartDataIntoDB(chart, "eod", {});
 
     auto how_many = CountRows();
     ASSERT_EQ(how_many, 1);
@@ -2088,12 +2088,12 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
     PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_DB pf_db{db_params};
 
-    pf_db.StorePFChartDataIntoDB(chart, {});
+    pf_db.StorePFChartDataIntoDB(chart, "eod", {});
 
     // now, let's retrieve the stored data, construct a chart and
     // see if it's the same as the one we built directly fromt the data.
 
-    PF_Chart chart2 = PF_Chart::MakeChartFromDB(pf_db, chart.GetChartParams());
+    PF_Chart chart2 = PF_Chart::MakeChartFromDB(pf_db, chart.GetChartParams(), "eod");
 
 //    std::cout << chart << '\n';
 }
@@ -2111,12 +2111,12 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
     PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_DB pf_db{db_params};
 
-    pf_db.StorePFChartDataIntoDB(chart, {});
+    pf_db.StorePFChartDataIntoDB(chart, "eod", {});
 
     // now, let's retrieve the stored data, construct a chart and
     // see if it's the same as the one we built directly fromt the data.
 
-    PF_Chart chart2 = PF_Chart::MakeChartFromDB(pf_db, chart.GetChartParams());
+    PF_Chart chart2 = PF_Chart::MakeChartFromDB(pf_db, chart.GetChartParams(), "eod");
     ASSERT_EQ(chart, chart2);
 
 //    std::cout << chart << '\n';
