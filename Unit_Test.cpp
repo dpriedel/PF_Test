@@ -1788,7 +1788,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
 	// first, get ready to retrieve our data from DB.  Do this for all our symbols here.
 	// (we know what data to extract because we know what is in our CSV original source above)
 
-	std::string get_symbol_prices_cmd = "SELECT date, close_p FROM stock_data.current_data WHERE symbol = 'SPY' AND date >= '2020-03-26' ORDER BY date ASC";
+	std::string get_symbol_prices_cmd = "SELECT date, adjclose FROM new_stock_data.current_data WHERE symbol = 'SPY' AND date >= '2020-03-26' ORDER BY date ASC";
 
 	try
 	{
@@ -1998,7 +1998,7 @@ class TestDBFunctions : public Test
 
 	    // make sure the DB is empty before we start
 
-	    auto row = trxn.exec1("SELECT COUNT(DISTINCT(symbol)) FROM stock_data.current_data WHERE exchange = 'AMEX'");
+	    auto row = trxn.exec1("SELECT COUNT(DISTINCT(symbol)) FROM new_stock_data.names_and_symbols WHERE exchange = 'AMEX'");
 	    trxn.commit();
 		return row[0].as<int>();
 	}
@@ -2007,7 +2007,7 @@ class TestDBFunctions : public Test
 
 TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)    //NOLINT
 {
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
     PF_DB pf_db{db_params};
 
     auto exchanges = pf_db.ListExchanges();
@@ -2017,7 +2017,7 @@ TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)    //NOLINT
 
 TEST_F(TestDBFunctions, TestCountSymbolsOnAMEXExchange)    //NOLINT
 {
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
     PF_DB pf_db{db_params};
 
     auto symbols = pf_db.ListSymbolsOnExchange("AMEX");
@@ -2126,7 +2126,7 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDataFromDB)    //NOLINT
 {
     // we should get the same result as we do from tiingo, I expect
 
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
     PF_DB the_db{db_params};
 
     constexpr int history_size = 20;
