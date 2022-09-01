@@ -960,6 +960,8 @@ TEST_F(Database, DailyScan)    //NOLINT
     // let's see what is in the DB
 
     auto updated_chart = PF_Chart::MakeChartFromDB(pf_db, saved_chart.GetChartParams(), "eod");
+    std::cout << "updated chart at after after running daily scan: \n\n" << updated_chart << "\n\n";
+
     ASSERT_NE(saved_chart, updated_chart);
 }
 
