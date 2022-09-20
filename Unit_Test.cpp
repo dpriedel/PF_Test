@@ -1991,14 +1991,14 @@ class TestDBFunctions : public Test
 		return row[0].as<int>();
 	}
 
-	int CountAMEXSymbols()
+	int CountNYSESymbols()
 	{
 	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
 	    pqxx::nontransaction trxn{c};
 
 	    // make sure the DB is empty before we start
 
-	    auto row = trxn.exec1("SELECT COUNT(DISTINCT(symbol)) FROM new_stock_data.names_and_symbols WHERE exchange = 'AMEX'");
+	    auto row = trxn.exec1("SELECT COUNT(DISTINCT(symbol)) FROM new_stock_data.names_and_symbols WHERE exchange = 'NYSE'");
 	    trxn.commit();
 		return row[0].as<int>();
 	}
@@ -2012,17 +2012,17 @@ TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)    //NOLINT
 
     auto exchanges = pf_db.ListExchanges();
 
-    ASSERT_EQ(exchanges, (std::vector<std::string>{"AMEX", "NASDAQ", "NYSE"}));
+    ASSERT_EQ(exchanges, (std::vector<std::string>{"INDX", "NASDAQ", "NYSE"}));
 }
 
-TEST_F(TestDBFunctions, TestCountSymbolsOnAMEXExchange)    //NOLINT
+TEST_F(TestDBFunctions, TestCountSymbolsOnNYSEExchange)    //NOLINT
 {
     PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
     PF_DB pf_db{db_params};
 
-    auto symbols = pf_db.ListSymbolsOnExchange("AMEX");
+    auto symbols = pf_db.ListSymbolsOnExchange("NYSE");
 
-    ASSERT_EQ(symbols.size(), CountAMEXSymbols());
+    ASSERT_EQ(symbols.size(), CountNYSESymbols());
 }
 
 class TestChartDBFunctions : public Test

@@ -550,7 +550,7 @@ TEST_F(Database, LoadDataFromDB)    //NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.1X1_linear_eod.json"));
 }
 
-TEST_F(Database, BulkLoadDataFromDB)    //NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDB)    //NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
@@ -561,7 +561,7 @@ TEST_F(Database, BulkLoadDataFromDB)    //NOLINT
 	//	the test program.
 
 	std::vector<std::string> tokens{"the_program",
-        "--symbol-list", "*",
+        "--symbol-list", "ALL",
         // "-s", "ACY",
         "--new-data-source", "database",
         "--mode", "load",
@@ -569,7 +569,7 @@ TEST_F(Database, BulkLoadDataFromDB)    //NOLINT
         "--price-fld-name", "adjclose",
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts3",
-        "--graphics-format", "csv",
+        "--graphics-format", "svg",
         // "--boxsize", ".1",
         "--boxsize", ".01",
         "--boxsize", ".001",
@@ -580,7 +580,7 @@ TEST_F(Database, BulkLoadDataFromDB)    //NOLINT
         "--db-data-source", "new_stock_data.current_data",
         "--begin-date", "2022-06-01",
         // "--use-ATR",
-        "--exchange", "AMEX",
+        "--exchange", "NYSE",
         "--max-graphic-cols", "150"
 	};
 
@@ -823,7 +823,7 @@ TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
 	//	the test program.
 
 	std::vector<std::string> tokens{"the_program",
-        "--symbol-list", "*",
+        "--symbol-list", "ALL",
         // "-s", "ACY",
         "--new-data-source", "database",
         "--mode", "load",
@@ -842,7 +842,7 @@ TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
         "--db-data-source", "new_stock_data.current_data",
         "--begin-date", "2022-01-01",
         // "--use-ATR",
-        "--exchange", "AMEX",
+        "--exchange", "NYSE",
         "--max-graphic-cols", "150"
 	};
 
