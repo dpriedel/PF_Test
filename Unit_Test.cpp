@@ -1964,6 +1964,15 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 }
 
+class ChartSignals10X3 : public Test
+{
+
+};
+
+TEST_F(ChartSignals10X3, FindDoubleTopBuy)    //NOLINT
+{
+}
+
 class TestDBFunctions : public Test
 {
 	public:
