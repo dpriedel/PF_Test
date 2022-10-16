@@ -102,6 +102,7 @@ using namespace testing;
 
 #include "PF_Column.h"
 #include "PF_Chart.h"
+#include "PF_Signals.h"
 #include "Tiingo.h"
 #include "PointAndFigureDB.h"
 #include "utilities.h"
@@ -1582,6 +1583,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)    //N
     EXPECT_EQ(chart[47].GetTop(), 148);
     EXPECT_EQ(chart[47].GetBottom(), 146);
 
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick12.svg", "no");
 //    std::cout << chart << '\n';
 }
 
@@ -1971,6 +1973,50 @@ class ChartSignals10X3 : public Test
 
 TEST_F(ChartSignals10X3, FindDoubleTopBuy)    //NOLINT
 {
+    const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
+        1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
+    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 3);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    std::cout << chart << '\n';
+
+    EXPECT_TRUE(chart.GetSignals().size() > 0);
+    ASSERT_EQ(chart.GetSignals()[0].box_, 1140);
+}
+
+TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)    //NOLINT
+{
+    const fs::path csv_file_name{"./test_files/SPY_streaming_1min_2022-10-07.csv"};
+    const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
+
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto header_record = symbol_data_records.front();
+
+    auto date_column = FindColumnIndex(header_record, "date", ',');
+    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    
+    auto close_column = FindColumnIndex(header_record, "close", ',');
+    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+
+    PF_Chart chart{"SPY", .01, 3};
+
+    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+        {
+            const auto fields = split_string<std::string_view> (record, ',');
+            chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%F %X%z", fields[date_col]));
+        });
+    // std::cout << "chart at after loading initial data: \n\n" << chart << "\n\n";
+
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick7.svg", "no", PF_Chart::X_AxisFormat::e_show_time);
+
+    // std::cout << chart << '\n';
+    //
+    EXPECT_TRUE(chart.GetSignals().size() > 0);
+    // ASSERT_EQ(chart.GetSignals()[0].box_, 1140);
 }
 
 class TestDBFunctions : public Test
@@ -2653,7 +2699,7 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)    //NOLINT
 
 void InitLogging ()
 {
-//    spdlog::set_level(spdlog::level::debug);
+   spdlog::set_level(spdlog::level::debug);
 //    spdlog::get()->set_filter
 //    (
 //        logging::trivial::severity >= logging::trivial::trace
