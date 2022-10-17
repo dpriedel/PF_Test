@@ -720,6 +720,10 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
 
 TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
 {
+    if (fs::exists("/tmp/test_charts9"))
+    {
+        fs::remove_all("/tmp/test_charts9");
+    }
     // construct a chart using some test data and save it.
     fs::path csv_file_name{SPY_EOD_CSV};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
@@ -756,14 +760,15 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         "--mode", "update",
         "--scale", "linear",
         "--price-fld-name", "adjclose",
-        "--destination", "database",
+        // "--destination", "database",
+        "--destination", "file",
         "--chart-data-source", "database",
-        // "--chart-data-dir", "/tmp/test_charts2",
-        // "--output-chart-dir", "/tmp/test_charts2",
-        "--graphics-format", "csv",
-        "--boxsize", "10",
+        "--output-chart-dir", "/tmp/test_charts9",
+        "--output-graph-dir", "/tmp/test_charts9",
+        "--graphics-format", "svg",
+        // "--boxsize", "10",
         "--boxsize", "5",
-        "--reversal", "1",
+        // "--reversal", "1",
         "--reversal", "3",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
