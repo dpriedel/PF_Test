@@ -13,6 +13,7 @@ import logging
 import numpy as np
 import os
 import pandas as pd
+import random
 import sys
 import traceback
 
@@ -205,6 +206,7 @@ def ProcessChartFile(args):
     if chart_data["current_column"]["reversal_boxes"] > 1:
         signal_data = chart_data["signals"]
         # print(signal_data)
+        # sys.exit(99)
 
         # need to have correct number of values in list
         # must be same as number of rows columns in data
@@ -255,15 +257,21 @@ def ProcessChartFile(args):
     streamed_prices = {}
     streamed_prices["the_time"] = []
     streamed_prices["price"] = []
+    streamed_prices["signal_type"] = []
 
     if args.prices_file_:
         prices = pd.read_csv(args.prices_file_, usecols=[0, 1], parse_dates=[0])
 
         streamed_prices["the_time"] = prices["date"].astype(np.int64)
         streamed_prices["price"] = prices["close"]
+        streamed_prices["signal_type"] = [0] * len(streamed_prices["price"])
 
-        # print(streamed_prices["the_time"])
-        # print(streamed_prices["price"])
+        # generate some random 'signals' just for testing purposes.
+
+        for ndx in range(20):
+            streamed_prices["signal_type"][random.choice(range(len(streamed_prices["signal_type"])))] = 4
+        for ndx in range(20):
+            streamed_prices["signal_type"][random.choice(range(len(streamed_prices["signal_type"])))] = 5
 
     date_time_format = "%Y-%m-%d" if args.y_axis_format_ == "date" else "%H:%M:%S"
 
