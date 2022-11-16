@@ -120,7 +120,6 @@ def makes_sense_to_run(args):
 def ProcessChartFile(args):
     with open(args.input_file_name_) as json_file:
         chart_data = json.load(json_file)
-        # print(chart_data)
 
     openData = []
     closeData = []
@@ -205,8 +204,6 @@ def ProcessChartFile(args):
 
     if chart_data["current_column"]["reversal_boxes"] > 1:
         signal_data = chart_data["signals"]
-        # print(signal_data)
-        # sys.exit(99)
 
         # need to have correct number of values in list
         # must be same as number of rows columns in data
