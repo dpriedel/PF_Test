@@ -1583,7 +1583,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)    //N
     EXPECT_EQ(chart[47].GetTop(), 148);
     EXPECT_EQ(chart[47].GetBottom(), 146);
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick12.svg", "no");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick12.svg", {}, "no");
 //    std::cout << chart << '\n';
 }
 
@@ -1772,7 +1772,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick5.svg", "no");
+    new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick5.svg", {}, "no");
 
     // save for comparison
 
@@ -1825,7 +1825,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
 	ranges::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
     std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
 
-    new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick6.svg", "no");
+    new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick6.svg", {}, "no");
 
     EXPECT_NE(new_chart, chart2);
 }
@@ -2011,7 +2011,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)    //NOLINT
         });
     // std::cout << "chart at after loading initial data: \n\n" << chart << "\n\n";
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick7.svg", "no", PF_Chart::X_AxisFormat::e_show_time);
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick7.svg", {}, "no", PF_Chart::X_AxisFormat::e_show_time);
 
     // std::cout << chart << '\n';
     //
@@ -2232,7 +2232,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
 
 //    std::cout << chart << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick1.svg", "no");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick1.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg"));
 }
@@ -2262,7 +2262,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)    //NOLINT
 
 //    std::cout << chart << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick.svg", "no");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
@@ -2288,7 +2288,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)    //NOLINT
 
 //    std::cout << chart << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick2.svg", "no");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick2.svg", {}, "no");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
@@ -2361,7 +2361,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
 
 //    std::cout << chart << '\n';
 //
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", "no");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", {}, "no");
     
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
@@ -2411,7 +2411,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 
     std::cout << "# of cols: " << chart.GetNumberOfColumns() << '\n';
 
-    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", "no");
+    chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", {}, "no");
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
@@ -2429,7 +2429,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 //    std::cout << chart_percent << '\n';
     std::cout << "# of cols: " << chart_percent.GetNumberOfColumns() << '\n';
 
-    chart_percent.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg", "no");
+    chart_percent.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg", {}, "no");
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
 }
