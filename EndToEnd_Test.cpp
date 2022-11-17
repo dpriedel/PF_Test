@@ -155,6 +155,61 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
 }
 
+TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
+{
+	//	NOTE: the program name 'the_program' in the command line below is ignored in the
+	//	the test program.
+
+	std::vector<std::string> tokens{"the_program",
+        "-s", "qqqq",
+        "-s", "spy",
+        "--new-data-source", "streaming",
+        "--new-data-dir", "./test_files",
+        "--source-format", "csv",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_charts",
+        "--use-ATR",
+        "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--reversal", "1",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            ASSERT_THROW(myApp.Run(), std::invalid_argument);
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+}
+
 class SingleFileEndToEnd : public Test
 {
 };
@@ -648,7 +703,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.ChartName("eod", "json"));
+    fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.MakeChartFileName("eod", "json"));
     std::ofstream new_file{chart_file_path, std::ios::out | std::ios::binary};
     BOOST_ASSERT_MSG(new_file.is_open(), fmt::format("Unable to open file: {} to write updated data.", chart_file_path).c_str());
     new_chart.ConvertChartToJsonAndWriteToStream(new_file);
@@ -837,16 +892,16 @@ TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
         "--destination", "database",
         "--output-graph-dir", "/tmp/test_charts3",
         "--graphics-format", "csv",
-        // "--boxsize", ".1",
+        "--boxsize", ".1",
         "--boxsize", ".01",
-        "--boxsize", ".001",
+        // "--boxsize", ".001",
         "--reversal", "1",
         "-r", "3",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--db-data-source", "new_stock_data.current_data",
         "--begin-date", "2022-01-01",
-        // "--use-ATR",
+        "--use-ATR",
         "--exchange", "NYSE",
         "--max-graphic-cols", "150"
 	};
@@ -1217,7 +1272,7 @@ int main(int argc, char** argv)
     py::print("Hello, World!"); // use the Python API
 
     py::exec(R"(
-        import PF_DrawChart
+        import PF_DrawChart_prices as PF_DrawChart
         )"
     );
 	InitGoogleTest(&argc, argv);
