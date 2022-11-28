@@ -664,7 +664,7 @@ TEST_F(ColumnFunctionality10X1, Equality)    //NOLINT
    EXPECT_EQ(col1, col2);
 
    Boxes boxes{DprDecimal::DDecQuad{5}};
-   PF_Column col3{&boxes, 5};
+   PF_Column col3{&boxes, 0, 5};
    ASSERT_NE(col3, col2);
 
 }
@@ -673,13 +673,13 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
     
     auto a_value = prices.begin();
 
     PF_Column::TmPt the_time = date::utc_clock::now();
 
-   std::cout << "first value: " << *a_value << '\n';
+    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
@@ -717,7 +717,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)    //NOLINT
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -733,7 +733,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -769,7 +769,7 @@ TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)    //NOLINT
 
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -782,7 +782,7 @@ TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)    //NOLINT
     const std::vector<int32_t> prices_2 = {1118, 1120, 1136, 1121, 1129, 1120}; 
 
     Boxes boxes_1{DprDecimal::DDecQuad{10}};
-    PF_Column col_1{&boxes_1, 1};
+    PF_Column col_1{&boxes_1, 0, 1};
     ranges::for_each(prices_1, [&col_1, &status, &the_time](auto price) { status = col_1.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
     const auto json_1 = boxes_1.ToJSON();
@@ -804,7 +804,7 @@ TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)    /
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -823,7 +823,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)    //NOLINT
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
 
@@ -857,7 +857,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)  
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -889,7 +889,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -924,7 +924,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLIN
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -960,7 +960,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -999,7 +999,7 @@ class ColumnFunctionalityFractionalBoxes10X1 : public Test
 TEST_F(ColumnFunctionalityFractionalBoxes10X1, Constructors)    //NOLINT
 {
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
 
    ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
 
@@ -1009,7 +1009,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
 {
     const std::vector<double> prices = {1100.4, 1105.9, 1110.3, 1112.2, 1118.7, 1120.6}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 1};
+    PF_Column col{&boxes, 0, 1};
     PF_Column::TmPt the_time = date::utc_clock::now();
     
     auto a_value = prices.begin();
@@ -1068,7 +1068,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
 {
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 3};
+    PF_Column col{&boxes, 0, 3};
     
     auto a_value = prices.begin();
 
@@ -1116,7 +1116,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)    //NOLINT
     const std::vector<int32_t> prices = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 3};
+    PF_Column col{&boxes, 0, 3};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -1151,7 +1151,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)    //NOLINT
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 3};
+    PF_Column col{&boxes, 0, 3};
 
     std::vector<PF_Column> columns;
 
@@ -1188,7 +1188,7 @@ class ColumnFunctionality10X5 : public Test
 TEST_F(ColumnFunctionality10X5, Constructors)    //NOLINT
 {
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 5};
+    PF_Column col{&boxes, 0, 5};
 
    ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
 
@@ -1200,7 +1200,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)    //NOLINT
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 5};
+    PF_Column col{&boxes, 0, 5};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -1237,7 +1237,7 @@ class ColumnFunctionality10X2 : public Test
 TEST_F(ColumnFunctionality10X2, Constructors)    //NOLINT
 {
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 2};
+    PF_Column col{&boxes, 0, 2};
 
    ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
 
@@ -1249,7 +1249,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     Boxes boxes{DprDecimal::DDecQuad{10}};
-    PF_Column col{&boxes, 2};
+    PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -1296,7 +1296,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
     Boxes boxes{box_size};
-    PF_Column col{&boxes, 2};
+    PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
 
@@ -1336,7 +1336,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
     Boxes boxes{0.01, Boxes::BoxScale::e_percent};
-    PF_Column col{&boxes, 2};
+    PF_Column col{&boxes, 0, 2};
 
     std::cout << "Boxes: " << boxes << '\n';
 
@@ -1391,7 +1391,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
     Boxes boxes{box_size, Boxes::BoxScale::e_percent};
-    PF_Column col{&boxes, 2};
+    PF_Column col{&boxes, 0, 2};
 
 //    std::cout << "Boxes: " << boxes << '\n';
 
@@ -1442,7 +1442,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
 //    std::cout << '\n';
 
     Boxes boxes{0.01, Boxes::BoxScale::e_percent};
-    PF_Column col{&boxes, 2};
+    PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
     PF_Column::TmPt the_time = date::utc_clock::now();
@@ -1580,8 +1580,8 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)    //N
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.GetNumberOfColumns(), 47);
 
-    EXPECT_EQ(chart[47].GetTop(), 148);
-    EXPECT_EQ(chart[47].GetBottom(), 146);
+    EXPECT_EQ(chart[46].GetTop(), 148);
+    EXPECT_EQ(chart[46].GetBottom(), 146);
 
     chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick12.svg", {}, "no");
 //    std::cout << chart << '\n';
@@ -1688,9 +1688,9 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.GetNumberOfColumns(), 5);
-    EXPECT_EQ(chart[5].GetTop(), 1151.68);
-    EXPECT_EQ(chart[5].GetBottom(), 1125.84);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
+    EXPECT_EQ(chart[4].GetTop(), 1151.68);
+    EXPECT_EQ(chart[4].GetBottom(), 1125.84);
+    EXPECT_EQ(chart[4].GetHadReversal(), false);
 }
 
 class MiscChartFunctionality : public Test
@@ -2230,7 +2230,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
     EXPECT_EQ(chart[5].GetBottom(), 1110);
     EXPECT_EQ(chart[7].GetHadReversal(), true);
 
-//    std::cout << chart << '\n';
+    std::cout << chart << '\n';
 
     chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick1.svg", {}, "no");
 
@@ -2716,7 +2716,7 @@ int main(int argc, char** argv)
     py::print("Hello, World!"); // use the Python API
 
     py::exec(R"(
-        import PF_DrawChart
+        import PF_DrawChart_prices as PF_DrawChart
         )"
     );
 
