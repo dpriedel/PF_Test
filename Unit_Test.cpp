@@ -1523,11 +1523,33 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.size(), 6);
 
     EXPECT_EQ(chart[5].GetTop(), 1140);
     EXPECT_EQ(chart[5].GetBottom(), 1130);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
+}
+
+TEST_F(ChartFunctionality10X2, TestChartIteratorWithFirstSetOfTestData)    //NOLINT
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.size(), ranges::distance(chart));
+
+    ranges::for_each(chart | ranges::views::reverse, [](const auto& col) { fmt::print("col: {}\n", col.GetColumnNumber()); });
+
+    EXPECT_EQ(chart.begin()[5].GetTop(), 1140);
+    EXPECT_EQ((chart.begin() + 5)->GetBottom(), 1130);
+    EXPECT_EQ((chart.begin()+=5)->GetHadReversal(), false);
 }
 
 TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData)    //NOLINT
@@ -1578,7 +1600,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)    //N
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 47);
+    EXPECT_EQ(chart.size(), 47);
 
     EXPECT_EQ(chart[46].GetTop(), 148);
     EXPECT_EQ(chart[46].GetBottom(), 146);
@@ -1687,7 +1709,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 5);
+    EXPECT_EQ(chart.size(), 5);
     EXPECT_EQ(chart[4].GetTop(), 1151.68);
     EXPECT_EQ(chart[4].GetBottom(), 1125.84);
     EXPECT_EQ(chart[4].GetHadReversal(), false);
@@ -1836,6 +1858,10 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)   
     {
         fs::remove("/tmp/SPY_chart.csv");
     }
+    if (fs::exists("/tmp/SPY_chart.svg"))
+    {
+        fs::remove("/tmp/SPY_chart.svg");
+    }
 
     fs::path csv_file_name{"./test_files/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
@@ -1860,6 +1886,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)   
 
     std::ofstream processed_data{"/tmp/SPY_chart.csv"};
     new_chart.ConvertChartToTableAndWriteToStream(processed_data);
+    new_chart.ConstructChartGraphAndWriteToFile("/tmp/SPY_chart.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/SPY_chart.csv"));
 }
@@ -1877,7 +1904,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.size(), 6);
 
     EXPECT_EQ(chart[5].GetTop(), 1140);
     EXPECT_EQ(chart[5].GetBottom(), 1130);
@@ -1900,7 +1927,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)    //NOLINT
     chart.LoadData(&prices_1, "%Y-%m-%d", ',');
 
     // EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    // EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    // EXPECT_EQ(chart.size(), 6);
     //
     // EXPECT_EQ(chart[5].GetTop(), 1140);
     // EXPECT_EQ(chart[5].GetBottom(), 1130);
@@ -1960,7 +1987,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     // std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 5);
+    EXPECT_EQ(chart.size(), 5);
     EXPECT_EQ(chart[5].GetTop(), 1151.4795611);
     EXPECT_EQ(chart[5].GetBottom(), 1125.445475);
     EXPECT_EQ(chart[5].GetHadReversal(), false);
@@ -2224,7 +2251,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 9);
+    EXPECT_EQ(chart.size(), 9);
 
     EXPECT_EQ(chart[5].GetTop(), 1120);
     EXPECT_EQ(chart[5].GetBottom(), 1110);
@@ -2254,7 +2281,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)    //NOLINT
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 6);
+    EXPECT_EQ(chart.size(), 6);
 
     EXPECT_EQ(chart[5].GetTop(), 1140);
     EXPECT_EQ(chart[5].GetBottom(), 1130);
@@ -2281,7 +2308,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)    //NOLINT
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(chart.GetNumberOfColumns(), 47);
+    EXPECT_EQ(chart.size(), 47);
 
     EXPECT_EQ(chart[47].GetTop(), 148);
     EXPECT_EQ(chart[47].GetBottom(), 146);
@@ -2354,7 +2381,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
 //    chart.LoadData(&prices, "%Y-%m-%d", ',');
 
 //    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-//    EXPECT_EQ(chart.GetNumberOfColumns(), 62);
+//    EXPECT_EQ(chart.size(), 62);
 //
 //    EXPECT_EQ(chart[61].GetTop(), 146);
 //    EXPECT_EQ(chart[61].GetBottom(), 144);
@@ -2398,7 +2425,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     DDecQuad box_size = .1;
 
     // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
-    PF_Chart chart("YHOO", 1, 3, Boxes::BoxScale::e_linear, box_size, 100);
+    PF_Chart chart("YHOO", 1, 3, Boxes::BoxScale::e_linear, box_size, 150);
 
     ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
         {
@@ -2409,7 +2436,9 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
             chart.AddValue(val, the_date);
         });
 
-    std::cout << "# of cols: " << chart.GetNumberOfColumns() << '\n';
+    std::cout << "# of cols: " << chart.size() << '\n';
+
+    std::cout << chart << '\n';
 
     chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", {}, "no");
     
@@ -2427,7 +2456,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
         });
 
 //    std::cout << chart_percent << '\n';
-    std::cout << "# of cols: " << chart_percent.GetNumberOfColumns() << '\n';
+    std::cout << "# of cols: " << chart_percent.size() << '\n';
 
     chart_percent.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg", {}, "no");
     
