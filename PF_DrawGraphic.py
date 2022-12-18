@@ -202,54 +202,77 @@ def ProcessChartFile(args):
     # NOTE: this code is 'copied' from my C++ code which ported to Python pretty
     # directly (ignoring syntax)
 
-    if chart_data["current_column"]["reversal_boxes"] > 1:
-        signal_data = chart_data["signals"]
+    signal_data = chart_data["signals"]
 
-        # need to have correct number of values in list
-        # must be same as number of rows columns in data
-        dt_buys = [np.nan] * len(the_data["Open"])
-        tt_buys = [np.nan] * len(the_data["Open"])
-        db_sells = [np.nan] * len(the_data["Open"])
-        tb_sells = [np.nan] * len(the_data["Open"])
-        bullish_tt_buys = [np.nan] * len(the_data["Open"])
-        bearish_tb_sells = [np.nan] * len(the_data["Open"])
+    # need to have correct number of values in list
+    # must be same as number of rows columns in data
+    dt_buys = [np.nan] * len(the_data["Open"])
+    tt_buys = [np.nan] * len(the_data["Open"])
+    db_sells = [np.nan] * len(the_data["Open"])
+    tb_sells = [np.nan] * len(the_data["Open"])
+    bullish_tt_buys = [np.nan] * len(the_data["Open"])
+    bearish_tb_sells = [np.nan] * len(the_data["Open"])
+    cat_buys = [np.nan] * len(the_data["Open"])
+    cat_sells = [np.nan] * len(the_data["Open"])
+    tt_cat_buys = [np.nan] * len(the_data["Open"])
+    tb_cat_sells = [np.nan] * len(the_data["Open"])
 
-        had_dt_buy = 0
-        had_tt_buy = 0
-        had_db_sell = 0
-        had_tb_sell = 0
-        had_bullish_tt_buy = 0
-        had_bearish_tb_sell = 0
+    had_dt_buy = 0
+    had_tt_buy = 0
+    had_db_sell = 0
+    had_tb_sell = 0
+    had_bullish_tt_buy = 0
+    had_bearish_tb_sell = 0
+    had_cat_buy = 0
+    had_cat_sell = 0
+    had_tt_cat_buy = 0
+    had_tb_cat_sell = 0
 
-        for col_num, sigs in itertools.groupby(signal_data, lambda s: s["column"]):
-            most_important = max(sigs, key=lambda s: int(s["priority"]))
+    for col_num, sigs in itertools.groupby(signal_data, lambda s: s["column"]):
+        most_important = max(sigs, key=lambda s: int(s["priority"]))
 
-            match most_important["type"]:
-                case "dt_buy":
-                    dt_buys[int(most_important["column"])] = float(most_important["box"])
-                    had_dt_buy += 1
-                case "db_sell":
-                    db_sells[int(most_important["column"])] = float(most_important["box"])
-                    had_db_sell += 1
-                case "tt_buy":
-                    tt_buys[int(most_important["column"])] = float(most_important["box"])
-                    had_tt_buy += 1
-                case "tb_sell":
-                    tb_sells[int(most_important["column"])] = float(most_important["box"])
-                    had_tb_sell += 1
-                case "bullish_tt_buy":
-                    bullish_tt_buys[int(most_important["column"])] = float(most_important["box"])
-                    had_bullish_tt_buy += 1
-                case "bearish_tb_sell":
-                    bearish_tb_sells[int(most_important["column"])] = float(most_important["box"])
-                    had_bearish_tb_sell += 1
+        match most_important["type"]:
+            case "dt_buy":
+                dt_buys[int(most_important["column"])] = float(most_important["box"])
+                had_dt_buy += 1
+            case "db_sell":
+                db_sells[int(most_important["column"])] = float(most_important["box"])
+                had_db_sell += 1
+            case "tt_buy":
+                tt_buys[int(most_important["column"])] = float(most_important["box"])
+                had_tt_buy += 1
+            case "tb_sell":
+                tb_sells[int(most_important["column"])] = float(most_important["box"])
+                had_tb_sell += 1
+            case "bullish_tt_buy":
+                bullish_tt_buys[int(most_important["column"])] = float(most_important["box"])
+                had_bullish_tt_buy += 1
+            case "bearish_tb_sell":
+                bearish_tb_sells[int(most_important["column"])] = float(most_important["box"])
+                had_bearish_tb_sell += 1
+            case "catapult_buy":
+                cat_buys[int(most_important["column"])] = float(most_important["box"])
+                had_cat_buy += 1
+            case "catapult_sell":
+                cat_sells[int(most_important["column"])] = float(most_important["box"])
+                had_cat_sell += 1
+            case "ttop_catapult_buy":
+                tt_cat_buys[int(most_important["column"])] = float(most_important["box"])
+                had_tt_cat_buy += 1
+            case "tbot_catapult_sell":
+                tb_cat_sells[int(most_important["column"])] = float(most_important["box"])
+                had_tb_cat_sell += 1
 
-        the_signals["dt_buys"] = dt_buys if had_dt_buy else []
-        the_signals["db_sells"] = db_sells if had_db_sell else []
-        the_signals["tt_buys"] = tt_buys if had_tt_buy else []
-        the_signals["tb_sells"] = tb_sells if had_tb_sell else []
-        the_signals["bullish_tt_buys"] = bullish_tt_buys if had_bullish_tt_buy else []
-        the_signals["bearish_tb_sells"] = bearish_tb_sells if had_bearish_tb_sell else []
+    the_signals["dt_buys"] = dt_buys if had_dt_buy else []
+    the_signals["db_sells"] = db_sells if had_db_sell else []
+    the_signals["tt_buys"] = tt_buys if had_tt_buy else []
+    the_signals["tb_sells"] = tb_sells if had_tb_sell else []
+    the_signals["bullish_tt_buys"] = bullish_tt_buys if had_bullish_tt_buy else []
+    the_signals["bearish_tb_sells"] = bearish_tb_sells if had_bearish_tb_sell else []
+    the_signals["catapult_buys"] = cat_buys if had_cat_buy else []
+    the_signals["catapult_sells"] = cat_sells if had_cat_sell else []
+    the_signals["tt_catapult_buys"] = cat_buys if had_cat_buy else []
+    the_signals["tb_catapult_sells"] = cat_sells if had_cat_sell else []
 
     streamed_prices = {}
     streamed_prices["the_time"] = []
