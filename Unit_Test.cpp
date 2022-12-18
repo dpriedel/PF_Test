@@ -45,11 +45,13 @@
 #include <fstream>
 #include <functional>
 #include <future>
+#include <initializer_list>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <thread>
+
 //#include <algorithm>
 //#include <cstdint>
 //#include <iostream>
@@ -57,21 +59,26 @@
 //#include <numeric>
 //#include <system_error>
 
-#include <range/v3/algorithm/for_each.hpp>
-#include <range/v3/numeric/accumulate.hpp>
-#include <range/v3/range/conversion.hpp>
-#include <range/v3/view/generate_n.hpp>
-#include <range/v3/view/partial_sum.hpp>
-#include <range/v3/view/sliding.hpp>
-#include <range/v3/view/reverse.hpp>
-#include <range/v3/view/take.hpp>
-#include <range/v3/view/zip_with.hpp>
-#include <range/v3/view/cartesian_product.hpp>
 
 #include <range/v3/algorithm/copy.hpp>
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/algorithm/find_if.hpp>
+#include <range/v3/algorithm/for_each.hpp>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/all.hpp>
+#include <range/v3/view/cartesian_product.hpp>
 #include <range/v3/view/drop.hpp>
+#include <range/v3/view/for_each.hpp>
+#include <range/v3/view/generate_n.hpp>
+#include <range/v3/view/partial_sum.hpp>
+#include <range/v3/view/reverse.hpp>
+#include <range/v3/view/sliding.hpp>
+#include <range/v3/view/subrange.hpp>
+#include <range/v3/view/take.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/zip_with.hpp>
+
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
@@ -1545,11 +1552,48 @@ TEST_F(ChartFunctionality10X2, TestChartIteratorWithFirstSetOfTestData)    //NOL
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.size(), ranges::distance(chart));
 
-    ranges::for_each(chart | ranges::views::reverse, [](const auto& col) { fmt::print("col: {}\n", col.GetColumnNumber()); });
+    std::vector<int> a = {0, 1, 2, 3, 4, 5};
+    auto col_nbrs = ranges::views::transform(chart, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    EXPECT_EQ(col_nbrs, a);
+
+    std::vector<int> b = {5, 4, 3, 2, 1, 0};
+    auto col_nbrs_r = ranges::views::transform(chart | ranges::views::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    EXPECT_EQ(col_nbrs_r, b);
 
     EXPECT_EQ(chart.begin()[5].GetTop(), 1140);
     EXPECT_EQ((chart.begin() + 5)->GetBottom(), 1130);
     EXPECT_EQ((chart.begin()+=5)->GetHadReversal(), false);
+}
+
+TEST_F(ChartFunctionality10X2, TestChartReverseIteratorWithFirstSetOfTestData)    //NOLINT
+{
+    const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
+    "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
+
+    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+
+    std::istringstream prices{test_data}; 
+
+    PF_Chart chart("GOOG", 10, 2);
+    chart.LoadData(&prices, "%Y-%m-%d", ',');
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.size(), ranges::distance(chart.rbegin(), chart.rend()));
+
+    std::vector<int> b = {5, 4, 3, 2, 1, 0};
+    auto col_nbrs_r = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()), [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    EXPECT_EQ(col_nbrs_r, b);
+    // ranges::for_each(chart.rbegin(), chart.rend(), [](const auto& col) { fmt::print("col: {}\n", col.GetColumnNumber()); });
+    //
+    std::vector<int> a = {0, 1, 2, 3, 4, 5};
+    auto col_nbrs = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()) | ranges::views::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    EXPECT_EQ(col_nbrs, a);
+
+    std::cout << chart << '\n';
+
+    EXPECT_EQ(chart.rbegin()[5].GetTop(), 1130);
+    EXPECT_EQ((chart.rbegin() + 5)->GetBottom(), 1100);
+    EXPECT_EQ((chart.rbegin()+=5)->GetHadReversal(), false);
 }
 
 TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData)    //NOLINT
