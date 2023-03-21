@@ -1861,24 +1861,20 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
 	try
 	{
 	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
-	    pqxx::nontransaction trxn{c};		// we are read-only for this work
-
-		auto stream = pqxx::stream_from::query(trxn, get_symbol_prices_cmd);
-		std::tuple<std::string_view, std::string_view> row;
+	    pqxx::transaction trxn{c};		// we are read-only for this work
 
 		// we know our database contains 'date's, but we need timepoints
 
 		std::istringstream time_stream;
 		date::utc_time<date::utc_clock::duration> tp;
 
-   	   	while (stream >> row)
-   	   	{
+        for (const auto& [date, adjclose] : trxn.stream<std::string_view, std::string_view>(get_symbol_prices_cmd))
+        {
 			time_stream.clear();
-			time_stream.str(std::string{std::get<0>(row)});
+			time_stream.str(std::string{date});
     		date::from_stream(time_stream, "%F", tp);
-            db_data.emplace_back(DB_data{.tp=tp, .price=DprDecimal::DDecQuad{std::get<1>(row)}});
+            db_data.emplace_back(DB_data{.tp=tp, .price=DprDecimal::DDecQuad{adjclose}});
         }
-   	   	stream.complete();
     	trxn.commit();
 
 		std::cout << "done retrieving data for symbol SPY. Got: " << db_data.size() << " rows." << std::endl;
@@ -2781,7 +2777,6 @@ void InitLogging ()
 
 int main(int argc, char** argv)
 {
-
     InitLogging();
 
     py::scoped_interpreter guard{false}; // start the interpreter and keep it alive
