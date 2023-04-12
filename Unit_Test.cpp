@@ -2269,6 +2269,32 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDataFromDB)    //NOLINT
     EXPECT_EQ(atr.Rescale(-3), DprDecimal::DDecQuad{"3.211"});
 }
 
+TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB)    //NOLINT
+{
+    // we should get the same result as we do from tiingo, I expect
+
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
+    PF_DB the_db{db_params};
+
+    DprDecimal::DDecQuad close_range;
+
+    std::string query = "select (max(adjclose) - min(adjclose)) as range from new_stock_data.current_data where date BETWEEN '2020-01-01' and '2023-04-01' and symbol = 'AAPL' ; ";
+    auto Row2Range = [](const auto& r) { return DprDecimal::DDecQuad{r[0].template as<std::string_view>()}; };
+	try
+	{
+		close_range = the_db.RunSQLQueryUsingRows<DprDecimal::DDecQuad>(query, Row2Range)[0];
+        // atr = ComputeATR("AAPL", price_data, history_size);
+    }
+   	catch (const std::exception& e)
+   	{
+		std::cout << "Unable to comput close range from DB for 'AAPL' because: " << e.what() << std::endl;
+   	}
+
+    // results won't be exactly equal due to small differences in least
+    // significant decimal digits of prices between tiingo and EODData
+    EXPECT_EQ(close_range.Rescale(-3), DprDecimal::DDecQuad{"125.918"});
+}
+
 class PlotChartsWithMatplotlib : public Test
 {
 
