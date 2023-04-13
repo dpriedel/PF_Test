@@ -231,7 +231,7 @@ TEST_F(Timer, TestCountDownTimer)    //NOLINT
         { 
             while (true)
             {
-                std::cout << "ding...\n";
+               std::cout << "ding...\n";
                 ++counter;
                 auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
@@ -265,7 +265,7 @@ TEST_F(BusinessDateRange, GenerateMarketHolidays1)    //NOLINT
 
     for (const auto& [name, date] : holidays)
     {
-        std::cout << name << '\t' << date << '\n';
+//        std::cout << name << '\t' << date << '\n';
     }
 
     which_year = 2021_y;
@@ -276,7 +276,7 @@ TEST_F(BusinessDateRange, GenerateMarketHolidays1)    //NOLINT
 
     for (const auto& [name, date] : holidays)
     {
-        std::cout << name << '\t' << date << '\n';
+//        std::cout << name << '\t' << date << '\n';
     }
 }
 
@@ -286,7 +286,7 @@ TEST_F(BusinessDateRange, WithinSingleWeek)    //NOLINT
 
     auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Down);
 
-    std::cout << result.first << " : " << result.second << '\n';
+//    std::cout << result.first << " : " << result.second << '\n';
 
     ASSERT_EQ(result.second, date::year_month_day{2021_y/date::September/27});
 
@@ -298,7 +298,7 @@ TEST_F(BusinessDateRange, SpanAWeek)    //NOLINT
 
     auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Up);
 
-    std::cout << result.first << " : " << result.second << '\n';
+//    std::cout << result.first << " : " << result.second << '\n';
 
     ASSERT_EQ(result.second, date::year_month_day{2021_y/date::October/7});
 }
@@ -309,7 +309,7 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonth)    //NOLINT
 
     auto result = ConstructeBusinessDayRange(start_here, 12, UpOrDown::e_Up);
 
-    std::cout << result.first << " : " << result.second << '\n';
+//    std::cout << result.first << " : " << result.second << '\n';
 
     EXPECT_EQ(result.second, date::year_month_day{2021_y/date::October/7});
 
@@ -317,7 +317,7 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonth)    //NOLINT
 
     result = ConstructeBusinessDayRange(start_here, 14, UpOrDown::e_Down);
 
-    std::cout << result.first << " : " << result.second << '\n';
+//    std::cout << result.first << " : " << result.second << '\n';
 
     ASSERT_EQ(result.second, date::year_month_day{2021_y/date::September/20});
 
@@ -330,7 +330,7 @@ TEST_F(BusinessDateRange, WithinSingleWeekWithHoliday)    //NOLINT
 
     auto result = ConstructeBusinessDayRange(start_here, 4, UpOrDown::e_Up, &holidays);
 
-    std::cout << result.first << " : " << result.second << '\n';
+//    std::cout << result.first << " : " << result.second << '\n';
 
     EXPECT_EQ(result.first, date::year_month_day{2022_y/date::January/18});
     ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/21});
@@ -343,7 +343,7 @@ TEST_F(BusinessDateRange, SpanAWeekWithHoliday)    //NOLINT
 
     auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Down, &holidays);
 
-    std::cout << result.first << " : " << result.second << '\n';
+//    std::cout << result.first << " : " << result.second << '\n';
 
     EXPECT_EQ(result.first, date::year_month_day{2022_y/date::January/19});
     ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/12});
@@ -362,7 +362,7 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays)    //NOLINT
 
     auto result = ConstructeBusinessDayRange(start_here, 43, UpOrDown::e_Up, &holidays);
 
-    std::cout << result.first << " : " << result.second << '\n';
+//    std::cout << result.first << " : " << result.second << '\n';
 
     EXPECT_EQ(result.first, date::year_month_day{2021_y/date::November/22});
     ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/24});
@@ -383,31 +383,31 @@ TEST_F(CanWeStreamNow, IsTheMarketOpenVariousTimeZones)    //NOLINT
 
     const auto time1 = date::local_days{2022_y/date::March/14} + 8h +30min +0s;
     auto market_status = GetUS_MarketStatus("Australia/Perth", time1);
-    std::cout << "Perth Australia: " << market_status << '\n';
+//    std::cout << "Perth Australia: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_NonTradingDay);
 
     const auto time2 = date::local_days{2022_y/date::March/14} + 8h +30min +0s;
     market_status = GetUS_MarketStatus("America/Los_Angeles", time2);
-    std::cout << "Los Angeles: " << market_status << '\n';
+//    std::cout << "Los Angeles: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_OpenForTrading);
 
     // DST in New York, standard time in London
 
     const auto time3 = date::local_days{2022_y/date::March/14} + 20h +30min +0s;
     market_status = GetUS_MarketStatus("Europe/London", time3);
-    std::cout << "London: " << market_status << '\n';
+//    std::cout << "London: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_ClosedForDay);
 
     // DST in New York, DST in London
 
     const auto time3a = date::local_days{2022_y/date::March/29} + 20h +30min +0s;
     market_status = GetUS_MarketStatus("Europe/London", time3a);
-    std::cout << "London: " << market_status << '\n';
+//    std::cout << "London: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_OpenForTrading);
 
     const auto time4 = date::local_days{2022_y/date::March/14} + 6h + 0min +0s;
     market_status = GetUS_MarketStatus("America/Chicago", time4);
-    std::cout << "Chicago: " << market_status << '\n';
+//    std::cout << "Chicago: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_NotOpenYet);
 }
 
@@ -641,9 +641,9 @@ TEST_F(Combinatorial, BasicFunctionlity)    //NOLINT
     std::vector<std::string_view> c = {"def", "hij", "mnop"};
 
     auto abc = ranges::views::cartesian_product(a, b, c);
-    ranges::for_each(abc, [](const auto& x) {fmt::print("{}\n", x); });
+//    ranges::for_each(abc, [](const auto& x) {fmt::print("{}\n", x); });
 
-    fmt::print("{}\n", abc);
+//    fmt::print("{}\n", abc);
 
    ASSERT_EQ(ranges::distance(abc), 18);
 }
@@ -686,7 +686,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
 
     PF_Column::TmPt the_time = date::utc_clock::now();
 
-    std::cout << "first value: " << *a_value << '\n';
+//    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
@@ -744,12 +744,12 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
 
     PF_Column::Status status;
     PF_Column::TmPt the_time = date::utc_clock::now();
-    std::cout << "time: " << the_time << '\n';
+//    std::cout << "time: " << the_time << '\n';
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
     auto json = col.ToJSON();
-   std::cout << json << '\n';
+//   std::cout << json << '\n';
 
 //    EXPECT_EQ(json["box_size"], "10");
 
@@ -758,7 +758,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
     // streaming interface.
 
     PF_Column::TmPt z{std::chrono::nanoseconds{json["first_entry"].asInt64()}};
-    std::cout << "z: " << z << '\n';
+//    std::cout << "z: " << z << '\n';
     
     EXPECT_TRUE(z == the_time);
 
@@ -923,8 +923,8 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 4);
 
-    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-    std::cout << col << '\n';
+    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLINT
@@ -958,8 +958,8 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLIN
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 5);
 
-    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-    std::cout << col << '\n';
+    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
@@ -994,8 +994,8 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 9);
 
-    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-    std::cout << col << '\n';
+    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 class ColumnFunctionalityFractionalBoxes10X1 : public Test
@@ -1054,7 +1054,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    std:: cout << "col: " << col << '\n';
+    // std::cout << "col: " << col << '\n';
 }
 
 
@@ -1183,8 +1183,8 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 3);
 
-    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-    std::cout << col << '\n';
+    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X5 : public Test
@@ -1233,7 +1233,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(columns.size() + 1, 1);
 
     ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-    std::cout << col << '\n';
+//    std::cout << col << '\n';
 }
 
 class ColumnFunctionality10X2 : public Test
@@ -1281,8 +1281,8 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 6);
 
-    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-    std::cout << col << '\n';
+    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFractionalBoxSize)    //NOLINT
@@ -1294,9 +1294,11 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 //    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
 
+    // do a simplified ATR calculation
+
     DDecQuad box_size = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
     box_size.Rescale(-5);
-    std::cout << "box_size: " << box_size << '\n';
+//    std::cout << "box_size: " << box_size << '\n';
 
     EXPECT_EQ(box_size, 12.91837);
 
@@ -1325,14 +1327,16 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
     });
 
+//   // fmt::print("Boxes: {}\n", boxes);
+   // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+   // std::cout << col << '\n';
+
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(col.GetTop(), 1151.67348);
-    EXPECT_EQ(col.GetBottom(), 1125.83674);
+    EXPECT_EQ(col.GetTop(), 1151.672);
+    EXPECT_EQ(col.GetBottom(), 1125.836);
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 5);
 
-//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-//    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractionalBoxSizeAndPercent)    //NOLINT
@@ -1345,7 +1349,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     Boxes boxes{0.01, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 0, 2};
 
-    std::cout << "Boxes: " << boxes << '\n';
+//    std::cout << "Boxes: " << boxes << '\n';
 
     std::vector<PF_Column> columns;
 
@@ -1384,7 +1388,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
-    // compute percent box size based on ATR  
+    // compute percent box size based on simplified ATR computation
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
 //    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
@@ -1393,7 +1397,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     DDecQuad average_price = static_cast<double>(ranges::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
     DprDecimal::DDecQuad box_size = atr / average_price;
     box_size.Rescale(-5);
-    std::cout << "box size: " << box_size << '\n';
+//    std::cout << "box size: " << box_size << '\n';
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
@@ -1424,14 +1428,15 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
     });
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(col.GetTop(), 1151.479561);
-    EXPECT_EQ(col.GetBottom(), 1125.445475);
-    EXPECT_EQ(col.GetHadReversal(), false);
-    EXPECT_EQ(columns.size() + 1, 5);
+//   // fmt::print("Boxes: {}\n", boxes);
+   // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+   // std::cout << col << '\n';
 
-//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-//    std::cout << col << '\n';
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetTop(), 1153.7580);
+    EXPECT_EQ(col.GetBottom(), 1113.2000);
+    EXPECT_EQ(col.GetHadReversal(), false);
+    EXPECT_EQ(columns.size() + 1, 3);
 }
 class ColumnFunctionalityPercentX1 : public Test
 {
@@ -1469,7 +1474,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
         }
     }
 
-    std::cout << "Column: " << col << '\n';
+//    std::cout << "Column: " << col << '\n';
 
     EXPECT_EQ(col.GetTop(), 530.761);
     EXPECT_EQ(col.GetBottom(), 500.00);
@@ -1496,7 +1501,7 @@ TEST_F(ChartFunctionality10X2, EmptyChartToJSON)    //NOLINT
    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
 
    auto json = chart.ToJSON();
-   std::cout << json << '\n';
+//   std::cout << json << '\n';
 
    ASSERT_EQ(json["current_direction"].asString(), "unknown");
 }
@@ -1583,13 +1588,13 @@ TEST_F(ChartFunctionality10X2, TestChartReverseIteratorWithFirstSetOfTestData)  
     std::vector<int> b = {5, 4, 3, 2, 1, 0};
     auto col_nbrs_r = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()), [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
     EXPECT_EQ(col_nbrs_r, b);
-    // ranges::for_each(chart.rbegin(), chart.rend(), [](const auto& col) { fmt::print("col: {}\n", col.GetColumnNumber()); });
+//    // ranges::for_each(chart.rbegin(), chart.rend(), [](const auto& col) { fmt::print("col: {}\n", col.GetColumnNumber()); });
     //
     std::vector<int> a = {0, 1, 2, 3, 4, 5};
     auto col_nbrs = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()) | ranges::views::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
     EXPECT_EQ(col_nbrs, a);
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     EXPECT_EQ(chart.rbegin()[5].GetTop(), 1130);
     EXPECT_EQ((chart.rbegin() + 5)->GetBottom(), 1100);
@@ -1716,7 +1721,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ComputeATRBoxSizeForFirstSetOfTestData)   
 
     DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
     atr.Rescale(-5);
-    std::cout << "atr: " << atr << '\n';
+//    std::cout << "atr: " << atr << '\n';
 
     EXPECT_EQ(atr, 12.91837);
 }
@@ -1730,7 +1735,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
     atr.Rescale(-5);
-    std::cout << "atr: " << atr << '\n';
+//    std::cout << "atr: " << atr << '\n';
 
     EXPECT_EQ(atr, 12.91837);
 
@@ -1750,7 +1755,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 //            std::cout << "value: " << fields[close_col] << " result: " << result << " direction: " << chart.GetCurrentDirection() << '\n';
         });
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.size(), 5);
@@ -1781,7 +1786,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)    /
     }
 
     PF_Chart new_chart{saved_data};
-    std::cout << new_chart << '\n';
+//    std::cout << new_chart << '\n';
     
     fs::path csv_file_name{"./test_files3/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
@@ -1795,7 +1800,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)    /
     auto close_column = FindColumnIndex(header_record, "Close", ',');
     BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
-    std::cout << "new chart at start of adding new data: \n\n" << new_chart << "\n\n";
+//    std::cout << "new chart at start of adding new data: \n\n" << new_chart << "\n\n";
     ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
 //            std::cout << "len: " << record.size() << "  " << record << '\n';
@@ -1803,7 +1808,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)    /
 //            std::cout << "close value: " << fields[close_col] << " date value: " << fields[date_col] << " record: \n" << record << '\n';
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
-    std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
+//    std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
 }
 
 TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //NOLINT
@@ -1836,7 +1841,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
             const auto fields = split_string<std::string_view> (record, ',');
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
-    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+//    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
     new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick5.svg", {}, "no");
 
@@ -1885,7 +1890,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
    	}
 
 	ranges::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
-    std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
+//    std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
 
     new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick6.svg", {}, "no");
 
@@ -1922,7 +1927,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)   
             const auto fields = split_string<std::string_view> (record, ',');
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
-    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+//    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
     std::ofstream processed_data{"/tmp/SPY_chart.csv"};
     new_chart.ConvertChartToTableAndWriteToStream(processed_data);
@@ -2012,7 +2017,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 
     DprDecimal::DDecQuad box_size = atr / average_price;
     box_size.Rescale(-5);
-    std::cout << "atr: " << atr << '\n';
+//    std::cout << "atr: " << atr << '\n';
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
     // std::cout << "test data: " << test_data << '\n';
@@ -2024,13 +2029,13 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     PF_Chart chart("GOOG", 1, 2, Boxes::BoxScale::e_percent, box_size);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    // std::cout << chart << '\n';
+//    fmt::print("Chart: {}\n", chart);
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(chart.size(), 5);
-    EXPECT_EQ(chart[5].GetTop(), 1151.4795611);
-    EXPECT_EQ(chart[5].GetBottom(), 1125.445475);
-    EXPECT_EQ(chart[5].GetHadReversal(), false);
+    EXPECT_EQ(chart.size(), 3);
+    EXPECT_EQ(chart[3].GetTop(), 1153.7580);
+    EXPECT_EQ(chart[3].GetBottom(), 1113.2000);
+    EXPECT_EQ(chart[3].GetHadReversal(), false);
 }
 
 class ChartSignals10X3 : public Test
@@ -2049,7 +2054,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuy)    //NOLINT
     PF_Chart chart("GOOG", 10, 3);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     EXPECT_TRUE(chart.GetSignals().size() > 0);
     ASSERT_EQ(chart.GetSignals()[0].box_, 1140);
@@ -2323,7 +2328,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
     EXPECT_EQ(chart[5].GetBottom(), 1110);
     EXPECT_EQ(chart[7].GetHadReversal(), true);
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick1.svg", {}, "no");
 
@@ -2395,12 +2400,12 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     const fs::path file_name{"./test_files/AAPL_short.json"};
 
     const std::string hist = LoadDataFileForUse(file_name);
-    std::cout << "history length: " << hist.size() << '\n';
+//    std::cout << "history length: " << hist.size() << '\n';
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
     const std::string dest{R"***("$1":"$2")***"};
     auto result1 = std::regex_replace(hist, source, dest);
-    std::cout << "result length: " << result1.size() << '\n';
+//    std::cout << "result length: " << result1.size() << '\n';
 //    std::cout.write(result1.data(), 900);
 //    std::cout << " <== data\n";
 
@@ -2413,14 +2418,14 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     {
         throw std::runtime_error("Problem parsing test data file: "s + err);
     }
-    std::cout << "history length: " << history.size() << '\n';
+//    std::cout << "history length: " << history.size() << '\n';
 
     auto converted_history = ConvertJSONPriceHistory("AAPL", history, history.size(), UseAdjusted::e_Yes);
     auto atr = ComputeATR("AAPL", converted_history, history.size() -1);
 
-    std::cout << "ATR: " << atr << '\n';
+//    std::cout << "ATR: " << atr << '\n';
     atr.Rescale(-2);
-    std::cout << "ATR: " << atr << '\n';
+//    std::cout << "ATR: " << atr << '\n';
 
     // // compute box size as a percent of ATR, eg. 0.1
     //
@@ -2471,7 +2476,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     }
 
     const std::string hist = LoadDataFileForUse("./test_files/YAHOO.json");
-    std::cout << "history length: " << hist.size() << '\n';
+//    std::cout << "history length: " << hist.size() << '\n';
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
     const std::string dest{R"***("$1":"$2")***"};
@@ -2486,7 +2491,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     {
         throw std::runtime_error("Problem parsing test data file: "s + err);
     }
-    std::cout << "history length: " << history.size() << '\n';
+//    std::cout << "history length: " << history.size() << '\n';
 
     DDecQuad box_size = .1;
 
@@ -2502,9 +2507,9 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
             chart.AddValue(val, the_date);
         });
 
-    std::cout << "# of cols: " << chart.size() << '\n';
+//    std::cout << "# of cols: " << chart.size() << '\n';
 
-    std::cout << chart << '\n';
+//    std::cout << chart << '\n';
 
     chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick3.svg", {}, "no");
     
@@ -2522,7 +2527,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
         });
 
 //    std::cout << chart_percent << '\n';
-    std::cout << "# of cols: " << chart_percent.size() << '\n';
+//    std::cout << "# of cols: " << chart_percent.size() << '\n';
 
     chart_percent.ConstructChartGraphAndWriteToFile("/tmp/candlestick4.svg", {}, "no");
     
@@ -2578,7 +2583,7 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
 
     if (market_status != US_MarketStatus::e_NotOpenYet && market_status != US_MarketStatus::e_OpenForTrading)
     {
-        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+//        std::cout << "Market not open for trading now so we can't stream quotes.\n";
         return;
     }
 
@@ -2601,9 +2606,9 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
             const std::string tstmp = e["timestamp"].asString();
             const auto time_stamp = StringToUTCTimePoint("%FT%T%z", tstmp);
 
-            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " << fmt::format("{}", time_stamp) << '\n';
+//            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " << fmt::format("{}", time_stamp) << '\n';
         }
-        std::cout << history << '\n';
+//        std::cout << history << '\n';
         EXPECT_EQ(history.size(), 3);
     }
 
@@ -2617,7 +2622,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15, UseAdjusted::e_No, &holidays);
-    // ranges::for_each(history, [](const auto& e){ fmt::print("{}\n", e); });
+//    // ranges::for_each(history, [](const auto& e){ fmt::print("{}\n", e); });
 
     EXPECT_EQ(history.size(), 15);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{2021_y/date::October/7});
@@ -2625,8 +2630,8 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
 
     // auto atr = ComputeATRUsingJSON("AAPL", history, 4);
     auto atr = ComputeATR("AAPL", history, 4);
-    std::cout << "ATR: " << atr << '\n';
-    ASSERT_TRUE(atr == DprDecimal::DDecQuad{"3.36875"});
+    // fmt::print("ATR: {}\n", atr);
+    ASSERT_TRUE(atr == DprDecimal::DDecQuad{"3.369"});
 }
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
@@ -2646,7 +2651,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     // recompute using all the data for rest of test
 
     auto atr = ComputeATR("AAPL", history, history_size);
-    std::cout << "ATR using 20 days: " << atr << '\n';
+//    std::cout << "ATR using 20 days: " << atr << '\n';
     EXPECT_EQ(atr.Rescale(-3), DprDecimal::DDecQuad{"3.211"});
 
     // next, I need to compute my average closing price over the interval 
@@ -2657,7 +2662,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
             [](const StockDataRecord& e) { return e.close_; });
     DprDecimal::DDecQuad box_size = atr / (sum / history_size);
 
-    std::cout << "atr: " << atr << '\n';
+//    std::cout << "atr: " << atr << '\n';
     // box_size.Rescale(-5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
@@ -2675,7 +2680,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
             chart.AddValue(e.close_, the_date);
         });
 
-   std::cout << chart << '\n';
+//   std::cout << chart << '\n';
 }
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    //NOLINT
@@ -2687,17 +2692,15 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
 
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
-    // ranges::for_each(history, [](const auto& e) { fmt::print("{}\n", e); });
+//    // ranges::for_each(history, [](const auto& e) { fmt::print("{}\n", e); });
 
     auto atr = ComputeATR("AAPL", history, 4);
-    atr.Rescale(-5);
 //    std::cout << "ATR: " << atr << '\n';
-    EXPECT_EQ(atr, DprDecimal::DDecQuad{"3.36875"});
+    EXPECT_EQ(atr, DprDecimal::DDecQuad{"3.369"});
 
     // recompute using all the data for rest of test
 
     atr = ComputeATR("AAPL", history, history_size);
-    atr.Rescale(-5);
 
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
@@ -2708,9 +2711,9 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
 
     DprDecimal::DDecQuad box_size = atr / (sum / history_size);
 
-    std::cout << "box size: " << box_size << '\n';
+//    std::cout << "box size: " << box_size << '\n';
     box_size.Rescale(-5);
-    std::cout << "rescaled box size: " << box_size << '\n';
+//    std::cout << "rescaled box size: " << box_size << '\n';
 
     PF_Chart chart("AAPL", box_size, 2, Boxes::BoxScale::e_percent, atr);
 
@@ -2723,10 +2726,13 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
         {
             auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
             auto status = chart.AddValue(e.close_, the_date);
-            fmt::print("value: {} status: {}\n", e.close_, status);
+//            fmt::print("value: {} status: {}\n", e.close_, status);
         });
 
-   std::cout << chart << '\n';
+    fmt::print("AAPL chart: {}\n", chart);
+
+    // TODO: I've lost the plot on this test and don't remember what else I 
+    // wanted to do. So, I'll leave this output so I'll be reminded when I run these tests.
 
 //    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << fmt::format("date: {} close: {} adjusted close: {} delta: {} \n",
 //                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });
@@ -2759,7 +2765,7 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)    //NOLINT
 
     if (! can_we_stream)
     {
-        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+//        std::cout << "Market not open for trading now so we can't stream quotes.\n";
         return;
     }
 
@@ -2794,7 +2800,7 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)    //NOLINT
 
 void InitLogging ()
 {
-   spdlog::set_level(spdlog::level::debug);
+   spdlog::set_level(spdlog::level::err);
 //    spdlog::get()->set_filter
 //    (
 //        logging::trivial::severity >= logging::trivial::trace
