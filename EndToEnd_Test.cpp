@@ -183,12 +183,14 @@ TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
 	{
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+	    const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
+            // 'qqqq' is not a valid symbol so there will be zero prices returned
+            // for ATR calculation. Hence the 'throw'.
             ASSERT_THROW(myApp.Run(), std::invalid_argument);
             myApp.Shutdown();
         }
@@ -210,10 +212,192 @@ TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
 	}
 }
 
+TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
+{
+	//	NOTE: the program name 'the_program' in the command line below is ignored in the
+	//	the test program.
+
+	std::vector<std::string> tokens{"the_program",
+        "-s", "qqqq",
+        "-s", "spy",
+        "--new-data-source", "streaming",
+        "--new-data-dir", "./test_files",
+        "--source-format", "csv",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_charts",
+        "--use-ATR",
+        "--use-MinMax",
+        "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--reversal", "1",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens);
+
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+
+        // both use-ATR and use-MinMax specified so this is an error
+        EXPECT_FALSE(startup_OK);
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+
+
+	std::vector<std::string> tokens2{"the_program",
+        "-s", "qqqq",
+        "-s", "spy",
+        "--new-data-source", "streaming",
+        "--new-data-dir", "./test_files",
+        "--source-format", "csv",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_charts",
+        "--use-MinMax",
+        "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--reversal", "1",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens2);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+
+        // use-MinMax is specified but data source is 'streaming' so this is an error
+        EXPECT_FALSE(startup_OK);
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+
+	std::vector<std::string> tokens3{"the_program",
+        "-s", "qqqq",
+        "-s", "spy",
+        "--new-data-source", "database",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        // "--new-data-dir", "./test_files",
+        // "--source-format", "csv",
+        "--mode", "update",
+        "--interval", "eod",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_charts",
+        "--use-MinMax",
+        "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--reversal", "1",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens3);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+
+        // use-MinMax is specified but mode is 'update' so this is an error
+        EXPECT_FALSE(startup_OK);
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+
+	std::vector<std::string> tokens4{"the_program",
+        "-s", "qqqq",
+        "-s", "spy",
+        "--new-data-source", "database",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--begin-date", "2017-01-01",
+        // "--new-data-dir", "./test_files",
+        // "--source-format", "csv",
+        "--mode", "load",
+        "--interval", "eod",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_charts",
+        "--use-MinMax",
+        "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--reversal", "1",
+        "--reversal", "3"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens4);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+        EXPECT_TRUE(startup_OK);
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+}
+
 class SingleFileEndToEnd : public Test
 {
 };
-
 
 TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
 {
@@ -815,15 +999,15 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         "--mode", "update",
         "--scale", "linear",
         "--price-fld-name", "adjclose",
-        // "--destination", "database",
-        "--destination", "file",
+        "--destination", "database",
+        // "--destination", "file",
         "--chart-data-source", "database",
         "--output-chart-dir", "/tmp/test_charts9",
         "--output-graph-dir", "/tmp/test_charts9",
         "--graphics-format", "svg",
-        // "--boxsize", "10",
+        "--boxsize", "10",
         "--boxsize", "5",
-        // "--reversal", "1",
+        "--reversal", "1",
         "--reversal", "3",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
@@ -937,6 +1121,73 @@ TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
 	}
     EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
+}
+
+TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    //NOLINT
+{
+    if (fs::exists("/tmp/test_charts13"))
+    {
+        fs::remove_all("/tmp/test_charts13");
+    }
+
+	//	NOTE: the program name 'the_program' in the command line below is ignored in the
+	//	the test program.
+
+	std::vector<std::string> tokens{"the_program",
+        "--symbol-list", "AAPL,GOOG,IWM,IWR,spy,qqq,A,rsp",
+        // "-s", "ACY",
+        "--new-data-source", "database",
+        "--mode", "load",
+        "--scale", "linear",
+        "--price-fld-name", "adjclose",
+        "--destination", "database",
+        "--output-graph-dir", "/tmp/test_charts13",
+        "--graphics-format", "svg",
+        // "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--boxsize", ".005",
+        "--reversal", "1",
+        "-r", "3",
+        "--db-mode", "test",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--db-data-source", "new_stock_data.current_data",
+        "--begin-date", "2017-01-01",
+        "--use-MinMax",
+        // "--exchange", "NYSE",
+        "--max-graphic-cols", "150"
+	};
+
+	try
+	{
+        PF_CollectDataApp myApp(tokens);
+
+		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+	}
+
+    // catch any problems trying to setup application
+
+	catch (const std::exception& theProblem)
+	{
+        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+	}
+	catch (...)
+	{		// handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+	}
+    ASSERT_TRUE(fs::exists("/tmp/test_charts13/SPY_0.01X1_linear_eod.svg"));
 }
 
 TEST_F(Database, DailyScan)    //NOLINT
