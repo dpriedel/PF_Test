@@ -534,7 +534,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
     // I'm not sure how du Plessis is doing his rounding (p. 492) but 
     // I'm using round half up to 3 decimals.
 
-    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0, Boxes::BoxScale::e_percent};
 
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, 500.00);
@@ -556,7 +556,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
 
     // test going smaller
 
-    Boxes boxes2{0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_percent};
 
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -568,14 +568,14 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
 
 TEST_F(BoxesBasicFunctionality, PercentBoxesNextandPrev)    //NOLINT
 {
-    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, 500.00);
 
     box = boxes.FindNextBox(500);
     EXPECT_EQ(box, 505);
 
-    Boxes boxes2{0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_percent};
     box = boxes2.FindBox(500);
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -592,7 +592,7 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)    //NOLINT
 
     auto prices = values | ranges::views::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
 
-    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
 
     ranges::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
 
@@ -1291,14 +1291,11 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
-//    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
-//    std::cout << '\n';
 
     // do a simplified ATR calculation
 
     DDecQuad box_size = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
     box_size.Rescale(-5);
-//    std::cout << "box_size: " << box_size << '\n';
 
     EXPECT_EQ(box_size, 12.91837);
 
@@ -1314,7 +1311,6 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     {
         const auto fields = split_string<std::string_view> (record, ',');
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-//        std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -1323,20 +1319,14 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
             // now continue on processing the value.
             
             status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
-//            std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
         }
     });
-
-//   // fmt::print("Boxes: {}\n", boxes);
-   // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-   // std::cout << col << '\n';
 
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1151.672);
     EXPECT_EQ(col.GetBottom(), 1125.836);
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 5);
-
 }
 
 TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractionalBoxSizeAndPercent)    //NOLINT
@@ -1346,10 +1336,8 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 0, 2};
-
-//    std::cout << "Boxes: " << boxes << '\n';
 
     std::vector<PF_Column> columns;
 
@@ -1358,7 +1346,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     {
         const auto fields = split_string<std::string_view> (record, ',');
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-//        std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
+
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -1367,9 +1355,6 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
             // now continue on processing the value.
             
             status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
-//            std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
-    
-//            std::cout << "Boxes: " << boxes << '\n';
         }
     });
 
@@ -1379,8 +1364,6 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 8);
 
-//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-//    std::cout << col << '\n';
 }
 
 TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFractionalBoxSizeAndPercent)    //NOLINT
@@ -1390,21 +1373,16 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     // compute percent box size based on simplified ATR computation
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
-//    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
-//    std::cout << '\n';
 
     DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0.0)) / static_cast<double>(value_differences.size());
-    DDecQuad average_price = static_cast<double>(ranges::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
-    DprDecimal::DDecQuad box_size = atr / average_price;
-    box_size.Rescale(-5);
-//    std::cout << "box size: " << box_size << '\n';
+    // DDecQuad average_price = static_cast<double>(ranges::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
+    // DprDecimal::DDecQuad box_size = atr / average_price;
+    // box_size.Rescale(-5);
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    Boxes boxes{box_size, Boxes::BoxScale::e_percent};
+    Boxes boxes{atr, 0.01, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 0, 2};
-
-//    std::cout << "Boxes: " << boxes << '\n';
 
     std::vector<PF_Column> columns;
 
@@ -1413,7 +1391,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     {
         const auto fields = split_string<std::string_view> (record, ',');
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-//        std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
+
         if (status == PF_Column::Status::e_reversal)
         {
             columns.push_back(col);
@@ -1422,22 +1400,16 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
             // now continue on processing the value.
             
             status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
-//            std::cout << "price: " << fields[close_col] << " result: " << status << col << '\n';
-    
-//            std::cout << "Boxes: " << boxes << '\n';
         }
     });
 
-//   // fmt::print("Boxes: {}\n", boxes);
-   // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
-   // std::cout << col << '\n';
-
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(col.GetTop(), 1153.7580);
-    EXPECT_EQ(col.GetBottom(), 1113.2000);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetTop(), 1144.664);
+    EXPECT_EQ(col.GetBottom(), 1133.331);
     EXPECT_EQ(col.GetHadReversal(), false);
-    EXPECT_EQ(columns.size() + 1, 3);
+    EXPECT_EQ(columns.size() + 1, 8);
 }
+
 class ColumnFunctionalityPercentX1 : public Test
 {
 
@@ -1453,7 +1425,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
 //    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
 
-    Boxes boxes{0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1741,26 +1713,23 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
 
-    PF_Chart chart("GOOG", 1, 2, Boxes::BoxScale::e_linear, atr);
+    PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_linear);
     
     // do it manually so can watch chart formation
 
     const auto data_values = rng_split_string<std::string_view>(test_data, '\n');
     ranges::for_each(data_values, [&chart, close_col = 1, date_col = 0](const auto record)
         {
-//            std::cout << "len: " << record.size() << "  " << record << '\n';
             const auto fields = split_string<std::string_view> (record, ',');
-//            std::cout << "close value: " << fields[close_col] << " date value: " << fields[date_col] << " record: \n" << record << '\n';
             auto result = chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-//            std::cout << "value: " << fields[close_col] << " result: " << result << " direction: " << chart.GetCurrentDirection() << '\n';
         });
 
-//    std::cout << chart << '\n';
+    // fmt::print("{}\n", chart);
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.size(), 5);
-    EXPECT_EQ(chart[4].GetTop(), 1151.68);
-    EXPECT_EQ(chart[4].GetBottom(), 1125.84);
+    EXPECT_EQ(chart[4].GetTop(), 1151.672);
+    EXPECT_EQ(chart[4].GetBottom(), 1125.836);
     EXPECT_EQ(chart[4].GetHadReversal(), false);
 }
 
@@ -2013,29 +1982,25 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
 
     DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0.0)) / static_cast<double>(value_differences.size());
-    DDecQuad average_price = static_cast<double>(ranges::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
+    // DDecQuad average_price = static_cast<double>(ranges::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
 
-    DprDecimal::DDecQuad box_size = atr / average_price;
-    box_size.Rescale(-5);
-//    std::cout << "atr: " << atr << '\n';
+    // DprDecimal::DDecQuad box_size = atr / average_price;
+    // box_size.Rescale(-5);
 
     std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
-    // std::cout << "test data: " << test_data << '\n';
 
     std::istringstream prices{test_data}; 
 
-//    double factor = (10.0 / box_size).ToDouble();
-
-    PF_Chart chart("GOOG", 1, 2, Boxes::BoxScale::e_percent, box_size);
+    PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_percent, .01);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-//    fmt::print("Chart: {}\n", chart);
+   // fmt::print("Chart: {}\n", chart);
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
-    EXPECT_EQ(chart.size(), 3);
-    EXPECT_EQ(chart[3].GetTop(), 1153.7580);
-    EXPECT_EQ(chart[3].GetBottom(), 1113.2000);
-    EXPECT_EQ(chart[3].GetHadReversal(), false);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.size(), 8);
+    EXPECT_EQ(chart[8].GetTop(), 1144.664);
+    EXPECT_EQ(chart[8].GetBottom(), 1133.331);
+    EXPECT_EQ(chart[8].GetHadReversal(), false);
 }
 
 class ChartSignals10X3 : public Test
@@ -2534,6 +2499,86 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
 }
 
+TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    //NOLINT
+{
+    if (fs::exists("/tmp/linear14.svg"))
+    {
+        fs::remove("/tmp/linear14.svg");
+    }
+    if (fs::exists("/tmp/percent14.svg"))
+    {
+        fs::remove("/tmp/percent14.svg");
+    }
+
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="live", .db_data_source_="new_stock_data.current_data"};
+    PF_DB the_db{db_params};
+
+    DprDecimal::DDecQuad close_range;
+
+    std::string query = "select (max(adjclose) - min(adjclose)) as range from new_stock_data.current_data where date BETWEEN '2017-01-01' and '2023-04-01' and symbol = 'AAPL' ; ";
+    auto Row2Range = [](const auto& r) { return DprDecimal::DDecQuad{r[0].template as<std::string_view>()}; };
+	try
+	{
+		close_range = the_db.RunSQLQueryUsingRows<DprDecimal::DDecQuad>(query, Row2Range)[0];
+        // atr = ComputeATR("AAPL", price_data, history_size);
+    }
+   	catch (const std::exception& e)
+   	{
+		std::cout << "Unable to comput close range from DB for 'AAPL' because: " << e.what() << std::endl;
+   	}
+//    std::cout << "history length: " << history.size() << '\n';
+
+	std::string get_symbol_prices_cmd = fmt::format("SELECT date, {} FROM new_stock_data.current_data WHERE date BETWEEN '2017-01-01' and '2023-04-01' AND symbol = 'AAPL' ORDER BY date ASC", "adjClose");
+
+    const auto *dt_format = "%F";
+
+    std::istringstream time_stream;
+    date::utc_time<date::utc_clock::duration> tp;
+
+    // we know our database contains 'date's, but we need timepoints.
+    // we'll handle that in the conversion routine below.
+
+    auto Row2Closing = [dt_format, &time_stream, &tp](const auto& r) {
+        time_stream.clear();
+        time_stream.str(std::string{std::get<0>(r)});
+        date::from_stream(time_stream, dt_format, tp);
+        DateCloseRecord new_data{.date_=tp, .close_=std::get<1>(r)};
+        return new_data;
+    };
+    const auto closing_prices = the_db.RunSQLQueryUsingStream<DateCloseRecord, std::string_view, std::string_view>(get_symbol_prices_cmd, Row2Closing);
+
+    DDecQuad box_size = .01;
+
+    // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
+    PF_Chart chart("AAPL", close_range, 2, Boxes::BoxScale::e_linear, box_size, 150);
+    // fmt::print("Linar chart before data: {}\n", chart);
+
+	for (const auto& [new_date, new_price] : closing_prices)
+	{
+		// std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
+		chart.AddValue(new_price, date::clock_cast<date::utc_clock>(new_date));
+	}
+
+    // fmt::print("Linear chart: {}\n", chart);
+
+    chart.ConstructChartGraphAndWriteToFile("/tmp/linear14.svg", {}, "no");
+    
+    EXPECT_TRUE(fs::exists("/tmp/linear14.svg"));
+
+    PF_Chart chart_percent("AAPL", close_range, 2, Boxes::BoxScale::e_percent, box_size, 150);
+
+	for (const auto& [new_date, new_price] : closing_prices)
+	{
+		// std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
+		chart_percent.AddValue(new_price, date::clock_cast<date::utc_clock>(new_date));
+	}
+    chart_percent.ConstructChartGraphAndWriteToFile("/tmp/percent14.svg", {}, "no");
+    
+    // fmt::print("Percent chart: {}\n", chart_percent);
+
+    EXPECT_TRUE(fs::exists("/tmp/percent14.svg"));
+}
+
 class TiingoATR : public Test
 {
     std::string LoadApiKey(std::string file_name)
@@ -2705,17 +2750,17 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
 
-    DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
-            DprDecimal::DDecQuad{}, std::plus<>(),
-            [](const StockDataRecord& e) { return e.close_; });
-
-    DprDecimal::DDecQuad box_size = atr / (sum / history_size);
+    // DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
+    //         DprDecimal::DDecQuad{}, std::plus<>(),
+    //         [](const StockDataRecord& e) { return e.close_; });
+    //
+    // DprDecimal::DDecQuad box_size = atr / (sum / history_size);
 
 //    std::cout << "box size: " << box_size << '\n';
-    box_size.Rescale(-5);
+    // box_size.Rescale(-5);
 //    std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxScale::e_percent, atr);
+    PF_Chart chart("AAPL", atr, 2, Boxes::BoxScale::e_percent, .01);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
