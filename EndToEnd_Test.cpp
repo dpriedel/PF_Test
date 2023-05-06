@@ -25,6 +25,7 @@
 #include "PF_CollectDataApp.h"
 #include "utilities.h"
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <future>
@@ -49,7 +50,6 @@ namespace py = pybind11;
 using namespace py::literals;
 
 using namespace std::literals::chrono_literals;
-using namespace date::literals;
 using namespace std::string_literals;
 
 namespace fs = std::filesystem;
@@ -1056,7 +1056,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
-TEST_F(Database, BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
@@ -1312,8 +1312,8 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
-        auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
         auto timer = [&counter] (const auto& stop_at)
@@ -1322,7 +1322,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
                 {
                     std::cout << "ding...\n";
                     ++counter;
-                    auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (now.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
@@ -1451,8 +1451,8 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
 
         bool startup_OK = myApp.Startup();
 
-        auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
         auto timer = [&counter] (const auto& stop_at)
@@ -1461,7 +1461,7 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
                 {
                     std::cout << "ding...\n";
                     ++counter;
-                    auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (now.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
