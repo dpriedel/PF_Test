@@ -83,6 +83,8 @@
 #include <gtest/gtest.h>
 
 #include <date/date.h>
+#include <date/tz.h>
+
 #include <spdlog/spdlog.h>
 #include <fmt/format.h>
 #include <fmt/chrono.h>
@@ -96,7 +98,6 @@ namespace py = pybind11;
 using namespace py::literals;
 
 using namespace std::literals::chrono_literals;
-using namespace date::literals;
 using namespace std::string_literals;
 namespace fs = std::filesystem;
 
@@ -122,7 +123,7 @@ using namespace DprDecimal;
 
 // some utility code for generating test data
 
-std::string MakeSimpleTestData(const std::string& data, const date::year_month_day& first_day, char delim)
+std::string MakeSimpleTestData(const std::string& data, const std::chrono::year_month_day& first_day, char delim)
 {
     auto values = rng_split_string<std::string_view>(data, delim);
 
@@ -132,7 +133,7 @@ std::string MakeSimpleTestData(const std::string& data, const date::year_month_d
 //    auto sample = dates | ranges::views::take(50);
 //    std::cout << sample << '\n';
 
-    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, std::string_view a_value)
+    auto make_test_data = ranges::views::zip_with([](const std::chrono::year_month_day& a_date, std::string_view a_value)
             { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
 
 //    auto sample2 = make_test_data | ranges::views::take(30);
@@ -144,7 +145,7 @@ std::string MakeSimpleTestData(const std::string& data, const date::year_month_d
     return test_data;
 }
 
-std::string MakeSimpleTestData(const std::vector<int32_t>& data, const date::year_month_day& first_day)
+std::string MakeSimpleTestData(const std::vector<int32_t>& data, const std::chrono::year_month_day& first_day)
 {
     // make some business days (although, not doing holidays)
     auto holidays = MakeHolidayList(first_day.year());
@@ -154,7 +155,7 @@ std::string MakeSimpleTestData(const std::vector<int32_t>& data, const date::yea
 //    auto sample = dates | ranges::views::take(50);
 //    std::cout << sample << '\n';
 
-    auto make_test_data = ranges::views::zip_with([](const date::year_month_day& a_date, int32_t a_value)
+    auto make_test_data = ranges::views::zip_with([](const std::chrono::year_month_day& a_date, int32_t a_value)
             { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, data);
 
 
@@ -223,8 +224,8 @@ TEST_F(Timer, TestCountDownTimer)    //NOLINT
 {
     // a 10 second count down
 
-    auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-    auto then = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 10s);
+    auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto then = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 10s);
 
     int counter = 0;
     auto timer = [&counter] (const auto& stop_at)
@@ -233,7 +234,7 @@ TEST_F(Timer, TestCountDownTimer)    //NOLINT
             {
                std::cout << "ding...\n";
                 ++counter;
-                auto now = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
                     break;
@@ -257,7 +258,7 @@ class BusinessDateRange : public Test
 
 TEST_F(BusinessDateRange, GenerateMarketHolidays1)    //NOLINT
 {
-    date::year which_year = 2022_y;
+    std::chrono::year which_year = 2022y;
 
     auto holidays = MakeHolidayList(which_year);
 
@@ -268,7 +269,7 @@ TEST_F(BusinessDateRange, GenerateMarketHolidays1)    //NOLINT
 //        std::cout << name << '\t' << date << '\n';
     }
 
-    which_year = 2021_y;
+    which_year = 2021y;
 
     holidays = MakeHolidayList(which_year);
 
@@ -282,71 +283,71 @@ TEST_F(BusinessDateRange, GenerateMarketHolidays1)    //NOLINT
 
 TEST_F(BusinessDateRange, WithinSingleWeek)    //NOLINT
 {
-    date::year_month_day start_here{2021_y/date::October/date::Friday[1]};
+    std::chrono::year_month_day start_here{2021y/std::chrono::October/std::chrono::Friday[1]};
 
     auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Down);
 
 //    std::cout << result.first << " : " << result.second << '\n';
 
-    ASSERT_EQ(result.second, date::year_month_day{2021_y/date::September/27});
+    ASSERT_EQ(result.second, std::chrono::year_month_day{2021y/std::chrono::September/27});
 
 }
 
 TEST_F(BusinessDateRange, SpanAWeek)    //NOLINT
 {
-    date::year_month_day start_here{2021_y/date::October/date::Friday[1]};
+    std::chrono::year_month_day start_here{2021y/std::chrono::October/std::chrono::Friday[1]};
 
     auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Up);
 
 //    std::cout << result.first << " : " << result.second << '\n';
 
-    ASSERT_EQ(result.second, date::year_month_day{2021_y/date::October/7});
+    ASSERT_EQ(result.second, std::chrono::year_month_day{2021y/std::chrono::October/7});
 }
 
 TEST_F(BusinessDateRange, SpanAWeekAndAMonth)    //NOLINT
 {
-    date::year_month_day start_here{2021_y/date::September/22};
+    std::chrono::year_month_day start_here{2021y/std::chrono::September/22};
 
     auto result = ConstructeBusinessDayRange(start_here, 12, UpOrDown::e_Up);
 
 //    std::cout << result.first << " : " << result.second << '\n';
 
-    EXPECT_EQ(result.second, date::year_month_day{2021_y/date::October/7});
+    EXPECT_EQ(result.second, std::chrono::year_month_day{2021y/std::chrono::October/7});
 
-    start_here = date::year_month_day{2021_y/date::October/7};
+    start_here = std::chrono::year_month_day{2021y/std::chrono::October/7};
 
     result = ConstructeBusinessDayRange(start_here, 14, UpOrDown::e_Down);
 
 //    std::cout << result.first << " : " << result.second << '\n';
 
-    ASSERT_EQ(result.second, date::year_month_day{2021_y/date::September/20});
+    ASSERT_EQ(result.second, std::chrono::year_month_day{2021y/std::chrono::September/20});
 
 }
 
 TEST_F(BusinessDateRange, WithinSingleWeekWithHoliday)    //NOLINT
 {
-    auto holidays = MakeHolidayList(2022_y);
-    date::year_month_day start_here{2022_y/date::January/16};
+    auto holidays = MakeHolidayList(2022y);
+    std::chrono::year_month_day start_here{2022y/std::chrono::January/16};
 
     auto result = ConstructeBusinessDayRange(start_here, 4, UpOrDown::e_Up, &holidays);
 
 //    std::cout << result.first << " : " << result.second << '\n';
 
-    EXPECT_EQ(result.first, date::year_month_day{2022_y/date::January/18});
-    ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/21});
+    EXPECT_EQ(result.first, std::chrono::year_month_day{2022y/std::chrono::January/18});
+    ASSERT_EQ(result.second, std::chrono::year_month_day{2022y/std::chrono::January/21});
 }
 
 TEST_F(BusinessDateRange, SpanAWeekWithHoliday)    //NOLINT
 {
-    auto holidays = MakeHolidayList(2022_y);
-    date::year_month_day start_here{2022_y/date::January/19};
+    auto holidays = MakeHolidayList(2022y);
+    std::chrono::year_month_day start_here{2022y/std::chrono::January/19};
 
     auto result = ConstructeBusinessDayRange(start_here, 5, UpOrDown::e_Down, &holidays);
 
 //    std::cout << result.first << " : " << result.second << '\n';
 
-    EXPECT_EQ(result.first, date::year_month_day{2022_y/date::January/19});
-    ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/12});
+    EXPECT_EQ(result.first, std::chrono::year_month_day{2022y/std::chrono::January/19});
+    ASSERT_EQ(result.second, std::chrono::year_month_day{2022y/std::chrono::January/12});
 }
 
 TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays)    //NOLINT
@@ -355,17 +356,17 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays)    //NOLINT
     // but Christmas and New Years are not observed because they 
     // fall on weekends
 
-    auto holidays = MakeHolidayList(2021_y);
-    ranges::copy(MakeHolidayList(2022_y), std::back_inserter(holidays));
+    auto holidays = MakeHolidayList(2021y);
+    ranges::copy(MakeHolidayList(2022y), std::back_inserter(holidays));
 
-    date::year_month_day start_here{2021_y/date::November/22};
+    std::chrono::year_month_day start_here{2021y/std::chrono::November/22};
 
     auto result = ConstructeBusinessDayRange(start_here, 43, UpOrDown::e_Up, &holidays);
 
 //    std::cout << result.first << " : " << result.second << '\n';
 
-    EXPECT_EQ(result.first, date::year_month_day{2021_y/date::November/22});
-    ASSERT_EQ(result.second, date::year_month_day{2022_y/date::January/24});
+    EXPECT_EQ(result.first, std::chrono::year_month_day{2021y/std::chrono::November/22});
+    ASSERT_EQ(result.second, std::chrono::year_month_day{2022y/std::chrono::January/24});
 }
 
 class CanWeStreamNow : public Test
@@ -381,31 +382,31 @@ TEST_F(CanWeStreamNow, IsTheMarketOpenVariousTimeZones)    //NOLINT
     // in this test, Perth is 12 hours ahead of New York so it's actually still 
     // Sunday in NY.
 
-    const auto time1 = date::local_days{2022_y/date::March/14} + 8h +30min +0s;
+    const auto time1 = std::chrono::local_days{2022y/std::chrono::March/14} + 8h +30min +0s;
     auto market_status = GetUS_MarketStatus("Australia/Perth", time1);
 //    std::cout << "Perth Australia: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_NonTradingDay);
 
-    const auto time2 = date::local_days{2022_y/date::March/14} + 8h +30min +0s;
+    const auto time2 = std::chrono::local_days{2022y/std::chrono::March/14} + 8h +30min +0s;
     market_status = GetUS_MarketStatus("America/Los_Angeles", time2);
 //    std::cout << "Los Angeles: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_OpenForTrading);
 
     // DST in New York, standard time in London
 
-    const auto time3 = date::local_days{2022_y/date::March/14} + 20h +30min +0s;
+    const auto time3 = std::chrono::local_days{2022y/std::chrono::March/14} + 20h +30min +0s;
     market_status = GetUS_MarketStatus("Europe/London", time3);
 //    std::cout << "London: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_ClosedForDay);
 
     // DST in New York, DST in London
 
-    const auto time3a = date::local_days{2022_y/date::March/29} + 20h +30min +0s;
+    const auto time3a = std::chrono::local_days{2022y/std::chrono::March/29} + 20h +30min +0s;
     market_status = GetUS_MarketStatus("Europe/London", time3a);
 //    std::cout << "London: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_OpenForTrading);
 
-    const auto time4 = date::local_days{2022_y/date::March/14} + 6h + 0min +0s;
+    const auto time4 = std::chrono::local_days{2022y/std::chrono::March/14} + 6h + 0min +0s;
     market_status = GetUS_MarketStatus("America/Chicago", time4);
 //    std::cout << "Chicago: " << market_status << '\n';
     EXPECT_EQ(market_status, US_MarketStatus::e_NotOpenYet);
@@ -684,7 +685,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     
     auto a_value = prices.begin();
 
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
 //    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
@@ -693,7 +694,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
    // std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
@@ -701,7 +702,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
    // std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
@@ -709,7 +710,7 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
     while (++a_value != prices.end())
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
@@ -727,7 +728,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)    //NOLINT
     PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
@@ -743,7 +744,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
     PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 //    std::cout << "time: " << the_time << '\n';
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
@@ -779,7 +780,7 @@ TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)    //NOLINT
     PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
@@ -814,7 +815,7 @@ TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)    /
     PF_Column col{&boxes, 0, 1};
 
     PF_Column::Status status;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
@@ -834,7 +835,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)    //NOLINT
 
     std::vector<PF_Column> columns;
 
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
@@ -867,7 +868,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)  
     PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -899,7 +900,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -934,7 +935,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLIN
     PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -970,7 +971,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     PF_Column col{&boxes, 0, 1};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1017,7 +1018,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     const std::vector<double> prices = {1100.4, 1105.9, 1110.3, 1112.2, 1118.7, 1120.6}; 
     Boxes boxes{DprDecimal::DDecQuad{10}};
     PF_Column col{&boxes, 0, 1};
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
     
     auto a_value = prices.begin();
 
@@ -1028,7 +1029,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
@@ -1036,7 +1037,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
@@ -1044,7 +1045,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
     while (++a_value != prices.end())
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
@@ -1079,7 +1080,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     
     auto a_value = prices.begin();
 
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 //    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
 //    std::cout << "first value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
@@ -1088,7 +1089,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
 //    std::cout << "second value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
@@ -1097,7 +1098,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
 //    std::cout << "third value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
@@ -1106,7 +1107,7 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
-    the_time = date::utc_clock::now();
+    the_time = std::chrono::utc_clock::now();
     while (++a_value != prices.end())
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
@@ -1126,7 +1127,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)    //NOLINT
     PF_Column col{&boxes, 0, 3};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1162,7 +1163,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)    //NOLINT
 
     std::vector<PF_Column> columns;
 
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
@@ -1210,7 +1211,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     PF_Column col{&boxes, 0, 5};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1259,7 +1260,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (auto price : prices)
     {
@@ -1299,7 +1300,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     EXPECT_EQ(box_size, 12.91837);
 
-    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     Boxes boxes{box_size};
     PF_Column col{&boxes, 0, 2};
@@ -1334,7 +1335,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
-    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 0, 2};
@@ -1379,7 +1380,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     // DprDecimal::DDecQuad box_size = atr / average_price;
     // box_size.Rescale(-5);
 
-    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     Boxes boxes{atr, 0.01, Boxes::BoxScale::e_percent};
     PF_Column col{&boxes, 0, 2};
@@ -1429,7 +1430,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
-    PF_Column::TmPt the_time = date::utc_clock::now();
+    PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     for (const auto& price : prices)
     {
@@ -1499,7 +1500,7 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -1519,7 +1520,7 @@ TEST_F(ChartFunctionality10X2, TestChartIteratorWithFirstSetOfTestData)    //NOL
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -1547,7 +1548,7 @@ TEST_F(ChartFunctionality10X2, TestChartReverseIteratorWithFirstSetOfTestData)  
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -1578,7 +1579,7 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
-    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
     // std::cout << "test data: " << test_data << std::endl;
 
     std::istringstream prices{test_data}; 
@@ -1588,9 +1589,9 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
 
     const std::vector<int32_t> values_ints_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
     const std::vector<int32_t> values_ints_2 = {1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
-    std::string test_data_1 = MakeSimpleTestData(values_ints_1, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data_1 = MakeSimpleTestData(values_ints_1, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
     // dates used for second data set need to be non-overlapping with first because Chart code now filters 'old' data.
-    std::string test_data_2 = MakeSimpleTestData(values_ints_2, date::year_month_day {2016_y/date::March/date::Monday[1]});
+    std::string test_data_2 = MakeSimpleTestData(values_ints_2, std::chrono::year_month_day {2016y/std::chrono::March/std::chrono::Monday[1]});
 
     std::istringstream prices_1{test_data_1}; 
 
@@ -1711,7 +1712,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     EXPECT_EQ(atr, 12.91837);
 
-    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_linear);
     
@@ -1822,7 +1823,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
 
 	struct DB_data
 	{
-		date::utc_time<date::utc_clock::duration> tp;
+		std::chrono::utc_time<std::chrono::utc_clock::duration> tp;
 		DprDecimal::DDecQuad price;
 	};
 	std::vector<DB_data> db_data;
@@ -1840,14 +1841,15 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
 		// we know our database contains 'date's, but we need timepoints
 
 		std::istringstream time_stream;
-		date::utc_time<date::utc_clock::duration> tp;
+		date::utc_time<std::chrono::utc_clock::duration> tp;
 
         for (const auto& [date, adjclose] : trxn.stream<std::string_view, std::string_view>(get_symbol_prices_cmd))
         {
 			time_stream.clear();
 			time_stream.str(std::string{date});
     		date::from_stream(time_stream, "%F", tp);
-            db_data.emplace_back(DB_data{.tp=tp, .price=DprDecimal::DDecQuad{adjclose}});
+            std::chrono::utc_time<std::chrono::utc_clock::duration> tp1{tp.time_since_epoch()};
+            db_data.emplace_back(DB_data{.tp=tp1, .price=DprDecimal::DDecQuad{adjclose}});
         }
     	trxn.commit();
 
@@ -1910,7 +1912,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -1933,7 +1935,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
 TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)    //NOLINT
 {
     const std::vector<int32_t> values_ints_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
-    std::string test_data_1 = MakeSimpleTestData(values_ints_1, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data_1 = MakeSimpleTestData(values_ints_1, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     std::istringstream prices_1{test_data_1}; 
 
@@ -1951,7 +1953,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)    //NOLINT
 
     const std::vector<int32_t> values_ints_2 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
-    std::string test_data_2 = MakeSimpleTestData(values_ints_2, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data_2 = MakeSimpleTestData(values_ints_2, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     std::istringstream prices_2{test_data_2}; 
 
@@ -1987,7 +1989,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     // DprDecimal::DDecQuad box_size = atr / average_price;
     // box_size.Rescale(-5);
 
-    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     std::istringstream prices{test_data}; 
 
@@ -2012,7 +2014,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuy)    //NOLINT
 {
     const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
-    std::string test_data = MakeSimpleTestData(values_ints, date::year_month_day {2015_y/date::March/date::Monday[1]});
+    std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
     std::istringstream prices{test_data}; 
 
@@ -2279,7 +2281,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -2309,7 +2311,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, date::year_month_day {2015_y/date::March/date::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
 
     std::istringstream prices{test_data}; 
 
@@ -2533,7 +2535,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
     const auto *dt_format = "%F";
 
     std::istringstream time_stream;
-    date::utc_time<date::utc_clock::duration> tp;
+    date::utc_time<std::chrono::utc_clock::duration> tp;
 
     // we know our database contains 'date's, but we need timepoints.
     // we'll handle that in the conversion routine below.
@@ -2542,7 +2544,8 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
         time_stream.clear();
         time_stream.str(std::string{std::get<0>(r)});
         date::from_stream(time_stream, dt_format, tp);
-        DateCloseRecord new_data{.date_=tp, .close_=std::get<1>(r)};
+        std::chrono::utc_time<std::chrono::utc_clock::duration> tp1{tp.time_since_epoch()};
+        DateCloseRecord new_data{.date_=tp1, .close_=std::get<1>(r)};
         return new_data;
     };
     const auto closing_prices = the_db.RunSQLQueryUsingStream<DateCloseRecord, std::string_view, std::string_view>(get_symbol_prices_cmd, Row2Closing);
@@ -2556,7 +2559,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
 	for (const auto& [new_date, new_price] : closing_prices)
 	{
 		// std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
-		chart.AddValue(new_price, date::clock_cast<date::utc_clock>(new_date));
+		chart.AddValue(new_price, std::chrono::clock_cast<std::chrono::utc_clock>(new_date));
 	}
 
     // fmt::print("Linear chart: {}\n", chart);
@@ -2570,7 +2573,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
 	for (const auto& [new_date, new_price] : closing_prices)
 	{
 		// std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
-		chart_percent.AddValue(new_price, date::clock_cast<date::utc_clock>(new_date));
+		chart_percent.AddValue(new_price, std::chrono::clock_cast<std::chrono::utc_clock>(new_date));
 	}
     chart_percent.ConstructChartGraphAndWriteToFile("/tmp/percent14.svg", {}, "no");
     
@@ -2600,16 +2603,16 @@ public:
 
 TEST_F(TiingoATR, RetrievePreviousData)    //NOLINT
 {
-    date::year which_year = 2021_y;
+    std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 14, UseAdjusted::e_No, &holidays);
+    auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, 14, UseAdjusted::e_No, &holidays);
 
     EXPECT_EQ(history.size(), 14);
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{2021_y/date::October/7});
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13].date_), date::year_month_day{2021_y/date::September/20});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), std::chrono::year_month_day{2021y/std::chrono::October/7});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13].date_), std::chrono::year_month_day{2021y/std::chrono::September/20});
 }
 
 TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
@@ -2618,13 +2621,13 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
     // are already open, the day's open.  We do this to capture 'gaps' and to set 
     // the direction at little sooner.
 
-    auto today = date::year_month_day{floor<date::days>(std::chrono::system_clock::now())};
-    date::year which_year = today.year();
+    auto today = std::chrono::year_month_day{floor<std::chrono::days>(std::chrono::system_clock::now())};
+    std::chrono::year which_year = today.year();
     auto holidays = MakeHolidayList(which_year);
     ranges::copy(MakeHolidayList(--which_year), std::back_inserter(holidays));
     
-    auto current_local_time = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-    auto market_status = GetUS_MarketStatus(std::string_view{date::current_zone()->name()}, current_local_time.get_local_time());
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto market_status = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()}, current_local_time.get_local_time());
 
     if (market_status != US_MarketStatus::e_NotOpenYet && market_status != US_MarketStatus::e_OpenForTrading)
     {
@@ -2661,17 +2664,17 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
 
 TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
 {
-    date::year which_year = 2021_y;
+    std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
-    auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, 15, UseAdjusted::e_No, &holidays);
+    auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, 15, UseAdjusted::e_No, &holidays);
 //    // ranges::for_each(history, [](const auto& e){ fmt::print("{}\n", e); });
 
     EXPECT_EQ(history.size(), 15);
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), date::year_month_day{2021_y/date::October/7});
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4].date_), date::year_month_day{2021_y/date::October/1});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), std::chrono::year_month_day{2021y/std::chrono::October/7});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4].date_), std::chrono::year_month_day{2021y/std::chrono::October/1});
 
     // auto atr = ComputeATRUsingJSON("AAPL", history, 4);
     auto atr = ComputeATR("AAPL", history, 4);
@@ -2681,13 +2684,13 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
 {
-    date::year which_year = 2021_y;
+    std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     constexpr int history_size = 20;
-    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
 
 //     auto atr = ComputeATRUsingJSON("AAPL", history, 4);
 // //    std::cout << "ATR: " << atr << '\n';
@@ -2730,13 +2733,13 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
 
 TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    //NOLINT
 {
-    date::year which_year = 2021_y;
+    std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     constexpr int history_size = 20;
-    const auto history = history_getter.GetMostRecentTickerData("AAPL", date::year_month_day{2021_y/date::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
+    const auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
 //    // ranges::for_each(history, [](const auto& e) { fmt::print("{}\n", e); });
 
     auto atr = ComputeATR("AAPL", history, 4);
@@ -2805,8 +2808,8 @@ public:
 
 TEST_F(WebSocketSynchronous, ConnectAndDisconnect)    //NOLINT
 {
-    auto current_local_time = date::zoned_seconds(date::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-    auto can_we_stream = GetUS_MarketStatus(std::string_view{date::current_zone()->name()}, current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()}, current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
 
     if (! can_we_stream)
     {
