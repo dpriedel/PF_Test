@@ -124,7 +124,7 @@ OBJS=$(OBJS1) $(OBJS2) $(OBJS3) $(OBJS3a) $(OBJS4)
 
 DEPS=$(OBJS:.o=.d)
 
-COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++2b -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DSPDLOG_FMT_EXTERNAL -DBOOST_REGEX_STANDALONE -DUSE_OS_TZDB  -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
+COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++2b -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DBOOST_REGEX_STANDALONE -DUSE_OS_TZDB  -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
 CCOMPILE=$(GCC) -c  -O0  -g3 -D_DEBUG -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
 
 # the noinhibit-exec seems to overcome the problem with duplcated symbols in the decimal library
