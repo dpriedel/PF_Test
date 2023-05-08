@@ -27,6 +27,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <future>
 
@@ -36,7 +37,7 @@
 #include <range/v3/algorithm/equal.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 
-#include <fmt/format.h>
+// #include <fmt/format.h>
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 
@@ -127,7 +128,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -145,7 +146,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -184,7 +185,7 @@ TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 	    const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -204,7 +205,7 @@ TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -242,7 +243,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
@@ -254,7 +255,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -286,7 +287,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         PF_CollectDataApp myApp(tokens2);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
@@ -298,7 +299,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -331,7 +332,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         PF_CollectDataApp myApp(tokens3);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
@@ -343,7 +344,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -377,7 +378,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         PF_CollectDataApp myApp(tokens4);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         EXPECT_TRUE(startup_OK);
@@ -387,7 +388,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -428,7 +429,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -446,7 +447,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -492,7 +493,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -511,7 +512,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -544,7 +545,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         PF_CollectDataApp myApp(tokens2);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -563,7 +564,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -597,7 +598,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         PF_CollectDataApp myApp(tokens3);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -616,7 +617,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -666,7 +667,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -684,7 +685,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -761,7 +762,7 @@ TEST_F(Database, LoadDataFromDB)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -779,7 +780,7 @@ TEST_F(Database, LoadDataFromDB)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -828,7 +829,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -846,7 +847,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -873,10 +874,10 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ',');
-    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
     auto close_column = FindColumnIndex(header_record, "Close", ',');
-    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -889,7 +890,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
 
     fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.MakeChartFileName("eod", "json"));
     std::ofstream new_file{chart_file_path, std::ios::out | std::ios::binary};
-    BOOST_ASSERT_MSG(new_file.is_open(), fmt::format("Unable to open file: {} to write updated data.", chart_file_path).c_str());
+    BOOST_ASSERT_MSG(new_file.is_open(), std::format("Unable to open file: {} to write updated data.", chart_file_path).c_str());
     new_chart.ConvertChartToJsonAndWriteToStream(new_file);
     new_file.close();
 
@@ -925,7 +926,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -944,7 +945,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -971,10 +972,10 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ',');
-    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
     auto close_column = FindColumnIndex(header_record, "Close", ',');
-    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -1024,7 +1025,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -1043,7 +1044,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -1095,7 +1096,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -1113,7 +1114,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -1163,7 +1164,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -1181,7 +1182,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -1200,10 +1201,10 @@ TEST_F(Database, DailyScan)    //NOLINT
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ',');
-    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
     auto close_column = FindColumnIndex(header_record, "Close", ',');
-    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -1241,7 +1242,7 @@ TEST_F(Database, DailyScan)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -1259,7 +1260,7 @@ TEST_F(Database, DailyScan)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -1310,7 +1311,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
         auto then = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
@@ -1353,7 +1354,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -1389,7 +1390,7 @@ TEST_F(StreamData, VerifySignalHandling)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -1407,7 +1408,7 @@ TEST_F(StreamData, VerifySignalHandling)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified
@@ -1447,7 +1448,7 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
         PF_CollectDataApp myApp(tokens);
 
 		const auto *test_info = UnitTest::GetInstance()->current_test_info();
-        spdlog::info(fmt::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
@@ -1489,7 +1490,7 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
 
 	catch (const std::exception& theProblem)
 	{
-        spdlog::error(fmt::format("Something fundamental went wrong: {}", theProblem.what()));
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
 	}
 	catch (...)
 	{		// handle exception: unspecified

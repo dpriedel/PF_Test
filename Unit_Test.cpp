@@ -86,9 +86,9 @@
 #include <date/tz.h>
 
 #include <spdlog/spdlog.h>
-#include <fmt/format.h>
-#include <fmt/chrono.h>
-#include <fmt/ranges.h>
+// #include <fmt/format.h>
+// #include <fmt/chrono.h>
+// #include <fmt/ranges.h>
 
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
@@ -642,9 +642,9 @@ TEST_F(Combinatorial, BasicFunctionlity)    //NOLINT
     std::vector<std::string_view> c = {"def", "hij", "mnop"};
 
     auto abc = ranges::views::cartesian_product(a, b, c);
-//    ranges::for_each(abc, [](const auto& x) {fmt::print("{}\n", x); });
+//    ranges::for_each(abc, [](const auto& x) {std::print("{}\n", x); });
 
-//    fmt::print("{}\n", abc);
+//    std::print("{}\n", abc);
 
    ASSERT_EQ(ranges::distance(abc), 18);
 }
@@ -1561,7 +1561,7 @@ TEST_F(ChartFunctionality10X2, TestChartReverseIteratorWithFirstSetOfTestData)  
     std::vector<int> b = {5, 4, 3, 2, 1, 0};
     auto col_nbrs_r = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()), [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
     EXPECT_EQ(col_nbrs_r, b);
-//    // ranges::for_each(chart.rbegin(), chart.rend(), [](const auto& col) { fmt::print("col: {}\n", col.GetColumnNumber()); });
+//    // ranges::for_each(chart.rbegin(), chart.rend(), [](const auto& col) { std::print("col: {}\n", col.GetColumnNumber()); });
     //
     std::vector<int> a = {0, 1, 2, 3, 4, 5};
     auto col_nbrs = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()) | ranges::views::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
@@ -1725,7 +1725,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
             auto result = chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
 
-    // fmt::print("{}\n", chart);
+    // std::print("{}\n", chart);
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.size(), 5);
@@ -1765,10 +1765,10 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)    /
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ',');
-    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
     auto close_column = FindColumnIndex(header_record, "Close", ',');
-    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
 //    std::cout << "new chart at start of adding new data: \n\n" << new_chart << "\n\n";
     ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
@@ -1799,10 +1799,10 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ',');
-    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
     auto close_column = FindColumnIndex(header_record, "Close", ',');
-    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -1886,10 +1886,10 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)   
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ',');
-    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
     auto close_column = FindColumnIndex(header_record, "Close", ',');
-    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -1996,7 +1996,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_percent, .01);
     chart.LoadData(&prices, "%Y-%m-%d", ',');
 
-   // fmt::print("Chart: {}\n", chart);
+   // std::print("Chart: {}\n", chart);
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.size(), 8);
@@ -2036,10 +2036,10 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)    //NOLINT
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ',');
-    BOOST_ASSERT_MSG(date_column.has_value(), fmt::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
     auto close_column = FindColumnIndex(header_record, "close", ',');
-    BOOST_ASSERT_MSG(close_column.has_value(), fmt::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart chart{"SPY", .01, 3};
 
@@ -2530,7 +2530,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
    	}
 //    std::cout << "history length: " << history.size() << '\n';
 
-	std::string get_symbol_prices_cmd = fmt::format("SELECT date, {} FROM new_stock_data.current_data WHERE date BETWEEN '2017-01-01' and '2023-04-01' AND symbol = 'AAPL' ORDER BY date ASC", "adjClose");
+	std::string get_symbol_prices_cmd = std::format("SELECT date, {} FROM new_stock_data.current_data WHERE date BETWEEN '2017-01-01' and '2023-04-01' AND symbol = 'AAPL' ORDER BY date ASC", "adjClose");
 
     const auto *dt_format = "%F";
 
@@ -2554,7 +2554,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
 
     // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
     PF_Chart chart("AAPL", close_range, 2, Boxes::BoxScale::e_linear, box_size, 150);
-    // fmt::print("Linar chart before data: {}\n", chart);
+    // std::print("Linar chart before data: {}\n", chart);
 
 	for (const auto& [new_date, new_price] : closing_prices)
 	{
@@ -2562,7 +2562,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
 		chart.AddValue(new_price, std::chrono::clock_cast<std::chrono::utc_clock>(new_date));
 	}
 
-    // fmt::print("Linear chart: {}\n", chart);
+    // std::print("Linear chart: {}\n", chart);
 
     chart.ConstructChartGraphAndWriteToFile("/tmp/linear14.svg", {}, "no");
     
@@ -2577,7 +2577,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
 	}
     chart_percent.ConstructChartGraphAndWriteToFile("/tmp/percent14.svg", {}, "no");
     
-    // fmt::print("Percent chart: {}\n", chart_percent);
+    // std::print("Percent chart: {}\n", chart_percent);
 
     EXPECT_TRUE(fs::exists("/tmp/percent14.svg"));
 }
@@ -2654,7 +2654,7 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
             const std::string tstmp = e["timestamp"].asString();
             const auto time_stamp = StringToUTCTimePoint("%FT%T%z", tstmp);
 
-//            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " << fmt::format("{}", time_stamp) << '\n';
+//            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " << std::format("{}", time_stamp) << '\n';
         }
 //        std::cout << history << '\n';
         EXPECT_EQ(history.size(), 3);
@@ -2670,7 +2670,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, 15, UseAdjusted::e_No, &holidays);
-//    // ranges::for_each(history, [](const auto& e){ fmt::print("{}\n", e); });
+//    // ranges::for_each(history, [](const auto& e){ std::print("{}\n", e); });
 
     EXPECT_EQ(history.size(), 15);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), std::chrono::year_month_day{2021y/std::chrono::October/7});
@@ -2678,7 +2678,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
 
     // auto atr = ComputeATRUsingJSON("AAPL", history, 4);
     auto atr = ComputeATR("AAPL", history, 4);
-    // fmt::print("ATR: {}\n", atr);
+    // std::print("ATR: {}\n", atr);
     ASSERT_TRUE(atr == DprDecimal::DDecQuad{"3.369"});
 }
 
@@ -2740,7 +2740,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
 
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
-//    // ranges::for_each(history, [](const auto& e) { fmt::print("{}\n", e); });
+//    // ranges::for_each(history, [](const auto& e) { std::print("{}\n", e); });
 
     auto atr = ComputeATR("AAPL", history, 4);
 //    std::cout << "ATR: " << atr << '\n';
@@ -2774,15 +2774,15 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
         {
             auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
             auto status = chart.AddValue(e.close_, the_date);
-//            fmt::print("value: {} status: {}\n", e.close_, status);
+//            std::print("value: {} status: {}\n", e.close_, status);
         });
 
-    fmt::print("AAPL chart: {}\n", chart);
+    std::cout << std::format("AAPL chart: {}\n", chart);
 
     // TODO: I've lost the plot on this test and don't remember what else I 
     // wanted to do. So, I'll leave this output so I'll be reminded when I run these tests.
 
-//    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << fmt::format("date: {} close: {} adjusted close: {} delta: {} \n",
+//    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << std::format("date: {} close: {} adjusted close: {} delta: {} \n",
 //                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });
 }
 
