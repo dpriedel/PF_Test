@@ -38,6 +38,7 @@
 
 
 
+#include <algorithm>
 #include <charconv>
 #include <chrono>
 #include <date/tz.h>
@@ -46,11 +47,16 @@
 #include <functional>
 #include <future>
 #include <initializer_list>
+#include <numeric>
+#include <ranges>
 #include <regex>
 #include <sstream>
 #include <string>
 #include <string_view>
 #include <thread>
+
+namespace rng = std::ranges;
+namespace vws = std::ranges::views;
 
 //#include <algorithm>
 //#include <cstdint>
@@ -60,24 +66,24 @@
 //#include <system_error>
 
 
-#include <range/v3/algorithm/copy.hpp>
-#include <range/v3/algorithm/equal.hpp>
-#include <range/v3/algorithm/find_if.hpp>
-#include <range/v3/algorithm/for_each.hpp>
-#include <range/v3/numeric/accumulate.hpp>
+// #include <range/v3/algorithm/copy.hpp>
+// #include <range/v3/algorithm/equal.hpp>
+// #include <range/v3/algorithm/find_if.hpp>
+// #include <range/v3/algorithm/for_each.hpp>
+// #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/range/conversion.hpp>
-#include <range/v3/view/all.hpp>
-#include <range/v3/view/cartesian_product.hpp>
-#include <range/v3/view/drop.hpp>
-#include <range/v3/view/for_each.hpp>
-#include <range/v3/view/generate_n.hpp>
-#include <range/v3/view/partial_sum.hpp>
-#include <range/v3/view/reverse.hpp>
-#include <range/v3/view/sliding.hpp>
-#include <range/v3/view/subrange.hpp>
-#include <range/v3/view/take.hpp>
-#include <range/v3/view/transform.hpp>
-#include <range/v3/view/zip_with.hpp>
+// #include <range/v3/view/all.hpp>
+// #include <range/v3/view/cartesian_product.hpp>
+// #include <range/v3/view/drop.hpp>
+// #include <range/v3/view/for_each.hpp>
+// #include <range/v3/view/generate_n.hpp>
+// #include <range/v3/view/partial_sum.hpp>
+// #include <range/v3/view/reverse.hpp>
+// #include <range/v3/view/sliding.hpp>
+// #include <range/v3/view/subrange.hpp>
+// #include <range/v3/view/take.hpp>
+// #include <range/v3/view/transform.hpp>
+// #include <range/v3/view/zip_with.hpp>
 
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
@@ -123,25 +129,24 @@ using namespace DprDecimal;
 
 // some utility code for generating test data
 
-std::string MakeSimpleTestData(const std::string& data, const std::chrono::year_month_day& first_day, char delim)
+std::string MakeSimpleTestData(const std::string& data, const std::chrono::year_month_day& first_day, std::string_view delim)
 {
-    auto values = rng_split_string<std::string_view>(data, delim);
+    auto values = rng_split_string<std::string_view>(data, delim) | ranges::to<std::vector>();
 
     auto holidays = MakeHolidayList(first_day.year());
-    ranges::copy(MakeHolidayList(++(first_day.year())), std::back_inserter(holidays));
-    const auto dates = ConstructeBusinessDayList(first_day, ranges::distance(values), UpOrDown::e_Up, &holidays); 
-//    auto sample = dates | ranges::views::take(50);
+    rng::copy(MakeHolidayList(++(first_day.year())), std::back_inserter(holidays));
+    const auto dates = ConstructeBusinessDayList(first_day, rng::size(values), UpOrDown::e_Up, &holidays); 
+//    auto sample = dates | vws::take(50);
 //    std::cout << sample << '\n';
 
-    auto make_test_data = ranges::views::zip_with([](const std::chrono::year_month_day& a_date, std::string_view a_value)
-            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, values);
-
-//    auto sample2 = make_test_data | ranges::views::take(30);
-//    std::cout << sample2 << '\n';
+    auto test_values = vws::zip(dates, values);
 
     std::string test_data;
 
-    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+    for (const auto& [date, value] : test_values)
+    {
+        test_data.append(std::format("{},{}\n", date, value));
+    }
     return test_data;
 }
 
@@ -149,28 +154,25 @@ std::string MakeSimpleTestData(const std::vector<int32_t>& data, const std::chro
 {
     // make some business days (although, not doing holidays)
     auto holidays = MakeHolidayList(first_day.year());
-    ranges::copy(MakeHolidayList(++(first_day.year())), std::back_inserter(holidays));
-    const auto dates = ConstructeBusinessDayList(first_day, ranges::distance(data), UpOrDown::e_Up, &holidays); 
+    rng::copy(MakeHolidayList(++(first_day.year())), std::back_inserter(holidays));
+    const auto dates = ConstructeBusinessDayList(first_day, rng::size(data), UpOrDown::e_Up, &holidays); 
 
-//    auto sample = dates | ranges::views::take(50);
+//    auto sample = dates | vws::take(50);
 //    std::cout << sample << '\n';
-
-    auto make_test_data = ranges::views::zip_with([](const std::chrono::year_month_day& a_date, int32_t a_value)
-            { std::ostringstream test_data; test_data << a_date << ',' << a_value << '\n'; return test_data.str(); }, dates, data);
-
-
-//    auto sample2 = make_test_data | ranges::views::take(30);
-//    std::cout << sample2 << '\n';
+    auto test_values = vws::zip(dates, data);
 
     std::string test_data;
 
-    ranges::for_each(make_test_data, [&test_data](const std::string& new_data){ test_data += new_data; } );
+    for (const auto& [date, value] : test_values)
+    {
+        test_data.append(std::format("{},{}\n", date, value));
+    }
     return test_data;
 }
 
-std::optional<int> FindColumnIndex (std::string_view header, std::string_view column_name, char delim)
+std::optional<int> FindColumnIndex (std::string_view header, std::string_view column_name, std::string_view delim)
 {
-    auto fields = rng_split_string<std::string_view>(header, delim);
+    auto fields = rng_split_string<std::string_view>(header, delim) | ranges::to<std::vector>();
     auto do_compare([&column_name](const auto& field_name)
     {
         // need case insensitive compare
@@ -181,12 +183,12 @@ std::optional<int> FindColumnIndex (std::string_view header, std::string_view co
         {
             return false;
         }
-        return ranges::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
+        return rng::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
     });
 
-    if (auto found_it = ranges::find_if(fields, do_compare); found_it != ranges::end(fields))
+    if (auto found_it = rng::find_if(fields, do_compare); found_it != rng::end(fields))
     {
-        return ranges::distance(ranges::begin(fields), found_it);
+        return rng::size(rng::subrange(rng::begin(fields), found_it));
     }
     return {};
 
@@ -202,15 +204,15 @@ TEST_F(RangeSplitterBasicFunctionality, Test1)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    auto values = split_string<std::string_view>(data, ' ');
+    auto values = split_string<std::string_view>(data, " ");
 
-    auto items = rng_split_string<std::string_view>(data, ' ');
+    auto items = rng_split_string<std::string_view>(data, " ") | ranges::to<std::vector>();
 
-    EXPECT_EQ(values.size(), ranges::distance(items));
+    EXPECT_EQ(values.size(), rng::size(items));
 
     std::vector<std::string_view> values2;
 
-    ranges::for_each(items, [&values2](const auto& x) { values2.push_back(x); });
+    rng::for_each(items, [&values2](const auto& x) { values2.push_back(x); });
 
     ASSERT_EQ(values, values2);
 };
@@ -275,10 +277,10 @@ TEST_F(BusinessDateRange, GenerateMarketHolidays1)    //NOLINT
 
     EXPECT_EQ(holidays.size(), 9);      // no new years market holiday for 2022
 
-    for (const auto& [name, date] : holidays)
-    {
-//        std::cout << name << '\t' << date << '\n';
-    }
+//     for (const auto& [name, date] : holidays)
+//     {
+// //        std::cout << name << '\t' << date << '\n';
+//     }
 }
 
 TEST_F(BusinessDateRange, WithinSingleWeek)    //NOLINT
@@ -357,7 +359,7 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays)    //NOLINT
     // fall on weekends
 
     auto holidays = MakeHolidayList(2021y);
-    ranges::copy(MakeHolidayList(2022y), std::back_inserter(holidays));
+    rng::copy(MakeHolidayList(2022y), std::back_inserter(holidays));
 
     std::chrono::year_month_day start_here{2021y/std::chrono::November/22};
 
@@ -589,13 +591,13 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)    //NOLINT
 {
     const std::string data = "500.0 505.0 510.05 515.151 520.303 525.506 530.761";
 
-    auto values = rng_split_string<std::string>(data, ' ');
+    auto values = rng_split_string<std::string>(data, " "); // | ranges::to<std::vector>();
 
-    auto prices = values | ranges::views::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
+    auto prices = values | vws::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
 
     Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
 
-    ranges::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
+    rng::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
 
     const auto json = boxes.ToJSON();
 
@@ -613,7 +615,7 @@ TEST_F(BoxesBasicFunctionality, BoxesToJsonThenFromJsonThenAddData)    //NOLINT
 
     Boxes boxes{DprDecimal::DDecQuad{10}};
 
-    ranges::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
+    rng::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
 
     // next, construct using part of the data, save to JSON, then load from JSON and add the remaining data 
 
@@ -621,11 +623,11 @@ TEST_F(BoxesBasicFunctionality, BoxesToJsonThenFromJsonThenAddData)    //NOLINT
     const std::vector<int32_t> prices_2 = { 1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     Boxes boxes_1{DprDecimal::DDecQuad{10}};
-    ranges::for_each(prices_1, [&boxes_1](const auto& x) { boxes_1.FindBox(x); });
+    rng::for_each(prices_1, [&boxes_1](const auto& x) { boxes_1.FindBox(x); });
     const auto json_1 = boxes_1.ToJSON();
 
     Boxes boxes_2{json_1};
-    ranges::for_each(prices_2, [&boxes_2](const auto& x) { boxes_2.FindBox(x); });
+    rng::for_each(prices_2, [&boxes_2](const auto& x) { boxes_2.FindBox(x); });
 
     ASSERT_EQ(boxes, boxes_2);
 }
@@ -641,12 +643,12 @@ TEST_F(Combinatorial, BasicFunctionlity)    //NOLINT
     std::vector<char> b = {'a', 'c'};
     std::vector<std::string_view> c = {"def", "hij", "mnop"};
 
-    auto abc = ranges::views::cartesian_product(a, b, c);
-//    ranges::for_each(abc, [](const auto& x) {std::print("{}\n", x); });
+    auto abc = vws::cartesian_product(a, b, c);
+//    rng::for_each(abc, [](const auto& x) {std::print("{}\n", x); });
 
 //    std::print("{}\n", abc);
 
-   ASSERT_EQ(ranges::distance(abc), 18);
+   ASSERT_EQ(rng::size(abc), 18);
 }
 
 class ColumnFunctionality10X1 : public Test
@@ -730,7 +732,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)    //NOLINT
     PF_Column::Status status;
     PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
-    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    rng::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1130);
     EXPECT_EQ(col.GetBottom(), 1100);
@@ -747,7 +749,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
     PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 //    std::cout << "time: " << the_time << '\n';
 
-    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    rng::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
     auto json = col.ToJSON();
 //   std::cout << json << '\n';
@@ -782,7 +784,7 @@ TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)    //NOLINT
     PF_Column::Status status;
     PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
-    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    rng::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
     // next, construct using part of the data, save to JSON, then load from JSON and add the remaining data 
 
@@ -791,14 +793,14 @@ TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)    //NOLINT
 
     Boxes boxes_1{DprDecimal::DDecQuad{10}};
     PF_Column col_1{&boxes_1, 0, 1};
-    ranges::for_each(prices_1, [&col_1, &status, &the_time](auto price) { status = col_1.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    rng::for_each(prices_1, [&col_1, &status, &the_time](auto price) { status = col_1.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
     const auto json_1 = boxes_1.ToJSON();
     const auto col_1_json = col_1.ToJSON();
 
     Boxes boxes_2{json_1};
     PF_Column col_2 = {&boxes_2, col_1_json};
-    ranges::for_each(prices_2, [&col_2, &status, &the_time](auto price) { status = col_2.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    rng::for_each(prices_2, [&col_2, &status, &the_time](auto price) { status = col_2.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
 //    std::cout << "\n\n col:\n" << col;
 //    std::cout << "\n\n col_1:\n" << col_1;
@@ -817,7 +819,7 @@ TEST_F(ColumnFunctionality10X1, ConstructValueStoreAsJSONThenConstructCopy)    /
     PF_Column::Status status;
     PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
-    ranges::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
+    rng::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
 
     auto json = col.ToJSON();
 //    std::cout << json << '\n';
@@ -924,7 +926,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 4);
 
-    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    // rng::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
 //    std::cout << col << '\n';
 }
 
@@ -959,7 +961,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLIN
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 5);
 
-    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    // rng::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
 //    std::cout << col << '\n';
 }
 
@@ -995,7 +997,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 9);
 
-    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    // rng::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
 //    std::cout << col << '\n';
 }
 
@@ -1149,7 +1151,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 2);
 
-//    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+//    rng::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
 //    std::cout << col << '\n';
 }
 
@@ -1184,7 +1186,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 3);
 
-    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    // rng::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
 //    std::cout << col << '\n';
 }
 
@@ -1233,7 +1235,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 1);
 
-    ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    rng::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
 //    std::cout << col << '\n';
 }
 
@@ -1282,7 +1284,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 6);
 
-    // ranges::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
+    // rng::for_each(columns, [](const auto& a_col) { std::cout << a_col << '\n'; });
 //    std::cout << col << '\n';
 }
 
@@ -1291,11 +1293,11 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
-    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+    auto value_differences = values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
 
     // do a simplified ATR calculation
 
-    DDecQuad box_size = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
+    DDecQuad box_size = static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) / static_cast<double>(value_differences.size());
     box_size.Rescale(-5);
 
     EXPECT_EQ(box_size, 12.91837);
@@ -1307,10 +1309,16 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     std::vector<PF_Column> columns;
 
-    const auto data_values = rng_split_string<std::string_view>(test_data, '\n');
-    ranges::for_each(data_values, [&columns, &col, close_col = 1, date_col = 0](const auto record)
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    int close_col = 1;
+    int date_col = 0;
+    for (const auto& record : data_values)
     {
-        const auto fields = split_string<std::string_view> (record, ',');
+        if (record.empty())
+        {
+            continue;
+        }
+        const auto fields = split_string<std::string_view> (record, ",");
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         if (status == PF_Column::Status::e_reversal)
         {
@@ -1321,7 +1329,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
             
             status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
         }
-    });
+    };
 
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(col.GetTop(), 1151.672);
@@ -1342,10 +1350,16 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
 
     std::vector<PF_Column> columns;
 
-    const auto data_values = rng_split_string<std::string_view>(test_data, '\n');
-    ranges::for_each(data_values, [&boxes, &columns, &col, close_col = 1, date_col = 0](const auto record)
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    int close_col = 1;
+    int date_col = 0;
+    for (const auto& record : data_values)
     {
-        const auto fields = split_string<std::string_view> (record, ',');
+        if (record.empty())
+        {
+            continue;
+        }
+        const auto fields = split_string<std::string_view> (record, ",");
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 
         if (status == PF_Column::Status::e_reversal)
@@ -1357,7 +1371,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
             
             status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
         }
-    });
+    };
 
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(col.GetTop(), 1144.664);
@@ -1373,10 +1387,10 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
     // compute percent box size based on simplified ATR computation
-    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+    const auto value_differences = values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
 
-    DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0.0)) / static_cast<double>(value_differences.size());
-    // DDecQuad average_price = static_cast<double>(ranges::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
+    DDecQuad atr = static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0.0)) / static_cast<double>(value_differences.size());
+    // DDecQuad average_price = static_cast<double>(rng::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
     // DprDecimal::DDecQuad box_size = atr / average_price;
     // box_size.Rescale(-5);
 
@@ -1387,10 +1401,16 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     std::vector<PF_Column> columns;
 
-    const auto data_values = rng_split_string<std::string_view>(test_data, '\n');
-    ranges::for_each(data_values, [&boxes, &columns, &col, close_col = 1, date_col = 0](const auto record)
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    int close_col = 1;
+    int date_col = 0;
+    for (const auto& record : data_values)
     {
-        const auto fields = split_string<std::string_view> (record, ',');
+        if (record.empty())
+        {
+            continue;
+        }
+        const auto fields = split_string<std::string_view> (record, ",");
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 
         if (status == PF_Column::Status::e_reversal)
@@ -1402,7 +1422,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
             
             status = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
         }
-    });
+    };
 
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(col.GetTop(), 1144.664);
@@ -1420,10 +1440,10 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
 {
     const std::string data = "500.0 505.0 510.05 515.151 520.303 525.506 530.761";
 
-    auto values = rng_split_string<std::string>(data, ' ');
+    auto values = rng_split_string<std::string>(data, " "); // | ranges::to<std::vector>();
 
-    auto prices = values | ranges::views::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
-//    ranges::for_each(values, [](const auto& x) { std::cout << x << "  "; });
+    auto prices = values | vws::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
+//    rng::for_each(values, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
 
     Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
@@ -1500,12 +1520,12 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, " ");
 
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.size(), 6);
@@ -1520,22 +1540,22 @@ TEST_F(ChartFunctionality10X2, TestChartIteratorWithFirstSetOfTestData)    //NOL
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, " ");
 
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.size(), ranges::distance(chart));
+    EXPECT_EQ(chart.size(), rng::size(chart));
 
     std::vector<int> a = {0, 1, 2, 3, 4, 5};
-    auto col_nbrs = ranges::views::transform(chart, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    auto col_nbrs = vws::transform(chart, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
     EXPECT_EQ(col_nbrs, a);
 
     std::vector<int> b = {5, 4, 3, 2, 1, 0};
-    auto col_nbrs_r = ranges::views::transform(chart | ranges::views::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    auto col_nbrs_r = vws::transform(chart | vws::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
     EXPECT_EQ(col_nbrs_r, b);
 
     EXPECT_EQ(chart.begin()[5].GetTop(), 1140);
@@ -1548,23 +1568,23 @@ TEST_F(ChartFunctionality10X2, TestChartReverseIteratorWithFirstSetOfTestData)  
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, " ");
 
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
-    EXPECT_EQ(chart.size(), ranges::distance(chart.rbegin(), chart.rend()));
+    // EXPECT_EQ(chart.size(), rng::size(rng::subrange(chart.rbegin(), chart.rend())));
 
     std::vector<int> b = {5, 4, 3, 2, 1, 0};
-    auto col_nbrs_r = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()), [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    auto col_nbrs_r = vws::transform(rng::subrange(chart.rbegin(), chart.rend()), [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
     EXPECT_EQ(col_nbrs_r, b);
-//    // ranges::for_each(chart.rbegin(), chart.rend(), [](const auto& col) { std::print("col: {}\n", col.GetColumnNumber()); });
+//    // rng::for_each(chart.rbegin(), chart.rend(), [](const auto& col) { std::print("col: {}\n", col.GetColumnNumber()); });
     //
     std::vector<int> a = {0, 1, 2, 3, 4, 5};
-    auto col_nbrs = ranges::views::transform(ranges::subrange(chart.rbegin(), chart.rend()) | ranges::views::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
+    auto col_nbrs = vws::transform(rng::subrange(chart.rbegin(), chart.rend()) | vws::reverse, [](const auto& col) { return col.GetColumnNumber(); }) | ranges::to<std::vector>();
     EXPECT_EQ(col_nbrs, a);
 
 //    std::cout << chart << '\n';
@@ -1585,7 +1605,7 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     const std::vector<int32_t> values_ints_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129};
     const std::vector<int32_t> values_ints_2 = {1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
@@ -1596,13 +1616,13 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     std::istringstream prices_1{test_data_1}; 
 
     PF_Chart chart_1("GOOG", 10, 2);
-    chart_1.LoadData(&prices_1, "%Y-%m-%d", ',');
+    chart_1.LoadData(&prices_1, "%Y-%m-%d", ",");
 
     const auto chart_1_json = chart_1.ToJSON();
 
     PF_Chart chart_2{chart_1_json};
     std::istringstream prices_2{test_data_2}; 
-    chart_2.LoadData(&prices_2, "%Y-%m-%d", ',');
+    chart_2.LoadData(&prices_2, "%Y-%m-%d", ",");
 
    // std::cout << "\n\n chart:\n" << chart;
    // std::cout << "\n\n chart_1:\n" << chart_1;
@@ -1619,7 +1639,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)    //N
 
 //    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.size(), 47);
@@ -1639,7 +1659,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSON) 
 
     // PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     auto json = chart.ToJSON();
 
@@ -1660,7 +1680,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
 
     PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     auto json = chart.ToJSON();
 
@@ -1684,15 +1704,15 @@ TEST_F(ChartFunctionalitySimpleATRX2, ComputeATRBoxSizeForFirstSetOfTestData)   
 
     // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
 
-    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
-//    ranges::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
+    const auto value_differences = values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
+//    rng::for_each(value_differences, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
 
     EXPECT_EQ(value_differences[0], 5);
     EXPECT_EQ(value_differences[6], 15);
     EXPECT_EQ(value_differences[value_differences.size() -1], 9);
 
-    DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
+    DDecQuad atr = static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) / static_cast<double>(value_differences.size());
     atr.Rescale(-5);
 //    std::cout << "atr: " << atr << '\n';
 
@@ -1704,9 +1724,9 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     const std::vector<int32_t> values_ints = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129, 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128, 1136, 1111, 1095, 1102, 1108, 1092, 1129,
         1122, 1133, 1125, 1139, 1105, 1132, 1122, 1131, 1127, 1138, 1111, 1122, 1111, 1128, 1115, 1117, 1120, 1119, 1132, 1133, 1147, 1131, 1159, 1136, 1127}; 
 
-    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+    const auto value_differences = values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
 
-    DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0)) / static_cast<double>(value_differences.size());
+    DDecQuad atr = static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) / static_cast<double>(value_differences.size());
     atr.Rescale(-5);
 //    std::cout << "atr: " << atr << '\n';
 
@@ -1718,12 +1738,18 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     
     // do it manually so can watch chart formation
 
-    const auto data_values = rng_split_string<std::string_view>(test_data, '\n');
-    ranges::for_each(data_values, [&chart, close_col = 1, date_col = 0](const auto record)
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    int close_col = 1;
+    int date_col = 0;
+    for (const auto& record : data_values)
+    {
+        if (record.empty())
         {
-            const auto fields = split_string<std::string_view> (record, ',');
-            auto result = chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-        });
+            continue;
+        }
+        const auto fields = split_string<std::string_view> (record, ",");
+        auto result = chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+    };
 
     // std::print("{}\n", chart);
 
@@ -1761,20 +1787,20 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)    /
     fs::path csv_file_name{"./test_files3/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
-    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
     const auto header_record = symbol_data_records.front();
 
-    auto date_column = FindColumnIndex(header_record, "date", ',');
+    auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
-    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
 //    std::cout << "new chart at start of adding new data: \n\n" << new_chart << "\n\n";
-    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
 //            std::cout << "len: " << record.size() << "  " << record << '\n';
-            const auto fields = split_string<std::string_view> (record, ',');
+            const auto fields = split_string<std::string_view> (record, ",");
 //            std::cout << "close value: " << fields[close_col] << " date value: " << fields[date_col] << " record: \n" << record << '\n';
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
@@ -1795,20 +1821,20 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
     fs::path csv_file_name{"./test_files/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
-    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
     const auto header_record = symbol_data_records.front();
 
-    auto date_column = FindColumnIndex(header_record, "date", ',');
+    auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
-    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
-            const auto fields = split_string<std::string_view> (record, ',');
+            const auto fields = split_string<std::string_view> (record, ",");
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
 //    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
@@ -1860,7 +1886,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)    //
 		std::cout << "Unable to load data for SPY because: " << e.what() << std::endl;
    	}
 
-	ranges::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
+	rng::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
 //    std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
 
     new_chart.ConstructChartGraphAndWriteToFile("/tmp/candlestick6.svg", {}, "no");
@@ -1882,20 +1908,20 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)   
     fs::path csv_file_name{"./test_files/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
-    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
     const auto header_record = symbol_data_records.front();
 
-    auto date_column = FindColumnIndex(header_record, "date", ',');
+    auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
-    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
-            const auto fields = split_string<std::string_view> (record, ',');
+            const auto fields = split_string<std::string_view> (record, ",");
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
 //    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
@@ -1912,12 +1938,12 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, " ");
 
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.size(), 6);
@@ -1927,7 +1953,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 
     PF_Chart saved_chart = chart;
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     ASSERT_EQ(chart, saved_chart);
 }
@@ -1940,7 +1966,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)    //NOLINT
     std::istringstream prices_1{test_data_1}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices_1, "%Y-%m-%d", ',');
+    chart.LoadData(&prices_1, "%Y-%m-%d", ",");
 
     // EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     // EXPECT_EQ(chart.size(), 6);
@@ -1957,7 +1983,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)    //NOLINT
 
     std::istringstream prices_2{test_data_2}; 
 
-    chart.LoadData(&prices_2, "%Y-%m-%d", ',');
+    chart.LoadData(&prices_2, "%Y-%m-%d", ",");
 
     ASSERT_NE(chart, saved_chart);
 }
@@ -1981,10 +2007,10 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 
     // compute a 'simple' ATR by taking successive differences and using that as the true range then compute the ATR using those values.
 
-    const auto value_differences = values_ints | ranges::views::sliding(2) | ranges::views::transform([](const auto x) { return abs(x[1] - x[0]); });
+    const auto value_differences = values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
 
-    DDecQuad atr = static_cast<double>(ranges::accumulate(value_differences, 0.0)) / static_cast<double>(value_differences.size());
-    // DDecQuad average_price = static_cast<double>(ranges::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
+    DDecQuad atr = static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0.0)) / static_cast<double>(value_differences.size());
+    // DDecQuad average_price = static_cast<double>(rng::accumulate(values_ints, 0.0)) / static_cast<double>(values_ints.size());
 
     // DprDecimal::DDecQuad box_size = atr / average_price;
     // box_size.Rescale(-5);
@@ -1994,7 +2020,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_percent, .01);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
    // std::print("Chart: {}\n", chart);
 
@@ -2019,7 +2045,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuy)    //NOLINT
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 3);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
 //    std::cout << chart << '\n';
 
@@ -2032,20 +2058,20 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)    //NOLINT
     const fs::path csv_file_name{"./test_files/SPY_streaming_1min_2022-10-07.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
-    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
     const auto header_record = symbol_data_records.front();
 
-    auto date_column = FindColumnIndex(header_record, "date", ',');
+    auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
-    auto close_column = FindColumnIndex(header_record, "close", ',');
+    auto close_column = FindColumnIndex(header_record, "close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart chart{"SPY", .01, 3};
 
-    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+    rng::for_each(symbol_data_records | vws::drop(1), [&chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
-            const auto fields = split_string<std::string_view> (record, ',');
+            const auto fields = split_string<std::string_view> (record, ",");
             chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%F %X%z", fields[date_col]));
         });
     // std::cout << "chart at after loading initial data: \n\n" << chart << "\n\n";
@@ -2156,7 +2182,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
 
     PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_DB pf_db{db_params};
@@ -2177,7 +2203,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
 
     PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_DB pf_db{db_params};
@@ -2200,7 +2226,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
 
     PF_Chart chart("AAPL", 2, 2);
 //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
     PF_DB pf_db{db_params};
@@ -2281,12 +2307,12 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, " ");
 
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 1);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.size(), 9);
@@ -2311,12 +2337,12 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)    //NOLINT
     const std::string data = "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 1108 1092 1129 " \
     "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 1159 1136 1127";
 
-    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, ' ');
+    std::string test_data = MakeSimpleTestData(data, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]}, " ");
 
     std::istringstream prices{test_data}; 
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     EXPECT_EQ(chart.size(), 6);
@@ -2343,7 +2369,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)    //NOLINT
     std::ifstream prices{file_name};
 
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ',');
+    chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
     EXPECT_EQ(chart.size(), 47);
@@ -2404,7 +2430,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
 
     PF_Chart chart("AAPL", 1, 3, Boxes::BoxScale::e_linear, atr);
 
-    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
+    rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1), [&chart](const auto& e)
         {
 //            std::cout << "processing: " << e << '\n';
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
@@ -2465,7 +2491,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
     PF_Chart chart("YHOO", 1, 3, Boxes::BoxScale::e_linear, box_size, 150);
 
-    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart](const auto& e)
+    rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1), [&chart](const auto& e)
         {
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
             std::string dte{e["date"].asString()};
@@ -2484,7 +2510,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 
     PF_Chart chart_percent("YHOO", box_size, 3, Boxes::BoxScale::e_percent);
 
-    ranges::for_each(*const_cast<const Json::Value*>(&history) | ranges::views::reverse | ranges::views::take(history.size() - 1), [&chart_percent](const auto& e)
+    rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1), [&chart_percent](const auto& e)
         {
             DprDecimal::DDecQuad val{e["adjClose"].asString()};
             std::string dte{e["date"].asString()};
@@ -2624,7 +2650,7 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
     auto today = std::chrono::year_month_day{floor<std::chrono::days>(std::chrono::system_clock::now())};
     std::chrono::year which_year = today.year();
     auto holidays = MakeHolidayList(which_year);
-    ranges::copy(MakeHolidayList(--which_year), std::back_inserter(holidays));
+    rng::copy(MakeHolidayList(--which_year), std::back_inserter(holidays));
     
     auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
     auto market_status = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()}, current_local_time.get_local_time());
@@ -2670,7 +2696,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
     Tiingo history_getter{"api.tiingo.com", "443", api_key};
 
     auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, 15, UseAdjusted::e_No, &holidays);
-//    // ranges::for_each(history, [](const auto& e){ std::print("{}\n", e); });
+//    // rng::for_each(history, [](const auto& e){ std::print("{}\n", e); });
 
     EXPECT_EQ(history.size(), 15);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), std::chrono::year_month_day{2021y/std::chrono::October/7});
@@ -2705,9 +2731,8 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
 
-    DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
-            DprDecimal::DDecQuad{}, std::plus<>(),
-            [](const StockDataRecord& e) { return e.close_; });
+    auto bkwd_data = history | vws::reverse | vws::take(history_size) | vws::transform([] (const StockDataRecord& e) { return e.close_; });
+    DprDecimal::DDecQuad sum = std::accumulate(bkwd_data.begin(), bkwd_data.end(), DprDecimal::DDecQuad{}, std::plus<>());
     DprDecimal::DDecQuad box_size = atr / (sum / history_size);
 
 //    std::cout << "atr: " << atr << '\n';
@@ -2719,9 +2744,9 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
     
-//    auto backwards = history | ranges::views::reverse;
+//    auto backwards = history | vws::reverse;
 
-    ranges::for_each(history | ranges::views::reverse | ranges::views::take(history_size), [&chart](const auto& e)
+    rng::for_each(history | vws::reverse | vws::take(history_size), [&chart](const auto& e)
         {
             // std::string_view date{e.date_.data(), e.date_.data() + e.date_.find('T')};
             auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
@@ -2740,7 +2765,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
 
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
-//    // ranges::for_each(history, [](const auto& e) { std::print("{}\n", e); });
+//    // rng::for_each(history, [](const auto& e) { std::print("{}\n", e); });
 
     auto atr = ComputeATR("AAPL", history, 4);
 //    std::cout << "ATR: " << atr << '\n';
@@ -2753,7 +2778,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
 
-    // DprDecimal::DDecQuad sum = ranges::accumulate(history | ranges::views::reverse | ranges::views::take(history_size),
+    // DprDecimal::DDecQuad sum = rng::accumulate(history | vws::reverse | vws::take(history_size),
     //         DprDecimal::DDecQuad{}, std::plus<>(),
     //         [](const StockDataRecord& e) { return e.close_; });
     //
@@ -2768,9 +2793,9 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
     
-//    auto backwards = history | ranges::views::reverse;
+//    auto backwards = history | vws::reverse;
 
-    ranges::for_each(history | ranges::views::reverse | ranges::views::take(history_size), [&chart](const auto& e)
+    rng::for_each(history | vws::reverse | vws::take(history_size), [&chart](const auto& e)
         {
             auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
             auto status = chart.AddValue(e.close_, the_date);
@@ -2782,7 +2807,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     // TODO: I've lost the plot on this test and don't remember what else I 
     // wanted to do. So, I'll leave this output so I'll be reminded when I run these tests.
 
-//    ranges::for_each(history | ranges::views::reverse , [](const auto& e) { std::cout << std::format("date: {} close: {} adjusted close: {} delta: {} \n",
+//    rng::for_each(history | vws::reverse , [](const auto& e) { std::cout << std::format("date: {} close: {} adjusted close: {} delta: {} \n",
 //                e["date"].asString(), e["close"].asString(), e["adjClose"].asString(), 0); });
 }
 
