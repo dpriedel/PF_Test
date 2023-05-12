@@ -36,13 +36,6 @@
 namespace rng = std::ranges;
 namespace vws = std::ranges::views;
 
-// #include <range/v3/algorithm/for_each.hpp>
-//
-// #include <range/v3/view/drop.hpp>
-// #include <range/v3/algorithm/equal.hpp>
-// #include <range/v3/algorithm/find_if.hpp>
-
-// #include <fmt/format.h>
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 

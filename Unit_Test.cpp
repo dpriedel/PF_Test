@@ -58,43 +58,12 @@
 namespace rng = std::ranges;
 namespace vws = std::ranges::views;
 
-//#include <algorithm>
-//#include <cstdint>
-//#include <iostream>
-//#include <memory>
-//#include <numeric>
-//#include <system_error>
-
-
-// #include <range/v3/algorithm/copy.hpp>
-// #include <range/v3/algorithm/equal.hpp>
-// #include <range/v3/algorithm/find_if.hpp>
-// #include <range/v3/algorithm/for_each.hpp>
-// #include <range/v3/numeric/accumulate.hpp>
 #include <range/v3/range/conversion.hpp>
-// #include <range/v3/view/all.hpp>
-// #include <range/v3/view/cartesian_product.hpp>
-// #include <range/v3/view/drop.hpp>
-// #include <range/v3/view/for_each.hpp>
-// #include <range/v3/view/generate_n.hpp>
-// #include <range/v3/view/partial_sum.hpp>
-// #include <range/v3/view/reverse.hpp>
-// #include <range/v3/view/sliding.hpp>
-// #include <range/v3/view/subrange.hpp>
-// #include <range/v3/view/take.hpp>
-// #include <range/v3/view/transform.hpp>
-// #include <range/v3/view/zip_with.hpp>
-
-/* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
-// #include <date/date.h>
 #include <date/tz.h>
 
 #include <spdlog/spdlog.h>
-// #include <fmt/format.h>
-// #include <fmt/chrono.h>
-// #include <fmt/ranges.h>
 
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
