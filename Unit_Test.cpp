@@ -41,12 +41,12 @@
 #include <algorithm>
 #include <charconv>
 #include <chrono>
-#include <date/tz.h>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <future>
 #include <initializer_list>
+#include <iterator>
 #include <numeric>
 #include <ranges>
 #include <regex>
@@ -88,7 +88,7 @@ namespace vws = std::ranges::views;
 /* #include <gmock/gmock.h> */
 #include <gtest/gtest.h>
 
-#include <date/date.h>
+// #include <date/date.h>
 #include <date/tz.h>
 
 #include <spdlog/spdlog.h>
@@ -131,11 +131,11 @@ using namespace DprDecimal;
 
 std::string MakeSimpleTestData(const std::string& data, const std::chrono::year_month_day& first_day, std::string_view delim)
 {
-    auto values = rng_split_string<std::string_view>(data, delim) | ranges::to<std::vector>();
+    auto values = rng_split_string<std::string_view>(data, delim);
 
     auto holidays = MakeHolidayList(first_day.year());
     rng::copy(MakeHolidayList(++(first_day.year())), std::back_inserter(holidays));
-    const auto dates = ConstructeBusinessDayList(first_day, rng::size(values), UpOrDown::e_Up, &holidays); 
+    const auto dates = ConstructeBusinessDayList(first_day, rng::distance(values), UpOrDown::e_Up, &holidays); 
 //    auto sample = dates | vws::take(50);
 //    std::cout << sample << '\n';
 
@@ -172,7 +172,7 @@ std::string MakeSimpleTestData(const std::vector<int32_t>& data, const std::chro
 
 std::optional<int> FindColumnIndex (std::string_view header, std::string_view column_name, std::string_view delim)
 {
-    auto fields = rng_split_string<std::string_view>(header, delim) | ranges::to<std::vector>();
+    auto fields = rng_split_string<std::string_view>(header, delim);
     auto do_compare([&column_name](const auto& field_name)
     {
         // need case insensitive compare
@@ -188,7 +188,8 @@ std::optional<int> FindColumnIndex (std::string_view header, std::string_view co
 
     if (auto found_it = rng::find_if(fields, do_compare); found_it != rng::end(fields))
     {
-        return rng::size(rng::subrange(rng::begin(fields), found_it));
+        return rng::distance(rng::begin(fields), found_it);
+        // return rng::size(rng::subrange(rng::begin(fields), found_it));
     }
     return {};
 
@@ -206,9 +207,9 @@ TEST_F(RangeSplitterBasicFunctionality, Test1)    //NOLINT
 
     auto values = split_string<std::string_view>(data, " ");
 
-    auto items = rng_split_string<std::string_view>(data, " ") | ranges::to<std::vector>();
+    auto items = rng_split_string<std::string_view>(data, " ");
 
-    EXPECT_EQ(values.size(), rng::size(items));
+    EXPECT_EQ(values.size(), rng::distance(items));
 
     std::vector<std::string_view> values2;
 
@@ -591,9 +592,9 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)    //NOLINT
 {
     const std::string data = "500.0 505.0 510.05 515.151 520.303 525.506 530.761";
 
-    auto values = rng_split_string<std::string>(data, " "); // | ranges::to<std::vector>();
+    auto values = rng_split_string<std::string>(data, " ");
 
-    auto prices = values | vws::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
+    auto prices = values | vws::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; });
 
     Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
 
@@ -1309,7 +1310,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     std::vector<PF_Column> columns;
 
-    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n");
     int close_col = 1;
     int date_col = 0;
     for (const auto& record : data_values)
@@ -1350,7 +1351,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
 
     std::vector<PF_Column> columns;
 
-    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n");
     int close_col = 1;
     int date_col = 0;
     for (const auto& record : data_values)
@@ -1401,7 +1402,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     std::vector<PF_Column> columns;
 
-    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n");
     int close_col = 1;
     int date_col = 0;
     for (const auto& record : data_values)
@@ -1440,9 +1441,9 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
 {
     const std::string data = "500.0 505.0 510.05 515.151 520.303 525.506 530.761";
 
-    auto values = rng_split_string<std::string>(data, " "); // | ranges::to<std::vector>();
+    auto values = rng_split_string<std::string>(data, " ");
 
-    auto prices = values | vws::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; }) | ranges::to<std::vector>();
+    auto prices = values | vws::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; });
 //    rng::for_each(values, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
 
@@ -1738,7 +1739,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     
     // do it manually so can watch chart formation
 
-    auto data_values = rng_split_string<std::string_view>(test_data, "\n"); // | ranges::to<std::vector>();
+    auto data_values = rng_split_string<std::string_view>(test_data, "\n");
     int close_col = 1;
     int date_col = 0;
     for (const auto& record : data_values)

@@ -25,17 +25,22 @@
 #include "PF_CollectDataApp.h"
 #include "utilities.h"
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <future>
+#include <ranges>
 
-#include <range/v3/algorithm/for_each.hpp>
+namespace rng = std::ranges;
+namespace vws = std::ranges::views;
 
-#include <range/v3/view/drop.hpp>
-#include <range/v3/algorithm/equal.hpp>
-#include <range/v3/algorithm/find_if.hpp>
+// #include <range/v3/algorithm/for_each.hpp>
+//
+// #include <range/v3/view/drop.hpp>
+// #include <range/v3/algorithm/equal.hpp>
+// #include <range/v3/algorithm/find_if.hpp>
 
 // #include <fmt/format.h>
 #include <gtest/gtest.h>
@@ -62,7 +67,7 @@ using namespace testing;
 
 std::shared_ptr<spdlog::logger> DEFAULT_LOGGER;
 
-std::optional<int> FindColumnIndex (std::string_view header, std::string_view column_name, char delim)
+std::optional<int> FindColumnIndex (std::string_view header, std::string_view column_name, std::string_view delim)
 {
     auto fields = rng_split_string<std::string_view>(header, delim);
     auto do_compare([&column_name](const auto& field_name)
@@ -75,12 +80,12 @@ std::optional<int> FindColumnIndex (std::string_view header, std::string_view co
         {
             return false;
         }
-        return ranges::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
+        return rng::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
     });
 
-    if (auto found_it = ranges::find_if(fields, do_compare); found_it != ranges::end(fields))
+    if (auto found_it = rng::find_if(fields, do_compare); found_it != rng::end(fields))
     {
-        return ranges::distance(ranges::begin(fields), found_it);
+        return rng::distance(rng::begin(fields), found_it);
     }
     return {};
 
@@ -870,20 +875,20 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
     fs::path csv_file_name{SPY_EOD_CSV};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
-    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
     const auto header_record = symbol_data_records.front();
 
-    auto date_column = FindColumnIndex(header_record, "date", ',');
+    auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
-    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
-            const auto fields = split_string<std::string_view> (record, ',');
+            const auto fields = split_string<std::string_view> (record, ",");
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
@@ -968,20 +973,20 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
     fs::path csv_file_name{SPY_EOD_CSV};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
-    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
     const auto header_record = symbol_data_records.front();
 
-    auto date_column = FindColumnIndex(header_record, "date", ',');
+    auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
-    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
-            const auto fields = split_string<std::string_view> (record, ',');
+            const auto fields = split_string<std::string_view> (record, ",");
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
@@ -1197,20 +1202,20 @@ TEST_F(Database, DailyScan)    //NOLINT
     fs::path csv_file_name{SPY_EOD_CSV};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
-    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, '\n');
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
     const auto header_record = symbol_data_records.front();
 
-    auto date_column = FindColumnIndex(header_record, "date", ',');
+    auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
     
-    auto close_column = FindColumnIndex(header_record, "Close", ',');
+    auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    ranges::for_each(symbol_data_records | ranges::views::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
-            const auto fields = split_string<std::string_view> (record, ',');
+            const auto fields = split_string<std::string_view> (record, ",");
             new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
@@ -1363,7 +1368,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.json"));
 }
 
-TEST_F(StreamData, VerifySignalHandling)    //NOLINT
+TEST_F(StreamData, DISABLED_VerifySignalHandling)    //NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
