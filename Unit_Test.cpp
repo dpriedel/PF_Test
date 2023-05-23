@@ -508,7 +508,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
     // I'm not sure how du Plessis is doing his rounding (p. 492) but 
     // I'm using round half up to 3 decimals.
 
-    Boxes boxes{0.01, 0, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0, Boxes::BoxScale::e_Percent};
 
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, 500.00);
@@ -530,7 +530,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
 
     // test going smaller
 
-    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_percent};
+    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_Percent};
 
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -542,14 +542,14 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)    //NOLINT
 
 TEST_F(BoxesBasicFunctionality, PercentBoxesNextandPrev)    //NOLINT
 {
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, 500.00);
 
     box = boxes.FindNextBox(500);
     EXPECT_EQ(box, 505);
 
-    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_percent};
+    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_Percent};
     box = boxes2.FindBox(500);
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -566,7 +566,7 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)    //NOLINT
 
     auto prices = values | vws::transform([](const auto& a_value){ DDecQuad result{a_value};  return result; });
 
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
 
     rng::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
 
@@ -631,7 +631,7 @@ TEST_F(ColumnFunctionality10X1, Constructors)    //NOLINT
 {
    PF_Column col;
 
-   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
 
 }
 
@@ -639,7 +639,7 @@ TEST_F(ColumnFunctionality10X1, Equality)    //NOLINT
 {
    PF_Column col1;
 
-   EXPECT_EQ(col1.GetDirection(), PF_Column::Direction::e_unknown);
+   EXPECT_EQ(col1.GetDirection(), PF_Column::Direction::e_Unknown);
 
    PF_Column col2;
    EXPECT_EQ(col1, col2);
@@ -662,24 +662,24 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
 
 //    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
     the_time = std::chrono::utc_clock::now();
    // std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
-    EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Ignored);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
     the_time = std::chrono::utc_clock::now();
    // std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
@@ -688,8 +688,8 @@ TEST_F(ColumnFunctionality10X1, InitialColumnConstructionInitialValueAndDirectio
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
     }
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1100);
 }
@@ -704,10 +704,10 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversal)    //NOLINT
     PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
     rng::for_each(prices, [&col, &status, &the_time](auto price) { status = col.AddValue(DprDecimal::DDecQuad(price), the_time).first; });
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1130);
     EXPECT_EQ(col.GetBottom(), 1100);
-    ASSERT_EQ(status, PF_Column::Status::e_reversal);
+    ASSERT_EQ(status, PF_Column::Status::e_Reversal);
 }
 
 TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
@@ -741,7 +741,7 @@ TEST_F(ColumnFunctionality10X1, ContinueUntilFirstReversalThenJSON)    //NOLINT
     EXPECT_EQ(json["direction"].asString(), "up");
     EXPECT_EQ(json["top"].asString(), "1130");
     EXPECT_EQ(json["bottom"].asString(), "1100");
-    ASSERT_EQ(status, PF_Column::Status::e_reversal);
+    ASSERT_EQ(status, PF_Column::Status::e_Reversal);
 }
 
 TEST_F(ColumnFunctionality10X1, ColumnToJsonThenFromJsonThenAddData)    //NOLINT
@@ -813,7 +813,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)    //NOLINT
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
 //        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -825,11 +825,11 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversal)    //NOLINT
         }
     }
 
-    EXPECT_EQ(columns.back().GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(columns.back().GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(columns.back().GetTop(), 1130);
     EXPECT_EQ(columns.back().GetBottom(), 1100);
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1120);
 }
@@ -847,7 +847,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)  
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
 //        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -859,7 +859,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedByOneStepBack)  
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1130);
     EXPECT_EQ(col.GetBottom(), 1120);
     EXPECT_EQ(col.GetHadReversal(), true);
@@ -879,7 +879,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
 //        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -891,7 +891,7 @@ TEST_F(ColumnFunctionality10X1, ProcessFirst1BoxReversalFollowedBySeriesOfOneSte
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1120);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -914,7 +914,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLIN
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
 //        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -926,7 +926,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstHalfOfTestData)    //NOLIN
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1110);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -950,7 +950,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
 //        std::cout << "price: " << price << " result: " << status << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -962,7 +962,7 @@ TEST_F(ColumnFunctionality10X1, ProcessCompletelyFirstSetOfTestData)    //NOLINT
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), 1140);
     EXPECT_EQ(col.GetBottom(), 1130);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -982,7 +982,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, Constructors)    //NOLINT
     Boxes boxes{DprDecimal::DDecQuad{10}};
     PF_Column col{&boxes, 0, 1};
 
-   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
 
 }
 
@@ -997,24 +997,24 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
 
 //    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
     the_time = std::chrono::utc_clock::now();
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
-    EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Ignored);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
     the_time = std::chrono::utc_clock::now();
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
@@ -1023,8 +1023,8 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     {
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
     }
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1100);
 
@@ -1041,7 +1041,7 @@ TEST_F(ColumnFunctionality10X3, Constructors)    //NOLINT
 {
    PF_Column col;
 
-   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
 
 }
 
@@ -1057,8 +1057,8 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
 //    std::cout << "first value: " << *a_value << '\n';
     auto status = col.AddValue(DprDecimal::DDecQuad{*a_value}, the_time);
 //    std::cout << "first value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
@@ -1066,8 +1066,8 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
 //    std::cout << "second value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
 //    std::cout << "second value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-    EXPECT_EQ(status.first, PF_Column::Status::e_ignored);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Ignored);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
     EXPECT_EQ(col.GetBottom(), 1100);
 
@@ -1075,8 +1075,8 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
 //    std::cout << "third value: " << *(++a_value) << '\n';
     status = col.AddValue(DprDecimal::DDecQuad{*(++a_value)}, the_time);
 //    std::cout << "third value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1110);
     EXPECT_EQ(col.GetBottom(), 1100);
 
@@ -1086,8 +1086,8 @@ TEST_F(ColumnFunctionality10X3, InitialColumnConstructionInitialValueAndDirectio
         status = col.AddValue(DprDecimal::DDecQuad(*a_value), the_time);
 //        std::cout << "next value: " << *a_value << " result: " << status.first << " top: " << col.GetTop() <<  " bottom: " << col.GetBottom() << '\n';
     }
-    EXPECT_EQ(status.first, PF_Column::Status::e_accepted);
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1100);
 }
@@ -1105,7 +1105,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)    //NOLINT
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1116,7 +1116,7 @@ TEST_F(ColumnFunctionality10X3, ProcessFirstHalfOfTestData)    //NOLINT
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), 1120);
     EXPECT_EQ(col.GetBottom(), 1100);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -1140,7 +1140,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1151,7 +1151,7 @@ TEST_F(ColumnFunctionality10X3, ProcessCompletelyFirstSetOfTestData)    //NOLINT
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1150);
     EXPECT_EQ(col.GetBottom(), 1110);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -1171,7 +1171,7 @@ TEST_F(ColumnFunctionality10X5, Constructors)    //NOLINT
     Boxes boxes{DprDecimal::DDecQuad{10}};
     PF_Column col{&boxes, 0, 5};
 
-   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
 
 }
 
@@ -1189,7 +1189,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1200,7 +1200,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData)    //NOLINT
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1150);
     EXPECT_EQ(col.GetBottom(), 1100);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -1220,7 +1220,7 @@ TEST_F(ColumnFunctionality10X2, Constructors)    //NOLINT
     Boxes boxes{DprDecimal::DDecQuad{10}};
     PF_Column col{&boxes, 0, 2};
 
-   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_unknown);
+   ASSERT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
 
 }
 
@@ -1238,7 +1238,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     for (auto price : prices)
     {
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(price), the_time);
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1249,7 +1249,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
         }
     }
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), 1140);
     EXPECT_EQ(col.GetBottom(), 1130);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -1291,7 +1291,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
         const auto fields = split_string<std::string_view> (record, ",");
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1302,7 +1302,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
     };
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1151.672);
     EXPECT_EQ(col.GetBottom(), 1125.836);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -1316,7 +1316,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
 
     std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1333,7 +1333,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
         const auto fields = split_string<std::string_view> (record, ",");
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1344,7 +1344,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
         }
     };
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), 1144.664);
     EXPECT_EQ(col.GetBottom(), 1133.331);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -1367,7 +1367,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
-    Boxes boxes{atr, 0.01, Boxes::BoxScale::e_percent};
+    Boxes boxes{atr, 0.01, Boxes::BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1384,7 +1384,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         const auto fields = split_string<std::string_view> (record, ",");
         auto [status, new_col] = col.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
 
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1395,7 +1395,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
     };
 
-    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), 1144.664);
     EXPECT_EQ(col.GetBottom(), 1133.331);
     EXPECT_EQ(col.GetHadReversal(), false);
@@ -1417,7 +1417,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
 //    rng::for_each(values, [](const auto& x) { std::cout << x << "  "; });
 //    std::cout << '\n';
 
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_percent};
+    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1427,7 +1427,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)    //NOLINT
     {
         auto [status, new_col] = col.AddValue(price, the_time);
 //        std::cout << "value: " << price << " status: " << status << " top: " << col.GetTop() << '\n';
-        if (status == PF_Column::Status::e_reversal)
+        if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
             col = std::move(new_col.value());
@@ -1454,7 +1454,7 @@ TEST_F(ChartFunctionality10X2, Constructors)    //NOLINT
 {
    PF_Chart chart("GOOG", 10, 2);
 
-   ASSERT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
+   ASSERT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Unknown);
 
 }
 
@@ -1462,7 +1462,7 @@ TEST_F(ChartFunctionality10X2, EmptyChartToJSON)    //NOLINT
 {
    PF_Chart chart("GOOG", 10, 2);
 
-   EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
+   EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Unknown);
 
    auto json = chart.ToJSON();
 //   std::cout << json << '\n';
@@ -1474,7 +1474,7 @@ TEST_F(ChartFunctionality10X2, EmptyChartToAndFromJSON)    //NOLINT
 {
    PF_Chart chart("GOOG", 10, 2);
 
-   EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_unknown);
+   EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Unknown);
 
    auto json = chart.ToJSON();
 //   std::cout << json << '\n';
@@ -1498,7 +1498,7 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)    //NOLINT
     PF_Chart chart("GOOG", 10, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 6);
 
     EXPECT_EQ(chart[5].GetTop(), 1140);
@@ -1518,7 +1518,7 @@ TEST_F(ChartFunctionality10X2, TestChartIteratorWithFirstSetOfTestData)    //NOL
     PF_Chart chart("GOOG", 10, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), rng::size(chart));
 
     std::vector<int> a = {0, 1, 2, 3, 4, 5};
@@ -1546,7 +1546,7 @@ TEST_F(ChartFunctionality10X2, TestChartReverseIteratorWithFirstSetOfTestData)  
     PF_Chart chart("GOOG", 10, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     // EXPECT_EQ(chart.size(), rng::size(rng::subrange(chart.rbegin(), chart.rend())));
 
     std::vector<int> b = {5, 4, 3, 2, 1, 0};
@@ -1612,7 +1612,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)    //N
     PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(chart.size(), 47);
 
     EXPECT_EQ(chart[46].GetTop(), 148);
@@ -1705,7 +1705,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     std::string test_data = MakeSimpleTestData(values_ints, std::chrono::year_month_day {2015y/std::chrono::March/std::chrono::Monday[1]});
 
-    PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_linear);
+    PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_Linear);
     
     // do it manually so can watch chart formation
 
@@ -1724,7 +1724,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     // std::print("{}\n", chart);
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(chart.size(), 5);
     EXPECT_EQ(chart[4].GetTop(), 1151.672);
     EXPECT_EQ(chart[4].GetBottom(), 1125.836);
@@ -1916,7 +1916,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)    //NOLINT
     PF_Chart chart("GOOG", 10, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 6);
 
     EXPECT_EQ(chart[5].GetTop(), 1140);
@@ -1990,12 +1990,12 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 
     std::istringstream prices{test_data}; 
 
-    PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_percent, .01);
+    PF_Chart chart("GOOG", atr, 2, Boxes::BoxScale::e_Percent, .01);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
    // std::print("Chart: {}\n", chart);
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 8);
     EXPECT_EQ(chart[8].GetTop(), 1144.664);
     EXPECT_EQ(chart[8].GetBottom(), 1133.331);
@@ -2098,7 +2098,7 @@ class TestDBFunctions : public Test
 
 TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)    //NOLINT
 {
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .stock_db_data_source_="new_stock_data.current_data"};
     PF_DB pf_db{db_params};
 
     auto exchanges = pf_db.ListExchanges();
@@ -2108,7 +2108,7 @@ TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)    //NOLINT
 
 TEST_F(TestDBFunctions, TestCountSymbolsOnNYSEExchange)    //NOLINT
 {
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .stock_db_data_source_="new_stock_data.current_data"};
     PF_DB pf_db{db_params};
 
     auto symbols = pf_db.ListSymbolsOnExchange("NYSE");
@@ -2155,7 +2155,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="test"};
     PF_DB pf_db{db_params};
 
     pf_db.StorePFChartDataIntoDB(chart, "eod", {});
@@ -2176,7 +2176,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="test"};
     PF_DB pf_db{db_params};
 
     pf_db.StorePFChartDataIntoDB(chart, "eod", {});
@@ -2199,7 +2199,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
 //    PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="test"};
     PF_DB pf_db{db_params};
 
     pf_db.StorePFChartDataIntoDB(chart, "eod", {});
@@ -2217,7 +2217,7 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDataFromDB)    //NOLINT
 {
     // we should get the same result as we do from tiingo, I expect
 
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .stock_db_data_source_="new_stock_data.current_data"};
     PF_DB the_db{db_params};
 
     constexpr int history_size = 20;
@@ -2242,7 +2242,7 @@ TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB)    //NOLINT
 {
     // we should get the same result as we do from tiingo, I expect
 
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_data_source_="new_stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .stock_db_data_source_="new_stock_data.current_data"};
     PF_DB the_db{db_params};
 
     DprDecimal::DDecQuad close_range;
@@ -2285,7 +2285,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)    //NOLINT
     PF_Chart chart("GOOG", 10, 1);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 9);
 
     EXPECT_EQ(chart[5].GetTop(), 1120);
@@ -2315,7 +2315,7 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)    //NOLINT
     PF_Chart chart("GOOG", 10, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 6);
 
     EXPECT_EQ(chart[5].GetTop(), 1140);
@@ -2342,7 +2342,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)    //NOLINT
     PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
-    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_up);
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(chart.size(), 47);
 
     EXPECT_EQ(chart[47].GetTop(), 148);
@@ -2399,7 +2399,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     // box_size.Rescale(-5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", 1, 3, Boxes::BoxScale::e_linear, atr);
+    PF_Chart chart("AAPL", 1, 3, Boxes::BoxScale::e_Linear, atr);
 
     rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1), [&chart](const auto& e)
         {
@@ -2460,7 +2460,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     DDecQuad box_size = .1;
 
     // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
-    PF_Chart chart("YHOO", 1, 3, Boxes::BoxScale::e_linear, box_size, 150);
+    PF_Chart chart("YHOO", 1, 3, Boxes::BoxScale::e_Linear, box_size, 150);
 
     rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1), [&chart](const auto& e)
         {
@@ -2479,7 +2479,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
-    PF_Chart chart_percent("YHOO", box_size, 3, Boxes::BoxScale::e_percent);
+    PF_Chart chart_percent("YHOO", box_size, 3, Boxes::BoxScale::e_Percent);
 
     rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1), [&chart_percent](const auto& e)
         {
@@ -2509,7 +2509,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
         fs::remove("/tmp/percent14.svg");
     }
 
-    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="live", .db_data_source_="new_stock_data.current_data"};
+    PF_DB::DB_Params db_params{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="live", .stock_db_data_source_="new_stock_data.current_data"};
     PF_DB the_db{db_params};
 
     DprDecimal::DDecQuad close_range;
@@ -2550,7 +2550,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
     DDecQuad box_size = .01;
 
     // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
-    PF_Chart chart("AAPL", close_range, 2, Boxes::BoxScale::e_linear, box_size, 150);
+    PF_Chart chart("AAPL", close_range, 2, Boxes::BoxScale::e_Linear, box_size, 150);
     // std::print("Linar chart before data: {}\n", chart);
 
 	for (const auto& [new_date, new_price] : closing_prices)
@@ -2565,7 +2565,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
     
     EXPECT_TRUE(fs::exists("/tmp/linear14.svg"));
 
-    PF_Chart chart_percent("AAPL", close_range, 2, Boxes::BoxScale::e_percent, box_size, 150);
+    PF_Chart chart_percent("AAPL", close_range, 2, Boxes::BoxScale::e_Percent, box_size, 150);
 
 	for (const auto& [new_date, new_price] : closing_prices)
 	{
@@ -2581,7 +2581,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)    /
 
 class TiingoATR : public Test
 {
-    std::string LoadApiKey(std::string file_name)
+    std::string LoadApiKey(std::string file_name) const
     {
         if (! fs::exists(file_name))
         {
@@ -2594,7 +2594,7 @@ class TiingoATR : public Test
     }
 public:
 
-    const std::string api_key = LoadApiKey("./tiingo_key.dat");
+    const std::string api_key_ = LoadApiKey("./tiingo_key.dat");
 
 };
 
@@ -2603,7 +2603,7 @@ TEST_F(TiingoATR, RetrievePreviousData)    //NOLINT
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
-    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+    Tiingo history_getter{"api.tiingo.com", "443", api_key_};
 
     auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, 14, UseAdjusted::e_No, &holidays);
 
@@ -2632,7 +2632,7 @@ TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)    //NOLINT
         return;
     }
 
-    Tiingo history_getter{"api.tiingo.com", "443", "/iex", api_key, std::vector<std::string> {"spy","uso","rsp"}};
+    Tiingo history_getter{"api.tiingo.com", "443", "/iex", api_key_, std::vector<std::string> {"spy","uso","rsp"}};
 
     if (market_status == US_MarketStatus::e_NotOpenYet)
     {
@@ -2664,7 +2664,7 @@ TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)    //NOLINT
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
-    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+    Tiingo history_getter{"api.tiingo.com", "443", api_key_};
 
     auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, 15, UseAdjusted::e_No, &holidays);
 //    // rng::for_each(history, [](const auto& e){ std::print("{}\n", e); });
@@ -2684,7 +2684,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
-    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+    Tiingo history_getter{"api.tiingo.com", "443", api_key_};
 
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
@@ -2710,7 +2710,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     // box_size.Rescale(-5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxScale::e_linear, atr);
+    PF_Chart chart("AAPL", box_size, 2, Boxes::BoxScale::e_Linear, atr);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 
@@ -2732,7 +2732,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
-    Tiingo history_getter{"api.tiingo.com", "443", api_key};
+    Tiingo history_getter{"api.tiingo.com", "443", api_key_};
 
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
@@ -2759,7 +2759,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)    /
     // box_size.Rescale(-5);
 //    std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", atr, 2, Boxes::BoxScale::e_percent, .01);
+    PF_Chart chart("AAPL", atr, 2, Boxes::BoxScale::e_Percent, .01);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue 

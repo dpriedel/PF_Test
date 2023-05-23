@@ -749,7 +749,7 @@ TEST_F(Database, LoadDataFromDB)    //NOLINT
         "-r", "3",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        "--db-data-source", "new_stock_data.current_data",
+        "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2017-01-01",
         "--use-ATR",
         "--max-graphic-cols", "150"
@@ -815,7 +815,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)    //NOLINT
         "-r", "3",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        "--db-data-source", "new_stock_data.current_data",
+        "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2022-06-01",
         // "--use-ATR",
         "--exchange", "NYSE",
@@ -912,7 +912,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
         "--reversal", "1",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        "--db-data-source", "new_stock_data.current_data",
+        "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2021-11-24",
         "--max-graphic-cols", "150"
 	};
@@ -984,7 +984,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
+    PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="test"};
     PF_DB pf_db(db_info);
 
     new_chart.StoreChartInChartsDB(pf_db, "eod");
@@ -1010,7 +1010,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         "--reversal", "3",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        "--db-data-source", "new_stock_data.current_data",
+        "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2021-11-24",
         "--max-graphic-cols", "150",
         "-l", "debug"
@@ -1082,7 +1082,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
         "-r", "3",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        "--db-data-source", "new_stock_data.current_data",
+        "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2022-01-01",
         "--use-ATR",
         "--exchange", "NYSE",
@@ -1150,7 +1150,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    //NOLINT
         "--db-mode", "test",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        "--db-data-source", "new_stock_data.current_data",
+        "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2017-01-01",
         "--use-MinMax",
         // "--exchange", "NYSE",
@@ -1213,7 +1213,7 @@ TEST_F(Database, DailyScan)    //NOLINT
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .db_mode_="test"};
+    PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="test"};
     PF_DB pf_db(db_info);
 
     new_chart.StoreChartInChartsDB(pf_db, "eod");
@@ -1230,7 +1230,7 @@ TEST_F(Database, DailyScan)    //NOLINT
         "--price-fld-name", "adjclose",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        "--db-data-source", "new_stock_data.current_data",
+        "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2021-11-24",
         "-l", "debug"
 	};
