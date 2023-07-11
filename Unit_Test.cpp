@@ -2020,7 +2020,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuy)    //NOLINT
 
 //    std::cout << chart << '\n';
 
-    EXPECT_TRUE(chart.GetSignals().size() > 0);
+    EXPECT_TRUE(! chart.GetSignals().empty());
     ASSERT_EQ(chart.GetSignals()[0].box_, 1140);
 }
 
