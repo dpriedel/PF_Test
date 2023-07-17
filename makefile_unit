@@ -22,8 +22,6 @@ MAKE=gmake
 BOOSTDIR := /extra/boost/boost-1.82_gcc-13
 GCCDIR := /extra/gcc/gcc-13
 GTESTDIR := /usr/local/include
-# DECIMALSRCDIR := /extra/gcc/decNumber_old
-# DECIMALSRCDIR := /extra/gcc/libdecnumber
 UTILITYDIR := ${HOME}/projects/PF_Project/common_utilities
 CPP := $(GCCDIR)/bin/g++
 GCC := $(GCCDIR)/bin/gcc
@@ -44,9 +42,6 @@ CFG_INC := -I${HOME}/projects/PF_Project/point_figure/src \
 	-I/usr/include/python3.11 \
 	-I/usr/lib/python3.11/site-packages/pybind11/include
 
-# -I/usr/include/python3.10 \
-# -I/usr/lib/python3.10/site-packages/pybind11/include
-
 RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib
 
 SDIR1 := .
@@ -59,20 +54,7 @@ SRCS2 := $(SDIR2)/Boxes.cpp \
 		$(SDIR2)/ConstructChartGraphic.cpp  \
 		$(SDIR2)/PF_Signals.cpp  \
 		$(SDIR2)/PointAndFigureDB.cpp \
-		$(SDIR2)/Tiingo.cpp # \
-#		$(SDIR2)/PathNameGenerator.cpp \
-#		$(SDIR2)/DailyIndexFileRetriever.cpp \
-#		$(SDIR2)/FormFileRetriever.cpp
-
-# SDIR3 := $(DECIMALSRCDIR)
-# SRCS3 := $(SDIR3)/decQuad.c \
-# 		 $(SDIR3)/decNumber.c \
-# 		 $(SDIR3)/decContext.c
-
-# SDIR3a := $(DECIMALSRCDIR)/bid
-# SDIR3a := $(DECIMALSRCDIR)
-# SRCS3a := $(SDIR3a)/decimal128.c \
-# 		  $(SDIR3a)/decimal64.c
+		$(SDIR2)/Tiingo.cpp 
 
 SDIR4 := $(UTILITYDIR)/src
 SRCS4 := $(SDIR4)/utilities.cpp \
@@ -113,12 +95,9 @@ CFG_LIB := -L/usr/local/lib \
 		-L$(GCCDIR)/lib64 \
 		-lpython3.11
 
-# -lpython3.10 \
 
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
 OBJS2=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS2)))))
-# OBJS3=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3)))))
-# OBJS3a=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3a)))))
 OBJS4=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS4)))))
 
 OBJS=$(OBJS1) $(OBJS2)  $(OBJS4)
@@ -130,8 +109,6 @@ CCOMPILE=$(GCC) -c  -O0  -g3 -D_DEBUG -fPIC -o $@ $(CFG_INC) $< -march=native -M
 
 # the noinhibit-exec seems to overcome the problem with duplcated symbols in the decimal library
 LINK := $(CPP)  -g -o $(OUTFILE) $(OBJS) $(CFG_LIB) -Wl,-E $(RPATH_LIB) 
-# COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++20 -D NOCERTTEST -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DSPDLOG_FMT_EXTERNAL -fPIC -fsanitize=address -o $@ $(CFG_INC) $< -march=native -MMD -MP
-# LINK := $(CPP)  -g -fsanitize=address  -o $(OUTFILE) $(OBJS) $(CFG_LIB) -Wl,-E $(RPATH_LIB)
 
 endif #	DEBUG configuration
 

@@ -85,7 +85,6 @@ namespace fs = std::filesystem;
 
 using namespace testing;
 
-// #include "decimal::Decimal.h"
 #include "Boxes.h"
 
 #include "PF_Column.h"
@@ -98,7 +97,6 @@ using namespace testing;
 
 // NOLINTBEGIN(*-magic-numbers)
 //
-// using namespace DprDecimal;
 
 // some specific files for Testing.
 
