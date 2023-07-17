@@ -882,7 +882,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
     rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
             const auto fields = split_string<std::string_view> (record, ",");
-            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+            new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
@@ -980,7 +980,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
     rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
             const auto fields = split_string<std::string_view> (record, ",");
-            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+            new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
@@ -1209,7 +1209,7 @@ TEST_F(Database, DailyScan)    //NOLINT
     rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
         {
             const auto fields = split_string<std::string_view> (record, ",");
-            new_chart.AddValue(DprDecimal::DDecQuad(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+            new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
         });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 

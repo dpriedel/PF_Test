@@ -22,7 +22,7 @@ MAKE=gmake
 BOOSTDIR := /extra/boost/boost-1.82_gcc-13
 GCCDIR := /extra/gcc/gcc-13
 GTESTDIR := /usr/local/include
-DECIMALSRCDIR := /extra/gcc/decNumber_old
+# DECIMALSRCDIR := /extra/gcc/decNumber_old
 # DECIMALSRCDIR := /extra/gcc/libdecnumber
 UTILITYDIR := ${HOME}/projects/PF_Project/common_utilities
 CPP := $(GCCDIR)/bin/g++
@@ -40,7 +40,6 @@ OUTFILE := Unit_Test
 CFG_INC := -I${HOME}/projects/PF_Project/point_figure/src \
 	-I$(GTESTDIR) \
 	-I$(BOOSTDIR) \
-	-I$(DECIMALSRCDIR) \
 	-I$(UTILITYDIR)/include \
 	-I/usr/include/python3.11 \
 	-I/usr/lib/python3.11/site-packages/pybind11/include
