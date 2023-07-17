@@ -54,8 +54,7 @@ SDIR1 := .
 SRCS1 := $(SDIR1)/Unit_Test.cpp
 
 SDIR2 := ../point_figure/src
-SRCS2 := $(SDIR2)/DDecQuad.cpp  \
-		$(SDIR2)/Boxes.cpp \
+SRCS2 := $(SDIR2)/Boxes.cpp \
 		$(SDIR2)/PF_Column.cpp \
 		$(SDIR2)/PF_Chart.cpp  \
 		$(SDIR2)/ConstructChartGraphic.cpp  \
@@ -66,23 +65,23 @@ SRCS2 := $(SDIR2)/DDecQuad.cpp  \
 #		$(SDIR2)/DailyIndexFileRetriever.cpp \
 #		$(SDIR2)/FormFileRetriever.cpp
 
-SDIR3 := $(DECIMALSRCDIR)
-SRCS3 := $(SDIR3)/decQuad.c \
-		 $(SDIR3)/decNumber.c \
-		 $(SDIR3)/decContext.c
+# SDIR3 := $(DECIMALSRCDIR)
+# SRCS3 := $(SDIR3)/decQuad.c \
+# 		 $(SDIR3)/decNumber.c \
+# 		 $(SDIR3)/decContext.c
 
 # SDIR3a := $(DECIMALSRCDIR)/bid
-SDIR3a := $(DECIMALSRCDIR)
-SRCS3a := $(SDIR3a)/decimal128.c \
-		  $(SDIR3a)/decimal64.c
+# SDIR3a := $(DECIMALSRCDIR)
+# SRCS3a := $(SDIR3a)/decimal128.c \
+# 		  $(SDIR3a)/decimal64.c
 
 SDIR4 := $(UTILITYDIR)/src
 SRCS4 := $(SDIR4)/utilities.cpp \
 		 $(SDIR4)/calfaq.c
 
-SRCS := $(SRCS1) $(SRCS2) $(SRCS3) $(SRCS3a) $(SRCS4)
+SRCS := $(SRCS1) $(SRCS2)  $(SRCS4)
 
-VPATH := $(SDIR1):$(SDIR2):$(SDIR3):$(SDIR3a):$(SDIR4)
+VPATH := $(SDIR1):$(SDIR2):$(SDIR4)
 
 #
 # Configuration: Debug
@@ -100,11 +99,13 @@ OUTDIR := Debug_unit
 CFG_LIB := -L/usr/local/lib \
 		-lgtest -lgtest_main \
 		-ldate-tz \
+		-lspdlog \
 		-lpqxx \
 		-lpq \
 		-L/usr/lib \
 		-lfmt \
-		-lspdlog \
+		-lmpdec++ \
+		-lmpdec \
 		-lcrypt \
 		-lpthread \
 		-ldl -lutil -lm -lm \
@@ -117,15 +118,15 @@ CFG_LIB := -L/usr/local/lib \
 
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
 OBJS2=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS2)))))
-OBJS3=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3)))))
-OBJS3a=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3a)))))
+# OBJS3=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3)))))
+# OBJS3a=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS3a)))))
 OBJS4=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS4)))))
 
-OBJS=$(OBJS1) $(OBJS2) $(OBJS3) $(OBJS3a) $(OBJS4)
+OBJS=$(OBJS1) $(OBJS2)  $(OBJS4)
 
 DEPS=$(OBJS:.o=.d)
 
-COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++2b -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DBOOST_REGEX_STANDALONE -DUSE_OS_TZDB -fconcepts-diagnostics-depth=2 -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
+COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++2b -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DBOOST_REGEX_STANDALONE -DSPDLOG_USE_STD_FORMAT -DUSE_OS_TZDB -fconcepts-diagnostics-depth=2 -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
 CCOMPILE=$(GCC) -c  -O0  -g3 -D_DEBUG -fPIC -o $@ $(CFG_INC) $< -march=native -MMD -MP
 
 # the noinhibit-exec seems to overcome the problem with duplcated symbols in the decimal library
@@ -144,7 +145,7 @@ $(OUTDIR)/%.o : %.cpp
 $(OUTDIR)/%.o : %.c
 	$(CCOMPILE)
 
-$(OUTFILE): $(OUTDIR) $(OBJS1) $(OBJS2) $(OBJS3) $(OBJS3a) $(OBJS4)
+$(OUTFILE): $(OUTDIR) $(OBJS1) $(OBJS2)  $(OBJS4)
 	$(LINK)
 
 -include $(DEPS)
