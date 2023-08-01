@@ -1272,7 +1272,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     // do a simplified ATR calculation
 
     Decimal box_size{dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) / static_cast<double>(value_differences.size()))};
-    box_size = box_size = box_size.rescale(-5);
+    box_size = box_size.rescale(-5);
 
     EXPECT_EQ(box_size, Decimal("12.91837"));
 
@@ -2369,11 +2369,11 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     const std::string hist = LoadDataFileForUse(file_name);
 //    std::cout << "history length: " << hist.size() << '\n';
 
-    const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"}; 
+    const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":\s*([0-9]*\.[0-9]*))***"}; 
     const std::string dest{R"***("$1":"$2")***"};
     auto result1 = std::regex_replace(hist, source, dest);
 //    std::cout << "result length: " << result1.size() << '\n';
-//    std::cout.write(result1.data(), 900);
+   // std::cout.write(result1.data(), 900);
 //    std::cout << " <== data\n";
 
     JSONCPP_STRING err;
@@ -2691,6 +2691,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
 
     constexpr int history_size = 20;
     const auto history = history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y/std::chrono::October/7}, history_size + 1, UseAdjusted::e_No, &holidays);
+    // rng::for_each(history, [](const auto& h) { std::cout << std::format("{}\n", h); });
 
 //     auto atr = ComputeATRUsingJSON("AAPL", history, 4);
 // //    std::cout << "ATR: " << atr << '\n';
@@ -2699,19 +2700,20 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)    //NOLINT
     // recompute using all the data for rest of test
 
     auto atr = ComputeATR("AAPL", history, history_size);
-//    std::cout << "ATR using 20 days: " << atr << '\n';
+   // std::cout << "ATR using 20 days: " << atr << '\n';
     EXPECT_EQ(atr.rescale(-3), Decimal{"3.211"});
 
     // next, I need to compute my average closing price over the interval 
     // but excluding the 'extra' value included for computing the ATR
 
-    auto bkwd_data = history | vws::reverse | vws::take(history_size) | vws::transform([] (const StockDataRecord& e) { return e.close_; });
-    Decimal sum = std::accumulate(bkwd_data.begin(), bkwd_data.end(), Decimal{}, std::plus<>());
+    auto bkwd_data = history | vws::reverse | vws::take(history_size) | vws::transform([] (const StockDataRecord& e) { /* std::cout << std::format("{}\n", e); */ return e.close_; });
+    Decimal sum = std::accumulate(bkwd_data.begin(), bkwd_data.end(), Decimal{0}, std::plus<>());
+   // std::cout << "sum: " << sum << '\n';
     Decimal box_size = atr / (sum / history_size);
 
-//    std::cout << "atr: " << atr << '\n';
-    // box_size.Rescale(-5);
-    // std::cout << "rescaled box size: " << box_size << '\n';
+   std::cout << "atr: " << atr << '\n';
+    box_size = box_size.rescale(-5);
+    std::cout << "rescaled box size: " << box_size << '\n';
 
     PF_Chart chart("AAPL", box_size, 2, Boxes::BoxScale::e_Linear, atr);
 
