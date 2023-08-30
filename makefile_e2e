@@ -80,12 +80,12 @@ OUTDIR=Debug_e2e
 #
 CFG_LIB := -L/usr/local/lib \
 		-lgtest -lgtest_main \
-		-lspdlog \
 		-ldate-tz \
+		-lspdlog \
+		-lfmt \
 		-lpqxx \
 		-lpq \
 		-L/usr/lib \
-		-lfmt \
 		-lmpdec++ \
 		-lmpdec \
 		-lcrypt \

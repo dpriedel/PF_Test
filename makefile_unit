@@ -81,10 +81,10 @@ CFG_LIB := -L/usr/local/lib \
 		-lgtest -lgtest_main \
 		-ldate-tz \
 		-lspdlog \
+		-lfmt \
 		-lpqxx \
 		-lpq \
 		-L/usr/lib \
-		-lfmt \
 		-lmpdec++ \
 		-lmpdec \
 		-lcrypt \
