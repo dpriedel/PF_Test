@@ -2124,7 +2124,20 @@ TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)    //NOLINT
 
     auto exchanges = pf_db.ListExchanges();
 
-    ASSERT_EQ(exchanges, (std::vector<std::string>{"INDX", "NASDAQ", "NYSE"}));
+    ASSERT_EQ(exchanges, (std::vector<std::string>{
+        "AMEX",
+        "BATS",
+        "NASDAQ",
+        "NMFQS",
+        "NYSE",
+        "OTCCE",
+        "OTCGREY",
+        "OTCMKTS",
+        "OTCQB",
+        "OTCQX",
+        "PINK",
+        "US"
+    }));
 }
 
 TEST_F(TestDBFunctions, TestCountSymbolsOnNYSEExchange)    //NOLINT
