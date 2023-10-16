@@ -5,7 +5,7 @@
 //    Description:  Driver program for end-to-end tests
 //
 //        Version:  1.0
-//        Created:  2021-11-20 09:07 AM 
+//        Created:  2021-11-20 09:07 AM
 //       Revision:  none
 //       Compiler:  g++
 //
@@ -15,15 +15,10 @@
 //
 // =====================================================================================
 
-
-
 // =====================================================================================
 //        Class:
 //  Description:
 // =====================================================================================
-
-#include "PF_CollectDataApp.h"
-#include "utilities.h"
 
 #include <algorithm>
 #include <chrono>
@@ -33,18 +28,19 @@
 #include <future>
 #include <ranges>
 
+#include "PF_CollectDataApp.h"
+#include "utilities.h"
+
 namespace rng = std::ranges;
 namespace vws = std::ranges::views;
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <pybind11/embed.h>    // everything needed for embedding
 #include <spdlog/spdlog.h>
 
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
-
-#include <gmock/gmock.h>
-
-#include <pybind11/embed.h> // everything needed for embedding
 namespace py = pybind11;
 using namespace py::literals;
 
@@ -60,21 +56,22 @@ using namespace testing;
 
 std::shared_ptr<spdlog::logger> DEFAULT_LOGGER;
 
-std::optional<int> FindColumnIndex (std::string_view header, std::string_view column_name, std::string_view delim)
+std::optional<int> FindColumnIndex(std::string_view header, std::string_view column_name, std::string_view delim)
 {
     auto fields = rng_split_string<std::string_view>(header, delim);
-    auto do_compare([&column_name](const auto& field_name)
-    {
-        // need case insensitive compare
-        // found this on StackOverflow (but modified for my use)
-        // (https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c)
-
-        if (column_name.size() != field_name.size())
+    auto do_compare(
+        [&column_name](const auto& field_name)
         {
-            return false;
-        }
-        return rng::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
-    });
+            // need case insensitive compare
+            // found this on StackOverflow (but modified for my use)
+            // (https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c)
+
+            if (column_name.size() != field_name.size())
+            {
+                return false;
+            }
+            return rng::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
+        });
 
     if (auto found_it = rng::find_if(fields, do_compare); found_it != rng::end(fields))
     {
@@ -82,13 +79,13 @@ std::optional<int> FindColumnIndex (std::string_view header, std::string_view co
     }
     return {};
 
-}		// -----  end of method PF_CollectDataApp::FindColumnIndex  ----- 
+}    // -----  end of method PF_CollectDataApp::FindColumnIndex  -----
 
 class ProgramOptions : public Test
 {
 };
 
-TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
+TEST_F(ProgramOptions, TestMixAndMatchOptions)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
@@ -99,9 +96,9 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
         fs::remove("/tmp/test_charts/SPY_10X1_linear_eod.json");
     }
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
-
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "-s", "SpY",
         "-s", "aapL",
@@ -120,12 +117,13 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
         "--reversal", "3",
         "--reversal", "1"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -138,27 +136,28 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
-   EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
-   ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
+    }
+    EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
 }
 
-TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
+TEST_F(ProgramOptions, TestProblemOptions)    // NOLINT
 {
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "-s", "qqqq",
         "-s", "spy",
@@ -177,12 +176,13 @@ TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
         "--reversal", "1",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-	    const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -197,25 +197,26 @@ TEST_F(ProgramOptions, TestProblemOptions)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 }
 
-TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
+TEST_F(ProgramOptions, TestMinMaxOptions)    // NOLINT
 {
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "-s", "qqqq",
         "-s", "spy",
@@ -235,32 +236,33 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         "--reversal", "1",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-        const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
         // both use-ATR and use-MinMax specified so this is an error
         EXPECT_FALSE(startup_OK);
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
-
+    // clang-format off
 	std::vector<std::string> tokens2{"the_program",
         "-s", "qqqq",
         "-s", "spy",
@@ -279,31 +281,33 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         "--reversal", "1",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens2);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
         // use-MinMax is specified but data source is 'streaming' so this is an error
         EXPECT_FALSE(startup_OK);
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
+    // clang-format off
 	std::vector<std::string> tokens3{"the_program",
         "-s", "qqqq",
         "-s", "spy",
@@ -324,31 +328,33 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         "--reversal", "1",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens3);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
         // use-MinMax is specified but mode is 'update' so this is an error
         EXPECT_FALSE(startup_OK);
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
+    // clang-format off
 	std::vector<std::string> tokens4{"the_program",
         "-s", "qqqq",
         "-s", "spy",
@@ -370,43 +376,45 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    //NOLINT
         "--reversal", "1",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens4);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         EXPECT_TRUE(startup_OK);
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 }
 
 class SingleFileEndToEnd : public Test
 {
 };
 
-TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
+TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
         fs::remove("/tmp/test_charts/SPY_10X3_linear_eod.json");
     }
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
@@ -421,12 +429,13 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
         "--boxsize", "10",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -439,22 +448,22 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
 }
 
-TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
+TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
@@ -464,13 +473,14 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
     {
         fs::remove("/tmp/test_charts2/SPY_10X3_linear_eod.json");
     }
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
-    // the first test run constructs the data file all at once 
+    // the first test run constructs the data file all at once
 
     PF_Chart whole_chart;
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
@@ -485,12 +495,13 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         "--boxsize", "10",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -504,25 +515,26 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
 
-    // now construct the data file from 2 input files which, together, contain the same 
-    // data as the 1 file used above. 
+    // now construct the data file from 2 input files which, together, contain the same
+    // data as the 1 file used above.
 
     PF_Chart half_chart;
 
+    // clang-format off
 	std::vector<std::string> tokens2{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
@@ -537,12 +549,13 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         "--boxsize", "10",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens2);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -556,25 +569,26 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"));
 
-    // now continue constructing the data file from 2 input files which, together, contain the same 
-    // data as the 1 file used above. 
+    // now continue constructing the data file from 2 input files which, together, contain the same
+    // data as the 1 file used above.
 
     PF_Chart franken_chart;
 
+    // clang-format off
 	std::vector<std::string> tokens3{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
@@ -590,12 +604,13 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         "--boxsize", "10",
         "--reversal", "3"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens3);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -609,22 +624,23 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
     std::cout << "\n\n whole chart:\n" << whole_chart;
     std::cout << "\n\n half chart:\n" << half_chart;
-    std::cout << "\n\n franken chart:\n" << franken_chart << '\n';;
+    std::cout << "\n\n franken chart:\n" << franken_chart << '\n';
+    ;
 
     EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"));
     ASSERT_TRUE(whole_chart == franken_chart);
@@ -634,15 +650,16 @@ class LoadAndUpdate : public Test
 {
 };
 
-TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
+TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts_updates"))
     {
         fs::remove_all("/tmp/test_charts_updates");
     }
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "-s", "ADIV", "-s", "ADRU", "-s", "AIA", "-s", "AWF", "-s", "CBRL",
         "--new-data-source", "file",
@@ -659,12 +676,13 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
         "--boxsize", ".1",
         "--reversal", "3", "--reversal", "1"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -677,18 +695,18 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
     EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/ADIV_0.1X3_linear_eod.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear_eod.svg"));
@@ -696,43 +714,42 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    //NOLINT
 
 class Database : public Test
 {
-	public:
+   public:
+    void SetUp() override
+    {
+        pqxx::connection c{"dbname=finance user=data_updater_pg"};
+        pqxx::work trxn{c};
 
-        void SetUp() override
-        {
-		    pqxx::connection c{"dbname=finance user=data_updater_pg"};
-		    pqxx::work trxn{c};
+        // make sure the DB is empty before we start
 
-		    // make sure the DB is empty before we start
+        trxn.exec("DELETE FROM test_point_and_figure.pf_charts");
+        trxn.commit();
+    }
 
-		    trxn.exec("DELETE FROM test_point_and_figure.pf_charts");
-		    trxn.commit();
-        }
+    int CountRows()
+    {
+        pqxx::connection c{"dbname=finance user=data_updater_pg"};
+        pqxx::work trxn{c};
 
-	int CountRows()
-	{
-	    pqxx::connection c{"dbname=finance user=data_updater_pg"};
-	    pqxx::work trxn{c};
+        // make sure the DB is empty before we start
 
-	    // make sure the DB is empty before we start
-
-	    auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
-	    trxn.commit();
-		return row[0].as<int>();
-	}
-
+        auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
+        trxn.commit();
+        return row[0].as<int>();
+    }
 };
 
-TEST_F(Database, LoadDataFromDB)    //NOLINT
+TEST_F(Database, LoadDataFromDB)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
         fs::remove_all("/tmp/test_charts");
     }
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
         "--symbol", "AAPL",
@@ -754,12 +771,13 @@ TEST_F(Database, LoadDataFromDB)    //NOLINT
         "--use-ATR",
         "--max-graphic-cols", "150"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -772,32 +790,33 @@ TEST_F(Database, LoadDataFromDB)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_1X3_linear_eod.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.1X1_linear_eod.json"));
 }
 
-TEST_F(Database, DISABLED_BulkLoadDataFromDB)    //NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDB)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
         fs::remove_all("/tmp/test_charts3");
     }
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol-list", "ALL",
         // "-s", "ACY",
@@ -821,12 +840,13 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)    //NOLINT
         "--exchange", "NYSE",
         "--max-graphic-cols", "150"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -839,23 +859,23 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
-TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
+TEST_F(Database, UpdateUsingDataFromDB)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts2"))
     {
@@ -873,17 +893,18 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
 
     auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
-    
+
     auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
-        {
-            const auto fields = split_string<std::string_view> (record, ",");
-            new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-        });
+    rng::for_each(symbol_data_records | vws::drop(1),
+                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+                  {
+                      const auto fields = split_string<std::string_view>(record, ",");
+                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                  });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
     fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.MakeChartFileName("eod", "json"));
@@ -892,10 +913,10 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
     new_chart.ConvertChartToJsonAndWriteToStream(new_file);
     new_file.close();
 
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
-
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
         "--symbol", "AAPL",      // want to use SP500 indicator but need to do more setup first
@@ -916,14 +937,15 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
         "--begin-date", "2021-11-24",
         "--max-graphic-cols", "150"
 	};
+    // clang-format on
 
     PF_Chart updated_chart;
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -937,18 +959,18 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
     std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
 
@@ -956,7 +978,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    //NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
-TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
+TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts9"))
     {
@@ -971,27 +993,29 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
 
     auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
-    
+
     auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
-        {
-            const auto fields = split_string<std::string_view> (record, ",");
-            new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-        });
+    rng::for_each(symbol_data_records | vws::drop(1),
+                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+                  {
+                      const auto fields = split_string<std::string_view>(record, ",");
+                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                  });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="test"};
+    PF_DB::DB_Params db_info{.user_name_ = "data_updater_pg", .db_name_ = "finance", .PF_db_mode_ = "test"};
     PF_DB pf_db(db_info);
 
     new_chart.StoreChartInChartsDB(pf_db, "eod");
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
         "--new-data-source", "database",
@@ -1015,14 +1039,15 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         "--max-graphic-cols", "150",
         "-l", "debug"
 	};
+    // clang-format on
 
     PF_Chart updated_chart;
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1036,18 +1061,18 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
     std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
 
@@ -1055,16 +1080,17 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    //NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
-TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
         fs::remove_all("/tmp/test_charts3");
     }
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol-list", "ALL",
         // "-s", "ACY",
@@ -1088,12 +1114,13 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
         "--exchange", "NYSE",
         "--max-graphic-cols", "150"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1106,32 +1133,33 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
-TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    //NOLINT
+TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts13"))
     {
         fs::remove_all("/tmp/test_charts13");
     }
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol-list", "AAPL,GOOG,IWM,IWR,spy,qqq,A,rsp",
         // "-s", "ACY",
@@ -1156,12 +1184,13 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    //NOLINT
         // "--exchange", "NYSE",
         "--max-graphic-cols", "150"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1174,22 +1203,22 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     ASSERT_TRUE(fs::exists("/tmp/test_charts13/SPY_0.01X1_linear_eod.svg"));
 }
 
-TEST_F(Database, DailyScan)    //NOLINT
+TEST_F(Database, DailyScan)    // NOLINT
 {
     // construct a chart using some test data and save it.
     fs::path csv_file_name{SPY_EOD_CSV};
@@ -1200,31 +1229,33 @@ TEST_F(Database, DailyScan)    //NOLINT
 
     auto date_column = FindColumnIndex(header_record, "date", ",");
     BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
-    
+
     auto close_column = FindColumnIndex(header_record, "Close", ",");
     BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
-    rng::for_each(symbol_data_records | vws::drop(1), [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
-        {
-            const auto fields = split_string<std::string_view> (record, ",");
-            new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
-        });
+    rng::for_each(symbol_data_records | vws::drop(1),
+                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+                  {
+                      const auto fields = split_string<std::string_view>(record, ",");
+                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                  });
     std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    PF_DB::DB_Params db_info{.user_name_="data_updater_pg", .db_name_="finance", .PF_db_mode_="test"};
+    PF_DB::DB_Params db_info{.user_name_ = "data_updater_pg", .db_name_ = "finance", .PF_db_mode_ = "test"};
     PF_DB pf_db(db_info);
 
     new_chart.StoreChartInChartsDB(pf_db, "eod");
 
-    // save for comparison later 
-    
+    // save for comparison later
+
     PF_Chart saved_chart{new_chart};
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--mode", "daily-scan",
         "--price-fld-name", "adjclose",
@@ -1234,12 +1265,13 @@ TEST_F(Database, DailyScan)    //NOLINT
         "--begin-date", "2021-11-24",
         "-l", "debug"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1252,18 +1284,18 @@ TEST_F(Database, DailyScan)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
 
     EXPECT_EQ(CountRows(), 1);
 
@@ -1279,16 +1311,17 @@ class StreamData : public Test
 {
 };
 
-TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
+TEST_F(StreamData, VerifyConnectAndDisconnect)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
         fs::remove_all("/tmp/test_charts");
     }
 
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--symbol", "AAPL",
@@ -1303,33 +1336,36 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
         "--boxsize", "0.05",
         "--reversal", "1"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+        auto then =
+            std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
-        auto timer = [&counter] (const auto& stop_at)
-            { 
-                while (true)
+        auto timer = [&counter](const auto& stop_at)
+        {
+            while (true)
+            {
+                std::cout << "ding...\n";
+                ++counter;
+                auto now =
+                    std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
-                    std::cout << "ding...\n";
-                    ++counter;
-                    auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-                    if (now.get_sys_time() >= stop_at.get_sys_time())
-                    {
-                        PF_CollectDataApp::SetSignal();
-                        break;
-                    }
-                    std::this_thread::sleep_for(1s);
+                    PF_CollectDataApp::SetSignal();
+                    break;
                 }
-            };
+                std::this_thread::sleep_for(1s);
+            }
+        };
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -1346,30 +1382,31 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.json"));
 }
 
-TEST_F(StreamData, DISABLED_VerifySignalHandling)    //NOLINT
+TEST_F(StreamData, DISABLED_VerifySignalHandling)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
         fs::remove_all("/tmp/test_charts");
     }
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol-list", "SPY,aapl",
         "--new-data-source", "streaming",
@@ -1382,12 +1419,13 @@ TEST_F(StreamData, DISABLED_VerifySignalHandling)    //NOLINT
         "--boxsize", "0.05",
         "--reversal", "1"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1400,33 +1438,34 @@ TEST_F(StreamData, DISABLED_VerifySignalHandling)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.json"));
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.svg"));
     EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.05X1_linear.json"));
     EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.05X1_linear.svg"));
 }
 
-TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
+TEST_F(StreamData, TryLogarithmicCharts)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts_log"))
     {
         fs::remove_all("/tmp/test_charts_log");
     }
-	//	NOTE: the program name 'the_program' in the command line below is ignored in the
-	//	the test program.
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
 
+    // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "GOOG",
         "--symbol", "AAPL",
@@ -1440,35 +1479,38 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
         "--boxsize", "0.01",
         "--reversal", "1"
 	};
+    // clang-format on
 
-	try
-	{
+    try
+    {
         PF_CollectDataApp myApp(tokens);
 
-		const auto *test_info = UnitTest::GetInstance()->current_test_info();
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
 
         auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+        auto then =
+            std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
-        auto timer = [&counter] (const auto& stop_at)
-            { 
-                while (true)
+        auto timer = [&counter](const auto& stop_at)
+        {
+            while (true)
+            {
+                std::cout << "ding...\n";
+                ++counter;
+                auto now =
+                    std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
-                    std::cout << "ding...\n";
-                    ++counter;
-                    auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-                    if (now.get_sys_time() >= stop_at.get_sys_time())
-                    {
-                        PF_CollectDataApp::SetSignal();
-                        break;
-                    }
-                    std::this_thread::sleep_for(1s);
+                    PF_CollectDataApp::SetSignal();
+                    break;
                 }
-            };
+                std::this_thread::sleep_for(1s);
+            }
+        };
 
         if (startup_OK)
         {
@@ -1482,49 +1524,46 @@ TEST_F(StreamData, TryLogarithmicCharts)    //NOLINT
         {
             std::cout << "Problems starting program.  No processing done.\n";
         }
-	}
+    }
 
     // catch any problems trying to setup application
 
-	catch (const std::exception& theProblem)
-	{
+    catch (const std::exception& theProblem)
+    {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
-	}
-	catch (...)
-	{		// handle exception: unspecified
+    }
+    catch (...)
+    {    // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
-	}
+    }
     EXPECT_TRUE(fs::exists("/tmp/test_charts_log/GOOG_0.01%X1_percent.json"));
     EXPECT_TRUE(fs::exists("/tmp/test_charts_log/GOOG_0.01%X1_percent.svg"));
     EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X1_percent.json"));
     EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X1_percent.svg"));
 }
 
-
-void InitLogging ()
+void InitLogging()
 {
     DEFAULT_LOGGER = spdlog::default_logger();
 
     //    nothing to do for now.
-//    logging::core::get()->set_filter
-//    (
-//        logging::trivial::severity >= logging::trivial::trace
-//    );
-}		/* -----  end of function InitLogging  ----- */
+    //    logging::core::get()->set_filter
+    //    (
+    //        logging::trivial::severity >= logging::trivial::trace
+    //    );
+} /* -----  end of function InitLogging  ----- */
 
 int main(int argc, char** argv)
 {
-
     InitLogging();
 
-    py::scoped_interpreter guard{false}; // start the interpreter and keep it alive
+    py::scoped_interpreter guard{false};    // start the interpreter and keep it alive
 
-    py::print("Hello, World!"); // use the Python API
+    py::print("Hello, World!");    // use the Python API
 
     py::exec(R"(
         import PF_DrawChart_prices as PF_DrawChart
-        )"
-    );
-	InitGoogleTest(&argc, argv);
-   return RUN_ALL_TESTS();
+        )");
+    InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }
