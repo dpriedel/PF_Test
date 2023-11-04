@@ -401,6 +401,100 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    // NOLINT
     }
 }
 
+TEST_F(ProgramOptions, TestExchangesList)    // NOLINT
+{
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
+
+    // clang-format off
+	std::vector<std::string> tokens{"the_program",
+        "--new-data-source", "database",
+        "--mode", "load",
+        "--interval", "eod",
+        "--scale", "percent",
+        "--price-fld-name", "adjclose",
+        "--destination", "database",
+        "--use-MinMax",
+        "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--reversal", "1",
+        "--reversal", "3",
+        "--exchanges", "NYSE,nasdax"
+	};
+    // clang-format on
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens);
+
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+
+        // both use-ATR and use-MinMax specified so this is an error
+        EXPECT_FALSE(startup_OK);
+    }
+
+    // catch any problems trying to setup application
+
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {    // handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+    }
+
+    // clang-format off
+	std::vector<std::string> tokens2{"the_program",
+        "--symbol-list", "ALL",
+        "--new-data-source", "database",
+        "--mode", "load",
+        "--interval", "eod",
+        "--scale", "percent",
+        "--price-fld-name", "adjclose",
+        "--destination", "database",
+        "--graphics-format", "csv",
+        "--use-MinMax",
+        "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--reversal", "1",
+        "--reversal", "3",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--stock-db-data-source", "new_stock_data.current_data",
+        "--begin-date", "2017-01-01",
+        "--exchange-list", "NYSE,nasdax"
+	};
+    // clang-format on
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens2);
+
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+
+        // both use-ATR and use-MinMax specified so this is an error
+        EXPECT_FALSE(startup_OK);
+    }
+
+    // catch any problems trying to setup application
+
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {    // handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+    }
+}
+
 class SingleFileEndToEnd : public Test
 {
 };
