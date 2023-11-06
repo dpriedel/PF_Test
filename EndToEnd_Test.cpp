@@ -409,17 +409,22 @@ TEST_F(ProgramOptions, TestExchangesList)    // NOLINT
     // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--new-data-source", "database",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--stock-db-data-source", "new_stock_data.current_data",
+        "--begin-date", "2017-01-01",
         "--mode", "load",
         "--interval", "eod",
         "--scale", "percent",
         "--price-fld-name", "adjclose",
         "--destination", "database",
+        "--graphics-format", "csv",
         "--use-MinMax",
         "--boxsize", ".1",
         "--boxsize", ".01",
         "--reversal", "1",
         "--reversal", "3",
-        "--exchanges", "NYSE,nasdax"
+        "--exchange-list", "NYSE,nasdaq"
 	};
     // clang-format on
 
@@ -433,7 +438,7 @@ TEST_F(ProgramOptions, TestExchangesList)    // NOLINT
         bool startup_OK = myApp.Startup();
 
         // both use-ATR and use-MinMax specified so this is an error
-        EXPECT_FALSE(startup_OK);
+        EXPECT_TRUE(startup_OK);
     }
 
     // catch any problems trying to setup application
@@ -1352,6 +1357,7 @@ TEST_F(Database, DailyScan)    // NOLINT
     // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--mode", "daily-scan",
+        "--exchange-list", "amex,nyse,nasdaq",
         "--price-fld-name", "adjclose",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
