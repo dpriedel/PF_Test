@@ -935,8 +935,8 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)    // NOLINT
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2022-06-01",
-        // "--use-ATR",
-        "--exchange", "NYSE",
+        "--use-MinMax",
+        "--exchange-list", "amex,bats",
         "--max-graphic-cols", "150"
 	};
     // clang-format on
