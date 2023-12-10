@@ -503,7 +503,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)  // NOLINT
     // I'm not sure how du Plessis is doing his rounding (p. 492) but
     // I'm using round half up to 3 decimals.
 
-    Boxes boxes{0.010, 0, Boxes::BoxScale::e_Percent};
+    Boxes boxes{0.010, 0, BoxScale::e_Percent};
 
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, Decimal("500.00"));
@@ -528,7 +528,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)  // NOLINT
     std::cout << boxes << std::endl;
     // test going smaller
 
-    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_Percent};
+    Boxes boxes2{0.01, 0.0, BoxScale::e_Percent};
 
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -539,14 +539,14 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)  // NOLINT
 
 TEST_F(BoxesBasicFunctionality, PercentBoxesNextandPrev)  // NOLINT
 {
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
+    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, Decimal("500.00"));
 
     box = boxes.FindNextBox(500);
     EXPECT_EQ(box, 505);
 
-    Boxes boxes2{0.01, 0.0, Boxes::BoxScale::e_Percent};
+    Boxes boxes2{0.01, 0.0, BoxScale::e_Percent};
     box = boxes2.FindBox(500);
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -568,7 +568,7 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)  // NOLINT
                                    return result;
                                });
 
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
+    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
 
     rng::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
 
@@ -1355,7 +1355,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
 
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
+    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1411,7 +1411,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
 
-    Boxes boxes{atr, Decimal("0.01"), Boxes::BoxScale::e_Percent};
+    Boxes boxes{atr, Decimal("0.01"), BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1466,7 +1466,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)  // NOLINT
     //    rng::for_each(values, [](const auto& x) { std::cout << x << "  "; });
     //    std::cout << '\n';
 
-    Boxes boxes{0.01, 0.0, Boxes::BoxScale::e_Percent};
+    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1695,7 +1695,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)  // NO
 
     std::ifstream prices{file_name};
 
-    //    PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
+    //    PF_Chart chart("AAPL", 2, 2, BoxType::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
@@ -1715,7 +1715,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSON) 
 
     std::ifstream prices{file_name};
 
-    // PF_Chart chart("AAPL", 2, 2, Boxes::BoxType::e_fractional);
+    // PF_Chart chart("AAPL", 2, 2, BoxType::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
@@ -1801,7 +1801,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
 
-    PF_Chart chart("GOOG", atr, 2, 0, Boxes::BoxScale::e_Linear);
+    PF_Chart chart("GOOG", atr, 2, 0, BoxScale::e_Linear);
 
     // do it manually so can watch chart formation
 
@@ -2115,7 +2115,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 
     std::istringstream prices{test_data};
 
-    PF_Chart chart("GOOG", atr, 2, Decimal(".01"), Boxes::BoxScale::e_Percent);
+    PF_Chart chart("GOOG", atr, 2, Decimal(".01"), BoxScale::e_Percent);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
     // std::print("Chart: {}\n", chart);
@@ -2245,7 +2245,7 @@ TEST_F(TestDBFunctions, TestCountSymbolsOnNYSEExchange)  // NOLINT
 
     const auto min_close_start_date_ =
         floor<std::chrono::days>(std::chrono::system_clock::now()) - std::chrono::days{183};
-    auto symbols = pf_db.ListSymbolsOnExchange("NYSE", "5.00"s, min_close_start_date_);
+    auto symbols = pf_db.ListSymbolsOnExchange("NYSE", "5.00"s, 100'000);
 
     ASSERT_LT(symbols.size(), CountNYSESymbols());
 }
@@ -2387,7 +2387,7 @@ TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB)  // NOLINT
         "BETWEEN '2020-01-01' and '2023-04-01' "
         "and symbol = 'AAPL' ; ";
 
-    std::cout << query << std::endl;
+    // std::cout << query << std::endl;
 
     auto Row2Range = [](const auto& r) { return Decimal{r[0].template as<const char*>()}; };
     try
@@ -2547,7 +2547,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
     // box_size.Rescale(-5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", atr, 3, 0, Boxes::BoxScale::e_Linear);
+    PF_Chart chart("AAPL", atr, 3, 0, BoxScale::e_Linear);
 
     rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
                   [&chart](const auto& e)
@@ -2608,8 +2608,8 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 
     Decimal box_size{".1"};
 
-    // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
-    PF_Chart chart("YHOO", 1, 3, box_size, Boxes::BoxScale::e_Linear, 150);
+    // PF_Chart chart("YHOO", box_size, 3, BoxType::e_fractional);
+    PF_Chart chart("YHOO", 1, 3, box_size, BoxScale::e_Linear, 150);
 
     rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
                   [&chart](const auto& e)
@@ -2629,7 +2629,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
-    PF_Chart chart_percent("YHOO", box_size, 3, 0, Boxes::BoxScale::e_Percent);
+    PF_Chart chart_percent("YHOO", box_size, 3, 0, BoxScale::e_Percent);
 
     rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
                   [&chart_percent](const auto& e)
@@ -2712,8 +2712,8 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)  // 
 
     Decimal box_size{".01"};
 
-    // PF_Chart chart("YHOO", box_size, 3, Boxes::BoxType::e_fractional);
-    PF_Chart chart("AAPL", close_range, 2, box_size, Boxes::BoxScale::e_Linear, 150);
+    // PF_Chart chart("YHOO", box_size, 3, BoxType::e_fractional);
+    PF_Chart chart("AAPL", close_range, 2, box_size, BoxScale::e_Linear, 150);
     // std::print("Linar chart before data: {}\n", chart);
 
     for (const auto& [new_date, new_price] : closing_prices)
@@ -2728,7 +2728,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)  // 
 
     EXPECT_TRUE(fs::exists("/tmp/linear14.svg"));
 
-    PF_Chart chart_percent("AAPL", close_range, 2, box_size, Boxes::BoxScale::e_Percent, 150);
+    PF_Chart chart_percent("AAPL", close_range, 2, box_size, BoxScale::e_Percent, 150);
 
     for (const auto& [new_date, new_price] : closing_prices)
     {
@@ -2888,7 +2888,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
     box_size = box_size.rescale(-5);
     std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", atr, 2, box_size, Boxes::BoxScale::e_Linear);
+    PF_Chart chart("AAPL", atr, 2, box_size, BoxScale::e_Linear);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue
@@ -2940,7 +2940,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)  // 
     // box_size.Rescale(-5);
     //    std::cout << "rescaled box size: " << box_size << '\n';
 
-    PF_Chart chart("AAPL", atr, 2, Decimal(".01"), Boxes::BoxScale::e_Percent);
+    PF_Chart chart("AAPL", atr, 2, Decimal(".01"), BoxScale::e_Percent);
 
     // ticker data retrieved above is in descending order by date, so let's read it backwards
     // but, there are no reverse iterator provided so let's see if ranges will come to the rescue
