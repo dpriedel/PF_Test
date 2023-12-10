@@ -114,7 +114,7 @@ $(OUTDIR)/%.o : %.cpp
 $(OUTDIR)/%.o : %.c
 	$(CCOMPILE)
 
-$(OUTFILE): $(OUTDIR) $(OBJS1) $(OBJS2) $(OBJS4)
+$(OUTFILE): $(OUTDIR) $(OBJS1) $(OBJS2) $(OBJS4) ../lib_PF_Chart/libPF_Chart.a
 	$(LINK)
 
 -include $(DEPS)
