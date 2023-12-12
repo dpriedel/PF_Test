@@ -17,4 +17,14 @@ test_charts*/*
 
 tags
 
+# don't show this !
 tiingo_key.dat
+
+GOOG*
+PF_DrawChart*
+SPY*
+Splits.txt
+*.json
+
+.sqlfluff
+
