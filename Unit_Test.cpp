@@ -423,6 +423,18 @@ TEST_F(DecimalBasicFunctionality, SimpleArithmetic)  // NOLINT
     EXPECT_TRUE(x2_result == Decimal("2.46914"));
 }
 
+TEST_F(DecimalBasicFunctionality, SimpleLog_nUsage)  // NOLINT
+{
+    Decimal x1{"500.5"};
+    auto x1_ln = x1.ln();
+    auto x1_dec = x1_ln.exp();
+    EXPECT_EQ(x1, x1_dec.rescale(x1.exponent()));
+
+    // Decimal x2("1.23457");
+    // auto x2_result = x2 * 2;
+    // EXPECT_EQ(x2_result, Decimal("2.46914"));
+    // EXPECT_TRUE(x2_result == Decimal("2.46914"));
+}
 class BoxesBasicFunctionality : public Test
 {
 };
@@ -1831,6 +1843,68 @@ class MiscChartFunctionality : public Test
 {
 };
 
+TEST_F(MiscChartFunctionality, TestChartIterators)  // NOLINT
+{
+    const std::string data =
+            "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+            "1108 1092 1129 "
+            "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+            "1159 1136 1127";
+
+        std::string test_data =
+            MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
+
+        std::istringstream prices{test_data};
+
+        // start with 1 box reversal - lots of short columns
+
+        PF_Chart chart1("GOOG", 10, 1);
+        chart1.LoadData(&prices, "%Y-%m-%d", ",");
+
+        EXPECT_EQ(chart1.size(), 9);
+        EXPECT_EQ(rng::distance(chart1), 9);
+    
+        prices.clear();
+        prices.seekg(0);
+        PF_Chart chart5("GOOG", 10, 5);
+        chart5.LoadData(&prices, "%Y-%m-%d", ",");
+
+        EXPECT_EQ(chart5.size(), 1);
+        EXPECT_EQ(rng::distance(chart5), 1);
+}
+
+TEST_F(MiscChartFunctionality, TestChartBoxFilters)  // NOLINT
+{
+    const std::string data =
+            "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+            "1108 1092 1129 "
+            "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+            "1159 1136 1127";
+
+        std::string test_data =
+            MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
+
+        std::istringstream prices{test_data};
+
+        // start with 1 box reversal - lots of short columns
+
+        PF_Chart chart1("GOOG", 10, 1);
+        chart1.LoadData(&prices, "%Y-%m-%d", ",");
+
+        EXPECT_EQ(chart1.size(), 9);
+        EXPECT_EQ(chart1.GetBoxesForColumns(ColumnFilter::e_up_column).size(), 9);
+        EXPECT_EQ(chart1.GetBoxesForColumns(ColumnFilter::e_reversed_to_up).size(), 8);
+    
+        prices.clear();
+        prices.seekg(0);
+        PF_Chart chart5("GOOG", 10, 5);
+        chart5.LoadData(&prices, "%Y-%m-%d", ",");
+
+        EXPECT_EQ(chart5.size(), 1);
+        EXPECT_EQ(chart5.GetBoxesForColumns(ColumnFilter::e_up_column).size(), 6);
+        EXPECT_EQ(chart5.GetBoxesForColumns(ColumnFilter::e_reversed_to_down).size(), 0);
+}
+
 TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)  // NOLINT
 {
     fs::path symbol_file_name{"./test_files/SPY_1.json"};
@@ -2077,6 +2151,43 @@ TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)  // NOLINT
     ASSERT_NE(chart, saved_chart);
 }
 
+TEST_F(MiscChartFunctionality, CheckColumnBoxCounts)  // NOLINT
+{
+    const std::string data =
+        "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+        "1108 1092 1129 "
+        "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+        "1159 1136 1127";
+
+    std::string test_data =
+        MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
+
+    std::istringstream prices{test_data};
+
+    // start with 1 box reversal - lots of short columns
+
+    PF_Chart chart1("GOOG", 10, 1);
+    chart1.LoadData(&prices, "%Y-%m-%d", ",");
+
+    const std::vector<size_t> col_lens1 = {4, 2, 2, 3, 3, 2, 2, 4, 2};
+
+    std::vector<size_t> found_lens1;
+    rng::for_each(chart1, [&found_lens1] (const auto& col) { found_lens1.push_back(col.GetColumnBoxes().size()); });
+    EXPECT_EQ(col_lens1, found_lens1);
+
+    // next 5 box reversal - 1 long column
+
+    prices.clear();
+    prices.seekg(0);
+    PF_Chart chart5("GOOG", 10, 5);
+    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+
+    const std::vector<size_t> col_lens5 = {6};
+
+    std::vector<size_t> found_lens5;
+    rng::for_each(chart5, [&found_lens5] (const auto& col) { found_lens5.push_back(col.GetColumnBoxes().size()); });
+    EXPECT_EQ(col_lens5, found_lens5);
+}
 // use ATR computed box size instead of predefined box size with logarithmic charts
 
 // class ColumnFunctionalityLogX1 : public Test
