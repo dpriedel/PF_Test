@@ -8,6 +8,7 @@
 
 import argparse
 import datetime
+import functools
 import itertools
 import json
 import logging
@@ -20,7 +21,7 @@ import traceback
 
 from pychartdir import *
 
-import PF_DrawChart_CD
+# import PF_DrawChart_CD
 
 THE_LOGGER = logging.getLogger()        # use the default 'root' name
 THE_LOGGER.setLevel(logging.INFO)
@@ -131,31 +132,38 @@ def ProcessChartFile(args):
     BLUE = 0x0000FF
     ORANGE = 0xFFA500
 
+    if args.prices_file_:
+        prices = pd.read_csv(args.prices_file_, usecols=[0, 1], parse_dates=[0], names=["time", "close"])
+    else:
+        prices = pd.DataFrame()
+    
     chart_data = PY_PF_Chart.PY_PF_Chart.MakeChartFromJSONFile(args.input_file_name_)
-
-    up_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_up_column)
-    down_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_down_column)
-    reversed_to_up_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_reversed_to_up)
-    reversed_to_down_columns_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_reversed_to_down)
     # print(up_columns)
 
+    up_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_up_column)
     upcol_pd = pd.DataFrame(up_columns, columns=["col_nbr", "price"])
+
+    down_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_down_column)
     downcol_pd = pd.DataFrame(down_columns, columns=["col_nbr", "price"])
     rev_to_up_pd = pd.DataFrame()
     if chart_data.GetReversalBoxes() == 1:
+        reversed_to_up_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_reversed_to_up)
         rev_to_up_pd = pd.DataFrame(reversed_to_up_columns, columns=["col_nbr", "price"])
     rev_to_down_pd = pd.DataFrame()
     if chart_data.GetReversalBoxes() == 1:
+        reversed_to_down_columns_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_reversed_to_down)
         rev_to_down_pd = pd.DataFrame(reversed_to_down_columns_columns, columns=["col_nbr", "price"])
 
     first_col = chart_data.GetColumn(0)
-    openning_price = first_col.GetColumnBottom() if first_col.GetColumnDirection() == PY_PF_Chart.PY_PF_Column.Direction.e_Up else first_col.GetColumnTop() 
-    print(openning_price)
+    last_col = chart_data.GetColumn(chart_data.GetNumberOfColumns())
 
-    overall_pct_chg = .5    # TODO: place holder
+    starting_price = first_col.GetColumnBottom() if first_col.GetColumnDirection() == PY_PF_Chart.PY_PF_Column.Direction.e_Up else first_col.GetColumnTop() 
+    ending_price = last_col.GetColumnTop() if last_col.GetColumnDirection() == PY_PF_Chart.PY_PF_Column.Direction.e_Up else last_col.GetColumnBottom() 
+
+    overall_pct_chg = (ending_price - starting_price) / starting_price
     explanation_text = ""
     if chart_data.HasReversedColumns():
-        explanation_text = "Orange: 1-step Up then reversal Down. Green: 1-step Down then reversal Up."
+        explanation_text = "Orange: 1-step Up then reversal Down. Blue: 1-step Down then reversal Up."
 
     skipped_columns_text = ""
     skipped_columns = 5     #   TODO: place holder
@@ -164,7 +172,7 @@ def ProcessChartFile(args):
     if skipped_columns > 0:
         skipped_columns_text = " (last {} cols)".format(max_columns_for_graph)
 
-    chart_title = "\n{}{} X {} for {} {}. Overall % change: {}{}\nLast change: {:%Y-%m-%d %H:%M:%S}\n{}".format(
+    chart_title = "\n{}{} X {} for {} {}. Overall % change: {:.00%}{}\nLast change: {:%Y-%m-%d %H:%M:%S}\n{}".format(
         chart_data.GetBoxSize(), ("%" if chart_data.IsPercent() else ""), chart_data.GetReversalBoxes(),
         chart_data.GetSymbol(), ("percent" if chart_data.IsPercent() else ""), overall_pct_chg, skipped_columns_text, datetime.datetime.fromtimestamp(int(chart_data.GetLastChangeTimeSeconds().total_seconds())),
         explanation_text)
@@ -173,18 +181,27 @@ def ProcessChartFile(args):
 
     x_axis_labels = []
 
+    if args.y_axis_format_ == "date":
+        lbl_fmt = "{:%Y-%m-%d}"
+    else:
+        lbl_fmt = "{:%H:%M:%S}"
+
     for col in chart_data:
-        xxx = "{:%Y-%m-%d %H:%M:%S}".format(datetime.datetime.fromtimestamp(int(col.GetColumnBeginTime().total_seconds())))
+        xxx = lbl_fmt.format(datetime.datetime.fromtimestamp(int(col.GetColumnBeginTime().total_seconds())))
         x_axis_labels.append(xxx)
 
-    c = XYChart(1450, 1520)
+    if prices.empty:
+        c = XYChart((14 * 72), (14 * 72))
 
-    # Set the plotarea at (55, 65) and of size 350 x 300 pixels, with a light grey border (0xc0c0c0).
-    # Turn on both horizontal and vertical grid lines with light grey color (0xc0c0c0)
-    c.setPlotArea(55, 125, 1350, 1300, -1, -1, 0xc0c0c0, 0xc0c0c0, -1)
+        # Set the plotarea at (55, 65) and of size 350 x 300 pixels, with a light grey border (0xc0c0c0).
+        # Turn on both horizontal and vertical grid lines with light grey color (0xc0c0c0)
+        c.setPlotArea(50, 100, (14 * 72 - 50), (14 * 72 - 200), -1, -1, 0xc0c0c0, 0xc0c0c0, -1)
+    else:
+        c = XYChart((14 * 72), (10 * 72))
+        c.setPlotArea(50, 100, (14 * 72 - 50), (10 * 72 - 200), -1, -1, 0xc0c0c0, 0xc0c0c0, -1)
 
     # Add a legend box at (50, 30) (top of the chart) with horizontal layout. Use 12pt Times Bold Italic
-    # font. Set the background and border color to Transparent.
+    # font. Set the background andu border color to Transparent.
     # c.addLegend(50, 30, 0, "Times New Roman Bold Italic", 12).setBackground(Transparent)
 
     # Add a title to the chart using 18pt Times Bold Itatic font.
@@ -201,25 +218,76 @@ def ProcessChartFile(args):
     c.yAxis().setWidth(3)
 
     # Add an orange (0xff9933) scatter chart layer, using 13 pixel diamonds as symbols
-    c.addScatterLayer(upcol_pd.col_nbr, upcol_pd.price, "first chart", Cross2Shape(.5), 13, GREEN)
-    c.addScatterLayer(downcol_pd.col_nbr, downcol_pd.price, "first chart", CircleShape, 13, RED)
+    s_layer1 = c.addScatterLayer(upcol_pd.col_nbr, upcol_pd.price, "first chart", Cross2Shape(.5), 13, GREEN)
+    if chart_data.GetNumberOfColumns() < 40:
+        s_layer1.setSymbolScale([.15] * len(up_columns), XAxisScale)
+    s_layer2 = c.addScatterLayer(downcol_pd.col_nbr, downcol_pd.price, "first chart", CircleShape, 13, RED)
+    if chart_data.GetNumberOfColumns() < 40:
+        s_layer2.setSymbolScale([.15] * len(down_columns), XAxisScale)
     if not rev_to_up_pd.empty:
-        c.addScatterLayer(rev_to_up_pd.col_nbr, rev_to_up_pd.price, "first chart", Cross2Shape(.5), 13,BLUE)
+        s_layer3 = c.addScatterLayer(rev_to_up_pd.col_nbr, rev_to_up_pd.price, "first chart", Cross2Shape(.5), 13,BLUE)
+        if chart_data.GetNumberOfColumns() < 40:
+            s_layer3.setSymbolScale([.15] * len(reversed_to_up_columns), XAxisScale)
     if not rev_to_down_pd.empty:
-        c.addScatterLayer(rev_to_down_pd.col_nbr, rev_to_down_pd.price, "first chart", CircleShape, 13, ORANGE)
+        s_layer4 =  c.addScatterLayer(rev_to_down_pd.col_nbr, rev_to_down_pd.price, "first chart", CircleShape, 13, ORANGE)
+        if chart_data.GetNumberOfColumns() < 40:
+            s_layer4.setSymbolScale([.15] * len(reversed_to_down_columns_columns), XAxisScale)
 
     # Add a green (0x33ff33) scatter chart layer, using 11 pixel triangles as symbols
     # c.addScatterLayer(dataX1, dataY1, "Natural", TriangleSymbol, 11, 0x33ff33)
 
-    layer1 = c.addLineLayer([openning_price, openning_price], RED)
-    layer1.setXData([0, chart_data.GetNumberOfColumns()])
-    layer1.setLineWidth(2)
-    # Output the chart
+    c.yAxis().addMark(starting_price, RED)
 
     yyy = c.xAxis().setLabels(x_axis_labels)
     c.xAxis().setLabelStep(int(chart_data.GetNumberOfColumns() / 40), 0)
-    yyy.setFontAngle(-45)
+    yyy.setFontAngle(45)
 
+    dt_buys =[]
+    tt_buys =[]
+    db_sells =[]
+    tb_sells =[]
+    bullish_tt_buys =[]
+    bearish_tb_sells =[]
+    cat_buys =[]
+    cat_sells =[]
+    tt_cat_buys =[]
+    tb_cat_sells =[]
+    signal_data =[]
+
+    for col_num, sigs in itertools.groupby(signal_data, lambda s: s.signal_column_):
+        most_important = max(sigs, key=functools.cmp_to_key(PY_PF_Chart.CmpSignalsByPriority))
+
+        match most_important.signal_type_:
+            case PY_PF_Chart.PF_SignalType.e_double_top_buy:
+                dt_buys.append(lbl_fmt.format(most_important.GetSignalTimeSec()))
+
+            case PY_PF_Chart.PF_SignalType.e_triple_top_buy:
+                tt_buys.append(lbl_fmt.format(most_important.GetSignalTimeSec()))
+
+    print(tt_buys)
+    sys.exit()
+
+
+    if not prices.empty:
+        d = XYChart((14 * 72), (6 * 72))
+        d.setPlotArea(50, 50, (14 * 72 - 50), (6 * 72 - 200), -1, -1, 0xc0c0c0, 0xc0c0c0, -1)
+        d.addTitle("Closing prices", "Times New Roman Bold Italic", 18)
+        p_layer1 = d.addLineLayer(prices.close.to_list())
+        p_x_axis_labels = []
+
+        for a in prices.time:
+            xxx = lbl_fmt.format(a)
+            p_x_axis_labels.append(xxx)
+        yyy = d.xAxis().setLabels(p_x_axis_labels)
+        d.xAxis().setLabelStep(int(prices.shape[0] / 40), 0)
+        yyy.setFontAngle(45)
+
+        combined_chart = MultiChart((14 * 72), (15 * 72))
+        combined_chart.addChart(0,0, c)
+        combined_chart.addChart(0,(10 * 72), d)
+        combined_chart.makeChart("prices.svg")
+        sys.exit()
+    # Output the chart
     c.makeChart("scatter.svg")
 
 
@@ -242,7 +310,7 @@ def ProcessChartFile(args):
     else:
         first_col = chart_data["current_column"]
 
-    openning_price = first_col["bottom"] if first_col["direction"] == "up" else first_col["top"]
+    starting_price = first_col["bottom"] if first_col["direction"] == "up" else first_col["top"]
 
     for col in chart_data["columns"]:
         lowData.append(float(col["bottom"]))
