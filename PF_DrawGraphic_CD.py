@@ -252,19 +252,21 @@ def ProcessChartFile(args):
     cat_sells =[]
     tt_cat_buys =[]
     tb_cat_sells =[]
-    signal_data =[]
+
+    signal_data = chart_data.GetSignals()
+    print(len(signal_data), "signals")
 
     for col_num, sigs in itertools.groupby(signal_data, lambda s: s.signal_column_):
         most_important = max(sigs, key=functools.cmp_to_key(PY_PF_Chart.CmpSignalsByPriority))
 
         match most_important.signal_type_:
             case PY_PF_Chart.PF_SignalType.e_double_top_buy:
-                dt_buys.append(lbl_fmt.format(most_important.GetSignalTimeSec()))
+                dt_buys.append(lbl_fmt.format(datetime.datetime.fromtimestamp(most_important.GetSignalTimeSecs().total_seconds())))
 
             case PY_PF_Chart.PF_SignalType.e_triple_top_buy:
-                tt_buys.append(lbl_fmt.format(most_important.GetSignalTimeSec()))
+                tt_buys.append(lbl_fmt.format(datetime.datetime.fromtimestamp(most_important.GetSignalTimeSecs().total_seconds())))
 
-    print(tt_buys)
+    print(dt_buys)
     sys.exit()
 
 
