@@ -1851,26 +1851,26 @@ TEST_F(MiscChartFunctionality, TestChartIterators)  // NOLINT
             "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
             "1159 1136 1127";
 
-        std::string test_data =
-            MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
+    std::string test_data =
+        MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
 
-        std::istringstream prices{test_data};
+    std::istringstream prices{test_data};
 
-        // start with 1 box reversal - lots of short columns
+    // start with 1 box reversal - lots of short columns
 
-        PF_Chart chart1("GOOG", 10, 1);
-        chart1.LoadData(&prices, "%Y-%m-%d", ",");
+    PF_Chart chart1("GOOG", 10, 1);
+    chart1.LoadData(&prices, "%Y-%m-%d", ",");
 
-        EXPECT_EQ(chart1.size(), 9);
-        EXPECT_EQ(rng::distance(chart1), 9);
-    
-        prices.clear();
-        prices.seekg(0);
-        PF_Chart chart5("GOOG", 10, 5);
-        chart5.LoadData(&prices, "%Y-%m-%d", ",");
+    EXPECT_EQ(chart1.size(), 9);
+    EXPECT_EQ(rng::distance(chart1), 9);
 
-        EXPECT_EQ(chart5.size(), 1);
-        EXPECT_EQ(rng::distance(chart5), 1);
+    prices.clear();
+    prices.seekg(0);
+    PF_Chart chart5("GOOG", 10, 5);
+    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+
+    EXPECT_EQ(chart5.size(), 1);
+    EXPECT_EQ(rng::distance(chart5), 1);
 }
 
 TEST_F(MiscChartFunctionality, TestChartBoxFilters)  // NOLINT
@@ -1881,47 +1881,36 @@ TEST_F(MiscChartFunctionality, TestChartBoxFilters)  // NOLINT
             "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
             "1159 1136 1127";
 
-        std::string test_data =
-            MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
+    std::string test_data =
+        MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
 
-        std::istringstream prices{test_data};
+    std::istringstream prices{test_data};
 
-        // start with 1 box reversal - lots of short columns
+    // start with 1 box reversal - lots of short columns
 
-        PF_Chart chart1("GOOG", 10, 1);
-        chart1.LoadData(&prices, "%Y-%m-%d", ",");
+    PF_Chart chart1("GOOG", 10, 1);
+    chart1.LoadData(&prices, "%Y-%m-%d", ",");
 
-        EXPECT_EQ(chart1.size(), 9);
-        EXPECT_EQ(chart1.GetBoxesForColumns(ColumnFilter::e_up_column).size(), 9);
-        EXPECT_EQ(chart1.GetBoxesForColumns(ColumnFilter::e_reversed_to_up).size(), 8);
-    
-        prices.clear();
-        prices.seekg(0);
-        PF_Chart chart5("GOOG", 10, 5);
-        chart5.LoadData(&prices, "%Y-%m-%d", ",");
+    EXPECT_EQ(chart1.size(), 9);
+    EXPECT_EQ(chart1.GetBoxesForColumns(PF_ColumnFilter::e_up_column).size(), 9);
+    EXPECT_EQ(chart1.GetBoxesForColumns(PF_ColumnFilter::e_reversed_to_up).size(), 8);
 
-        EXPECT_EQ(chart5.size(), 1);
-        EXPECT_EQ(chart5.GetBoxesForColumns(ColumnFilter::e_up_column).size(), 6);
-        EXPECT_EQ(chart5.GetBoxesForColumns(ColumnFilter::e_reversed_to_down).size(), 0);
+    prices.clear();
+    prices.seekg(0);
+    PF_Chart chart5("GOOG", 10, 5);
+    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+
+    EXPECT_EQ(chart5.size(), 1);
+    EXPECT_EQ(chart5.GetBoxesForColumns(PF_ColumnFilter::e_up_column).size(), 6);
+    EXPECT_EQ(chart5.GetBoxesForColumns(PF_ColumnFilter::e_reversed_to_down).size(), 0);
 }
 
 TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)  // NOLINT
 {
     fs::path symbol_file_name{"./test_files/SPY_1.json"};
 
-    const std::string file_content = LoadDataFileForUse(symbol_file_name);
+    PF_Chart new_chart = PF_Chart::MakeChartFromJSONFile(symbol_file_name);
 
-    JSONCPP_STRING err;
-    Json::Value saved_data;
-
-    Json::CharReaderBuilder builder;
-    const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
-    if (!reader->parse(file_content.data(), file_content.data() + file_content.size(), &saved_data, &err))
-    {
-        throw std::runtime_error("Problem parsing test data file: "s + err);
-    }
-
-    PF_Chart new_chart{saved_data};
     //    std::cout << new_chart << '\n';
 
     fs::path csv_file_name{"./test_files3/SPY.csv"};
@@ -2430,6 +2419,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
     PF_Chart chart2 = PF_Chart::MakeChartFromDB(pf_db, chart.GetChartParams(), "eod");
 
     //    std::cout << chart << '\n';
+    EXPECT_EQ(chart, chart2);
 }
 
 TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveIntoJson)  // NOLINT

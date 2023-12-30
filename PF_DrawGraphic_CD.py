@@ -402,7 +402,15 @@ def ProcessChartFile(args):
     # (we collect data for both PF_Chart and prices chart)
 
     for sig in signal_data:
-        signal_prices_row_info = prices.time.isin([lbl_fmt.format(datetime.datetime.fromtimestamp( round(sig.GetSignalTimeSecs().total_seconds())))])
+        signal_prices_row_info = prices.time.isin(
+            [
+                lbl_fmt.format(
+                    datetime.datetime.fromtimestamp(
+                        round(sig.GetSignalTimeSecs().total_seconds())
+                    )
+                )
+            ]
+        )
         sig_prices_row_row = prices[signal_prices_row_info]
 
         if not sig_prices_row_row.empty:
@@ -464,10 +472,12 @@ def ProcessChartFile(args):
         tb_sells, columns=["PF_column", "price_column", "signal_box", "signal_price"]
     )
     bullish_tt_buys_pd = pd.DataFrame(
-        bullish_tt_buys, columns=["PF_column", "price_column", "signal_box", "signal_price"]
+        bullish_tt_buys,
+        columns=["PF_column", "price_column", "signal_box", "signal_price"],
     )
     bearish_tb_sells_pd = pd.DataFrame(
-        bearish_tb_sells, columns=["PF_column", "price_column", "signal_box", "signal_price"]
+        bearish_tb_sells,
+        columns=["PF_column", "price_column", "signal_box", "signal_price"],
     )
     cat_buys_pd = pd.DataFrame(
         cat_buys, columns=["PF_column", "price_column", "signal_box", "signal_price"]
@@ -479,7 +489,8 @@ def ProcessChartFile(args):
         tt_cat_buys, columns=["PF_column", "price_column", "signal_box", "signal_price"]
     )
     tb_cat_sells_pd = pd.DataFrame(
-        tb_cat_sells, columns=["PF_column", "price_column", "signal_box", "signal_price"]
+        tb_cat_sells,
+        columns=["PF_column", "price_column", "signal_box", "signal_price"],
     )
 
     # define our shapes to be used for each signal type
