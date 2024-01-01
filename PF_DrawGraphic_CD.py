@@ -242,37 +242,50 @@ def ProcessChartFile(args):
     # we want to assign different colors to each of the 4 types
     # of column we can have so we will put each into a separate layer
 
-    upcol_pd = pd.DataFrame()
-    downcol_pd = pd.DataFrame()
-    rev_to_up_pd = pd.DataFrame()
-    rev_to_down_pd = pd.DataFrame()
+    # each data frame needs to have values for all columns
+    # initialize everything to zeros and then overlay with values
+    # for each column type
 
-    up_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_up_column)
-    xxx = RemoveTooCloseValues(up_columns, 13)
-    upcol_pd = pd.DataFrame(xxx, columns=["col_nbr", "price"])
+    a1 = [0] * (chart_data.GetNumberOfColumns() - 1)
 
-    down_columns = chart_data.GetBoxesForColumns(
+    upcol_pd = pd.DataFrame(columns=["bottom", "top"], index=range(chart_data.GetNumberOfColumns() - 1))
+    upcol_pd.reset_index(inplace=True, names="col_nbr")
+    downcol_pd = pd.DataFrame(columns=["bottom", "top"], index=range(chart_data.GetNumberOfColumns() - 1))
+    downcol_pd.reset_index(inplace=True, names="col_nbr")
+    rev_to_up_pd = pd.DataFrame(columns=["bottom", "top"], index=range(chart_data.GetNumberOfColumns() - 1))
+    rev_to_up_pd.reset_index(inplace=True, names="col_nbr")
+    rev_to_down_pd = pd.DataFrame(columns=["bottom", "top"], index=range(chart_data.GetNumberOfColumns() - 1))
+    rev_to_down_pd.reset_index(inplace=True, names="col_nbr")
+
+    up_columns = chart_data.GetTopBottomForColumns(PY_PF_Chart.PF_ColumnFilter.e_up_column)
+    xx = pd.DataFrame(up_columns, columns=["col_nbr", "bottom", "top"])
+    xx.set_index("col_nbr", drop=False, inplace=True)
+    upcol_pd.loc[upcol_pd.col_nbr.isin(xx.col_nbr)] = xx[["col_nbr", "bottom", "top"]]
+
+    down_columns = chart_data.GetTopBottomForColumns(
         PY_PF_Chart.PF_ColumnFilter.e_down_column
     )
-    downcol_pd = pd.DataFrame(down_columns, columns=["col_nbr", "price"])
+    xx = pd.DataFrame(down_columns, columns=["col_nbr", "bottom", "top"])
+    xx.set_index("col_nbr", drop=False, inplace=True)
+    downcol_pd.loc[downcol_pd.col_nbr.isin(xx.col_nbr)] = xx[["col_nbr", "bottom", "top"]]
 
     # reversal columns are only possible if the number of reversal boxes is 1
 
     if chart_data.GetReversalBoxes() == 1:
-        reversed_to_up_columns = chart_data.GetBoxesForColumns(
+        reversed_to_up_columns = chart_data.GetTopBottomForColumns(
             PY_PF_Chart.PF_ColumnFilter.e_reversed_to_up
         )
-        rev_to_up_pd = pd.DataFrame(
-            reversed_to_up_columns, columns=["col_nbr", "price"]
-        )
+        xx = pd.DataFrame(reversed_to_up_columns, columns=["col_nbr", "bottom", "top"])
+        xx.set_index("col_nbr", drop=False, inplace=True)
+        rev_to_up_pd.loc[rev_to_up_pd.col_nbr.isin(xx.col_nbr)] = xx[["col_nbr", "bottom", "top"]]
 
     if chart_data.GetReversalBoxes() == 1:
-        reversed_to_down_columns_columns = chart_data.GetBoxesForColumns(
+        reversed_to_down_columns = chart_data.GetTopBottomForColumns(
             PY_PF_Chart.PF_ColumnFilter.e_reversed_to_down
         )
-        rev_to_down_pd = pd.DataFrame(
-            reversed_to_down_columns_columns, columns=["col_nbr", "price"]
-        )
+        xx = pd.DataFrame(reversed_to_down_columns, columns=["col_nbr", "bottom", "top"])
+        xx.set_index("col_nbr", drop=False, inplace=True)
+        rev_to_down_pd.loc[rev_to_down_pd.col_nbr.isin(xx.col_nbr)] = xx[["col_nbr", "bottom", "top"]]
 
     first_col = chart_data.GetColumn(0)
     last_col = chart_data.GetColumn(chart_data.GetNumberOfColumns() - 1)
@@ -362,41 +375,35 @@ def ProcessChartFile(args):
     c.yAxis().setWidth(3)
 
     # Add an orange (0xff9933) scatter chart layer, using 13 pixel diamonds as symbols
-    s_layer1 = c.addScatterLayer(
-        upcol_pd.col_nbr, upcol_pd.price, "Up", Cross2Shape(0.5), 13, GREEN
-    )
-    if chart_data.GetNumberOfColumns() < 40:
-        s_layer1.setSymbolScale([0.15] * len(up_columns), XAxisScale)
-    s_layer2 = c.addScatterLayer(
-        downcol_pd.col_nbr, downcol_pd.price, "Down", CircleShape, 13, RED
-    )
-    if chart_data.GetNumberOfColumns() < 40:
-        s_layer2.setSymbolScale([0.15] * len(down_columns), XAxisScale)
+    s_layer1 = c.addBoxLayer(
+        upcol_pd.top, upcol_pd.bottom, GREEN, "Up")
+    # if chart_data.GetNumberOfColumns() < 40:
+    #     s_layer1.setSymbolScale([0.15] * len(up_columns), XAxisScale)
+    s_layer2 = c.addBoxLayer(
+        downcol_pd.top, downcol_pd.bottom, RED, "Down")
+    # if chart_data.GetNumberOfColumns() < 40:
+    #     s_layer2.setSymbolScale([0.15] * len(down_columns), XAxisScale)
     if not rev_to_up_pd.empty:
-        s_layer3 = c.addScatterLayer(
-            rev_to_up_pd.col_nbr,
-            rev_to_up_pd.price,
-            "Reversed To Up",
-            Cross2Shape(0.5),
-            13,
+        s_layer3 = c.addBoxLayer(
+            rev_to_up_pd.top,
+            rev_to_up_pd.bottom,
             BLUE,
+            "Reversed To Up",
         )
-        if chart_data.GetNumberOfColumns() < 40:
-            s_layer3.setSymbolScale([0.15] * len(reversed_to_up_columns), XAxisScale)
+        # if chart_data.GetNumberOfColumns() < 40:
+        #     s_layer3.setSymbolScale([0.15] * len(reversed_to_up_columns), XAxisScale)
     if not rev_to_down_pd.empty:
-        s_layer4 = c.addScatterLayer(
-            rev_to_down_pd.col_nbr,
-            rev_to_down_pd.price,
-            "Reversed to Down",
-            CircleShape,
-            13,
+        s_layer4 = c.addBoxLayer(
+            rev_to_down_pd.top,
+            rev_to_down_pd.bottom,
             ORANGE,
+            "Reversed to Down",
         )
-        if chart_data.GetNumberOfColumns() < 40:
-            s_layer4.setSymbolScale(
-                [0.15] * len(reversed_to_down_columns_columns), XAxisScale
-            )
-
+        # if chart_data.GetNumberOfColumns() < 40:
+        #     s_layer4.setSymbolScale(
+        #         [0.15] * len(reversed_to_down_columns_columns), XAxisScale
+        #     )
+    #
     # Add a green (0x33ff33) scatter chart layer, using 11 pixel triangles as symbols
     # c.addScatterLayer(dataX1, dataY1, "Natural", TriangleSymbol, 11, 0x33ff33)
 
