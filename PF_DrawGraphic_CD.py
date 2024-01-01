@@ -8,9 +8,9 @@
 
 import argparse
 import datetime
-import functools
+# import functools
 import itertools
-import json
+# import json
 import logging
 import numpy as np
 import os
@@ -218,7 +218,7 @@ def ProcessChartFile(args):
     # print(up_columns)
 
     # we want to assign different colors to each of the 4 types
-    # of column we can have
+    # of column we can have so we will put each into a separate layer
 
     upcol_pd = pd.DataFrame()
     downcol_pd = pd.DataFrame()
@@ -232,6 +232,8 @@ def ProcessChartFile(args):
         PY_PF_Chart.PF_ColumnFilter.e_down_column
     )
     downcol_pd = pd.DataFrame(down_columns, columns=["col_nbr", "price"])
+
+    # reversal columns are only possible if the number of reversal boxes is 1
 
     if chart_data.GetReversalBoxes() == 1:
         reversed_to_up_columns = chart_data.GetBoxesForColumns(
@@ -321,7 +323,7 @@ def ProcessChartFile(args):
 
     # Add a legend box at (50, 30) (top of the chart) with horizontal layout. Use 12pt Times Bold Italic
     # font. Set the background andu border color to Transparent.
-    # c.addLegend(50, 30, 0, "Times New Roman Bold Italic", 12).setBackground(Transparent)
+    c.addLegend(50, 30, 0, "Times New Roman Bold Italic", 12).setBackground(Transparent)
 
     # Add a title to the chart using 18pt Times Bold Itatic font.
     c.addTitle(chart_title, "Times New Roman Bold Italic", 18)
@@ -338,12 +340,12 @@ def ProcessChartFile(args):
 
     # Add an orange (0xff9933) scatter chart layer, using 13 pixel diamonds as symbols
     s_layer1 = c.addScatterLayer(
-        upcol_pd.col_nbr, upcol_pd.price, "first chart", Cross2Shape(0.5), 13, GREEN
+        upcol_pd.col_nbr, upcol_pd.price, "Up", Cross2Shape(0.5), 13, GREEN
     )
     if chart_data.GetNumberOfColumns() < 40:
         s_layer1.setSymbolScale([0.15] * len(up_columns), XAxisScale)
     s_layer2 = c.addScatterLayer(
-        downcol_pd.col_nbr, downcol_pd.price, "first chart", CircleShape, 13, RED
+        downcol_pd.col_nbr, downcol_pd.price, "Down", CircleShape, 13, RED
     )
     if chart_data.GetNumberOfColumns() < 40:
         s_layer2.setSymbolScale([0.15] * len(down_columns), XAxisScale)
@@ -351,7 +353,7 @@ def ProcessChartFile(args):
         s_layer3 = c.addScatterLayer(
             rev_to_up_pd.col_nbr,
             rev_to_up_pd.price,
-            "first chart",
+            "Reversed To Up",
             Cross2Shape(0.5),
             13,
             BLUE,
@@ -362,7 +364,7 @@ def ProcessChartFile(args):
         s_layer4 = c.addScatterLayer(
             rev_to_down_pd.col_nbr,
             rev_to_down_pd.price,
-            "first chart",
+            "Reversed to Down",
             CircleShape,
             13,
             ORANGE,
@@ -514,13 +516,15 @@ def ProcessChartFile(args):
         )
         d.addTitle("Closing prices", "Times New Roman Bold Italic", 18)
         p_layer1 = d.addLineLayer(prices.close.to_list())
+        d.addLegend(50, 30, 0, "Times New Roman Bold Italic", 12).setBackground(Transparent)
+
         p_x_axis_labels = []
 
         if not dt_buys_pd.empty:
             x_layer1 = d.addScatterLayer(
                 dt_buys_pd.price_column,
                 dt_buys_pd.signal_price,
-                "first chart",
+                "dt buy",
                 dt_buy_sym,
                 13,
                 GREEN,
@@ -530,7 +534,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 tt_buys_pd.price_column,
                 tt_buys_pd.signal_price,
-                "first chart",
+                "tt buy",
                 tt_buy_sym,
                 13,
                 GREEN,
@@ -540,7 +544,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 db_sells_pd.price_column,
                 db_sells_pd.signal_price,
-                "first chart",
+                "db sell",
                 db_sell_sym,
                 13,
                 RED,
@@ -550,7 +554,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 tb_sells_pd.price_column,
                 tb_sells_pd.signal_price,
-                "first chart",
+                "tb sell",
                 tb_sell_sym,
                 13,
                 RED,
@@ -560,7 +564,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 bullish_tt_buys_pd.price_column,
                 bullish_tt_buys_pd.signal_price,
-                "first chart",
+                "bullish tt buy",
                 bullish_tt_buy_sym,
                 13,
                 GREEN,
@@ -570,7 +574,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 bearish_tb_sells_pd.price_column,
                 bearish_tb_sells_pd.signal_price,
-                "first chart",
+                "bearish tb sell",
                 bearish_tb_sell_sym,
                 13,
                 RED,
@@ -580,7 +584,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 cat_buys_pd.price_column,
                 cat_buys_pd.signal_price,
-                "first chart",
+                "cat buy",
                 cat_buy_sym,
                 13,
                 GREEN,
@@ -590,7 +594,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 cat_sells_pd.price_column,
                 cat_sells_pd.signal_price,
-                "first chart",
+                "cat sell",
                 cat_sell_sym,
                 13,
                 RED,
@@ -600,7 +604,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 tt_cat_buys_pd.price_column,
                 tt_cat_buys_pd.signal_price,
-                "first chart",
+                "tt cat buy",
                 tt_cat_buy_sym,
                 13,
                 GREEN,
@@ -610,7 +614,7 @@ def ProcessChartFile(args):
             x_layer1 = d.addScatterLayer(
                 tb_cat_sells_pd.price_column,
                 tb_cat_sells_pd.signal_price,
-                "first chart",
+                "tb cat sell",
                 tb_cat_sell_sym,
                 13,
                 RED,
