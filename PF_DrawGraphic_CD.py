@@ -7,8 +7,9 @@
 """
 
 import argparse
+import copy
 import datetime
-# import functools
+import functools
 import itertools
 # import json
 import logging
@@ -195,6 +196,27 @@ def makes_sense_to_run(args):
 
     return True
 
+def RemoveTooCloseValues(list, min_distance):
+    # input is a list of (column number, y-value) tuples
+    final_result = []
+
+    for col_num, prices in itertools.groupby(list, lambda s: s[0]):
+        result = []
+
+        last_value = -999
+        for price in prices:
+            next_value = price[1]
+            if next_value < last_value + min_distance:
+                continue
+            result.append(price)
+            last_value = next_value
+
+        final_result.extend(result)
+
+    print("orig len: ", len(list), "new len: ", len(final_result))
+
+    return final_result
+
 
 def ProcessChartFile(args):
     # define some colors
@@ -226,7 +248,8 @@ def ProcessChartFile(args):
     rev_to_down_pd = pd.DataFrame()
 
     up_columns = chart_data.GetBoxesForColumns(PY_PF_Chart.PF_ColumnFilter.e_up_column)
-    upcol_pd = pd.DataFrame(up_columns, columns=["col_nbr", "price"])
+    xxx = RemoveTooCloseValues(up_columns, 13)
+    upcol_pd = pd.DataFrame(xxx, columns=["col_nbr", "price"])
 
     down_columns = chart_data.GetBoxesForColumns(
         PY_PF_Chart.PF_ColumnFilter.e_down_column
@@ -619,6 +642,8 @@ def ProcessChartFile(args):
                 13,
                 RED,
             )
+
+        d.yAxis().addMark(starting_price, RED)
 
         for a in prices.time:
             xxx = lbl_fmt.format(a)
