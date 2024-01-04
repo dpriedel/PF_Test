@@ -58,14 +58,14 @@ namespace vws = std::ranges::views;
 
 #include <date/tz.h>
 #include <gtest/gtest.h>
-#include <pybind11/embed.h>  // everything needed for embedding
+// #include <pybind11/embed.h>  // everything needed for embedding
 #include <spdlog/spdlog.h>
 
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
 #include <range/v3/range/conversion.hpp>
-namespace py = pybind11;
-using namespace py::literals;
+// namespace py = pybind11;
+// using namespace py::literals;
 
 #include <decimal.hh>
 
@@ -1717,7 +1717,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)  // NO
     EXPECT_EQ(chart[46].GetTop(), 148);
     EXPECT_EQ(chart[46].GetBottom(), 146);
 
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/candlestick12.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick12.svg", {}, "no");
     std::cout << chart << '\n';
 }
 
@@ -1873,7 +1873,7 @@ TEST_F(MiscChartFunctionality, TestChartIterators)  // NOLINT
     EXPECT_EQ(rng::distance(chart5), 1);
 }
 
-TEST_F(MiscChartFunctionality, TestChartBoxFilters)  // NOLINT
+TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithBoxes)  // NOLINT
 {
     const std::string data =
             "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
@@ -1905,6 +1905,41 @@ TEST_F(MiscChartFunctionality, TestChartBoxFilters)  // NOLINT
     EXPECT_EQ(chart5.GetBoxesForColumns(PF_ColumnFilter::e_reversed_to_down).size(), 0);
 }
 
+TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithColumns)  // NOLINT
+{
+    const std::string data =
+            "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+            "1108 1092 1129 "
+            "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+            "1159 1136 1127";
+
+    std::string test_data =
+        MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
+
+    std::istringstream prices{test_data};
+
+    // start with 1 box reversal - lots of short columns
+
+    PF_Chart chart1("GOOG", 10, 1);
+    chart1.LoadData(&prices, "%Y-%m-%d", ",");
+
+    std::cout << chart1 << std::endl;
+
+    EXPECT_EQ(chart1.size(), 9);
+    EXPECT_EQ(chart1.GetTopBottomForColumns(PF_ColumnFilter::e_up_column).size(), 3);
+    const auto top_bottom = chart1.GetTopBottomForColumns(PF_ColumnFilter::e_reversed_to_up);
+    EXPECT_EQ(top_bottom.size(), 3);
+    // EXPECT_EQ(std::get<2>(top_bottom[2]), 1160);
+
+    prices.clear();
+    prices.seekg(0);
+    PF_Chart chart5("GOOG", 10, 5);
+    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+
+    EXPECT_EQ(chart5.size(), 1);
+    EXPECT_EQ(chart5.GetTopBottomForColumns(PF_ColumnFilter::e_up_column).size(), 1);
+    EXPECT_EQ(chart5.GetTopBottomForColumns(PF_ColumnFilter::e_reversed_to_down).size(), 0);
+}
 TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)  // NOLINT
 {
     fs::path symbol_file_name{"./test_files/SPY_1.json"};
@@ -1975,7 +2010,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // N
                   });
     //    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    ConstructChartGraphAndWriteToFile(new_chart, "/tmp/candlestick5.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick5.svg", {}, "no");
 
     // save for comparison
 
@@ -2028,7 +2063,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // N
     rng::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
     //    std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
 
-    ConstructChartGraphAndWriteToFile(new_chart, "/tmp/candlestick6.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick6.svg", {}, "no");
 
     EXPECT_NE(new_chart, chart2);
 }
@@ -2070,7 +2105,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)  /
 
     std::ofstream processed_data{"/tmp/SPY_chart.csv"};
     new_chart.ConvertChartToTableAndWriteToStream(processed_data);
-    ConstructChartGraphAndWriteToFile(new_chart, "/tmp/SPY_chart.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(new_chart, "/tmp/SPY_chart.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/SPY_chart.csv"));
 }
@@ -2277,7 +2312,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)  // NOLINT
                   });
     // std::cout << "chart at after loading initial data: \n\n" << chart << "\n\n";
 
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/candlestick7.svg", {}, "no", PF_Chart::X_AxisFormat::e_show_time);
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", {}, "no", PF_Chart::X_AxisFormat::e_show_time);
 
     // std::cout << chart << '\n';
     //
@@ -2506,11 +2541,11 @@ TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB)  // NOLINT
     EXPECT_EQ(close_range.rescale(-3), Decimal{"125.918"});
 }
 
-class PlotChartsWithMatplotlib : public Test
+class PlotChartsWithChartDirector : public Test
 {
 };
 
-TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)  // NOLINT
+TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick1.svg"))
     {
@@ -2530,6 +2565,8 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)  // NOLINT
     PF_Chart chart("GOOG", 10, 1);
     chart.LoadData(&prices, "%Y-%m-%d", ",");
 
+    std::cout << chart << std::endl;
+
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 9);
 
@@ -2539,12 +2576,46 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X1Chart)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/candlestick1.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg"));
 }
+TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
+{
+    if (fs::exists("/tmp/candlestick1_a.svg"))
+    {
+        fs::remove("/tmp/candlestick1_a.svg");
+    }
+    const std::string data =
+        "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+        "1108 1092 1129 "
+        "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+        "1159 1136 1127";
 
-TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)  // NOLINT
+    std::string test_data =
+        MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
+
+    std::istringstream prices{test_data};
+
+    PF_Chart chart("GOOG", 10, 1);
+    const auto price_data_for_graphic = chart.LoadDataCollectPricesAndSignals(&prices, "%Y-%m-%d", ",");
+
+    std::cout << chart << std::endl;
+
+    EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
+    EXPECT_EQ(chart.size(), 9);
+
+    EXPECT_EQ(chart[5].GetTop(), 1120);
+    EXPECT_EQ(chart[5].GetBottom(), 1110);
+    EXPECT_EQ(chart[7].GetHadReversal(), true);
+
+    //    std::cout << chart << '\n';
+
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg_a", price_data_for_graphic, "no");
+
+    ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg_a"));
+}
+TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick.svg"))
     {
@@ -2573,12 +2644,12 @@ TEST_F(PlotChartsWithMatplotlib, Plot10X2Chart)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/candlestick.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
 
-TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)  // NOLINT
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick2.svg"))
     {
@@ -2599,12 +2670,12 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalData)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/candlestick2.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick2.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
 
-TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR)  // NOLINT
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedATR)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick3.svg"))
     {
@@ -2673,12 +2744,12 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingComputedATR) 
 
     //    std::cout << chart << '\n';
     //
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
 
-TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeticAndPercent)  // NOLINT
+TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithmeticAndPercent)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick3.svg"))
     {
@@ -2726,7 +2797,7 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
 
     //    std::cout << chart << '\n';
 
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
@@ -2745,12 +2816,12 @@ TEST_F(PlotChartsWithMatplotlib, ProcessFileWithFractionalDataUsingBothArithmeti
     //    std::cout << chart_percent << '\n';
     //    std::cout << "# of cols: " << chart_percent.size() << '\n';
 
-    ConstructChartGraphAndWriteToFile(chart_percent, "/tmp/candlestick4.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart_percent, "/tmp/candlestick4.svg", {}, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
 }
 
-TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)  // NOLINT
+TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  // NOLINT
 {
     if (fs::exists("/tmp/linear14.svg"))
     {
@@ -2825,7 +2896,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)  // 
 
     // std::print("Linear chart: {}\n", chart);
 
-    ConstructChartGraphAndWriteToFile(chart, "/tmp/linear14.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/linear14.svg", {}, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/linear14.svg"));
 
@@ -2836,7 +2907,7 @@ TEST_F(PlotChartsWithMatplotlib, LoadDataFromLiveDBUseMinMaxForLinearChart)  // 
         // std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
         chart_percent.AddValue(new_price, std::chrono::clock_cast<std::chrono::utc_clock>(new_date));
     }
-    ConstructChartGraphAndWriteToFile(chart_percent, "/tmp/percent14.svg", {}, "no");
+    ConstructCDChartGraphicAndWriteToFile(chart_percent, "/tmp/percent14.svg", {}, "no");
 
     // std::print("Percent chart: {}\n", chart_percent);
 
@@ -3145,13 +3216,13 @@ int main(int argc, char** argv)
 
     InitLogging();
 
-    py::scoped_interpreter guard{false};  // start the interpreter and keep it alive
-
-    py::print("Hello, World!");  // use the Python API
-
-    py::exec(R"(
-        import PF_DrawChart_prices as PF_DrawChart
-        )");
+    // py::scoped_interpreter guard{false};  // start the interpreter and keep it alive
+    //
+    // py::print("Hello, World!");  // use the Python API
+    //
+    // py::exec(R"(
+    //     import PF_DrawChart_prices as PF_DrawChart
+    //     )");
 
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
