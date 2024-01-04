@@ -104,7 +104,7 @@ def GetArgs():
         type=int,
         action="store",
         dest="number_columns_",
-        default=0,
+        default=150,
         help="Maximun number of columns to show in graph. Default is '0' which means 'all'.",
     )
     parser.add_argument(
@@ -237,7 +237,7 @@ def ProcessChartFile(args):
     print(prices.head())
 
     chart_data = PY_PF_Chart.PY_PF_Chart.MakeChartFromJSONFile(args.input_file_name_)
-    # print(up_columns)
+    # print(chart_data)
 
     # we want to assign different colors to each of the 4 types
     # of column we can have so we will put each into a separate layer
@@ -245,8 +245,6 @@ def ProcessChartFile(args):
     # each data frame needs to have values for all columns
     # initialize everything to zeros and then overlay with values
     # for each column type
-
-    a1 = [0] * (chart_data.GetNumberOfColumns() - 1)
 
     upcol_pd = pd.DataFrame(columns=["bottom", "top"], index=range(chart_data.GetNumberOfColumns() - 1))
     upcol_pd.reset_index(inplace=True, names="col_nbr")
@@ -359,7 +357,7 @@ def ProcessChartFile(args):
 
     # Add a legend box at (50, 30) (top of the chart) with horizontal layout. Use 12pt Times Bold Italic
     # font. Set the background andu border color to Transparent.
-    c.addLegend(50, 30, 0, "Times New Roman Bold Italic", 12).setBackground(Transparent)
+    c.addLegend(50, 90, 0, "Times New Roman Bold Italic", 12).setBackground(Transparent)
 
     # Add a title to the chart using 18pt Times Bold Itatic font.
     c.addTitle(chart_title, "Times New Roman Bold Italic", 18)
@@ -412,6 +410,10 @@ def ProcessChartFile(args):
     yyy = c.xAxis().setLabels(x_axis_labels)
     c.xAxis().setLabelStep(int(chart_data.GetNumberOfColumns() / 40), 0)
     yyy.setFontAngle(45)
+
+    if prices.empty:
+        c.makeChart("PF_chart.svg")
+        sys.exit()
 
     # signal types currently implemented
 
