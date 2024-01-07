@@ -39,9 +39,7 @@ CFG_INC := -I${HOME}/projects/PF_Project/point_figure/src \
 	-I$(GTESTDIR) \
 	-I$(BOOSTDIR) \
 	-I/usr/local/include/ChartDirector \
-	-I$(UTILITYDIR)/include # \
-	# -I/usr/include/python3.11 \
-	# -I/usr/lib/python3.11/site-packages/pybind11/include
+	-I$(UTILITYDIR)/include 
 
 RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib -Wl,-rpath,/usr/local/lib/ChartDirector
 
@@ -90,13 +88,9 @@ CFG_LIB := -L/usr/local/lib \
 		-L/usr/lib \
 		-lmpdec++ \
 		-lmpdec \
-		-lcrypt \
-		-lpthread \
-		-ldl -lutil -lm -lm \
 		-lssl -lcrypto \
 		-ljsoncpp \
-		-L$(GCCDIR)/lib64 \
-		-lpython3.11
+		-L$(GCCDIR)/lib64
 
 
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
