@@ -38,11 +38,10 @@ OUTFILE := EndToEnd_Test
 CFG_INC := -I${HOME}/projects/PF_Project/point_figure/src \
 	-I$(GTESTDIR) \
 	-I$(BOOSTDIR) \
-	-I$(UTILITYDIR)/include \
-	-I/usr/include/python3.11 \
-	-I/usr/lib/python3.11/site-packages/pybind11/include
+	-I/usr/local/include/ChartDirector \
+	-I$(UTILITYDIR)/include 
 
-RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib
+RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib -Wl,-rpath,/usr/local/lib/ChartDirector
 
 SDIR1 := .
 SRCS1 := $(SDIR1)/EndToEnd_Test.cpp
@@ -78,18 +77,16 @@ CFG_LIB := -L../lib_PF_Chart \
 		-lfmt \
 		-lpqxx \
 		-lpq \
+		-L/usr/local/lib/ChartDirector \
+		-lchartdir \
 		-L/usr/lib \
 		-lmpdec++ \
 		-lmpdec \
-		-lcrypt \
-		-lpthread \
 		-lssl -lcrypto \
 		-ljsoncpp \
 		-L$(GCCDIR)/lib64 \
 		-L$(BOOSTDIR)/lib \
-		-lboost_program_options-mt-x64 \
-		-ldl -lutil -lm -lm \
-		-lpython3.11
+		-lboost_program_options-mt-x64 
 
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
 OBJS2=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS2)))))
