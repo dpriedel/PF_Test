@@ -37,13 +37,11 @@
 
 #include <algorithm>
 #include <array>
-#include <charconv>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <functional>
 #include <future>
-#include <initializer_list>
 #include <iterator>
 #include <numeric>
 #include <ranges>
@@ -58,14 +56,11 @@ namespace vws = std::ranges::views;
 
 #include <date/tz.h>
 #include <gtest/gtest.h>
-// #include <pybind11/embed.h>  // everything needed for embedding
 #include <spdlog/spdlog.h>
 
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
 #include <range/v3/range/conversion.hpp>
-// namespace py = pybind11;
-// using namespace py::literals;
 
 #include <decimal.hh>
 
@@ -451,9 +446,15 @@ TEST_F(BoxesBasicFunctionality, Constructors)  // NOLINT
 TEST_F(BoxesBasicFunctionality, GenerateLinearBoxes)  // NOLINT
 {
     Boxes boxes{Decimal{10}};
+
     Boxes::Box box = boxes.FindBox(101);
+
     auto howmany = boxes.GetBoxList().size();
-    EXPECT_EQ(howmany, 1);
+
+    // expect 3 boxes after adding the first as a result
+    // of logic to add and 'extra' box to support the new
+    // drawing logic
+    EXPECT_EQ(howmany, 3);
 
     // default integral, linear rounds down to nearest integer
 
@@ -461,7 +462,7 @@ TEST_F(BoxesBasicFunctionality, GenerateLinearBoxes)  // NOLINT
     box = boxes.FindBox(109);
     EXPECT_EQ(box, 101);
     howmany = boxes.GetBoxList().size();
-    EXPECT_EQ(howmany, 2);
+    EXPECT_EQ(howmany, 3);
 
     box = boxes.FindBox(400);
     EXPECT_EQ(box, 391);
@@ -515,7 +516,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)  // NOLINT
     // I'm not sure how du Plessis is doing his rounding (p. 492) but
     // I'm using round half up to 3 decimals.
 
-    Boxes boxes{0.010, 0, BoxScale::e_Percent};
+    Boxes boxes{500, 0.010, BoxScale::e_Percent};
 
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, Decimal("500.00"));
@@ -540,7 +541,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)  // NOLINT
     std::cout << boxes << std::endl;
     // test going smaller
 
-    Boxes boxes2{0.01, 0.0, BoxScale::e_Percent};
+    Boxes boxes2{500, 0.01, BoxScale::e_Percent};
 
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -551,14 +552,14 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes)  // NOLINT
 
 TEST_F(BoxesBasicFunctionality, PercentBoxesNextandPrev)  // NOLINT
 {
-    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
+    Boxes boxes{500, 0.01, BoxScale::e_Percent};
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, Decimal("500.00"));
 
     box = boxes.FindNextBox(500);
     EXPECT_EQ(box, 505);
 
-    Boxes boxes2{0.01, 0.0, BoxScale::e_Percent};
+    Boxes boxes2{500, 0.01, BoxScale::e_Percent};
     box = boxes2.FindBox(500);
     box = boxes2.FindBox(505);
     EXPECT_EQ(box, 505);
@@ -580,7 +581,7 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson)  // NOLINT
                                    return result;
                                });
 
-    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
+    Boxes boxes{500, 0.01, BoxScale::e_Percent};
 
     rng::for_each(prices, [&boxes](const auto& x) { boxes.FindBox(x); });
 
@@ -1367,7 +1368,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
 
-    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
+    Boxes boxes{10, 0.01, BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1452,6 +1453,8 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
     };
 
+    std::cout << boxes; 
+
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), Decimal("1144.664"));
     EXPECT_EQ(col.GetBottom(), Decimal("1133.331"));
@@ -1478,7 +1481,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData)  // NOLINT
     //    rng::for_each(values, [](const auto& x) { std::cout << x << "  "; });
     //    std::cout << '\n';
 
-    Boxes boxes{0.01, 0.0, BoxScale::e_Percent};
+    Boxes boxes{500, 0.01, BoxScale::e_Percent};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1717,7 +1720,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)  // NO
     EXPECT_EQ(chart[46].GetTop(), 148);
     EXPECT_EQ(chart[46].GetBottom(), 146);
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick12.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick12.svg", {}, "no");
     std::cout << chart << '\n';
 }
 
@@ -2010,7 +2013,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // N
                   });
     //    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    ConstructCDChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick5.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick5.svg", {}, "no");
 
     // save for comparison
 
@@ -2063,7 +2066,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // N
     rng::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
     //    std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
 
-    ConstructCDChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick6.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick6.svg", {}, "no");
 
     EXPECT_NE(new_chart, chart2);
 }
@@ -2105,7 +2108,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)  /
 
     std::ofstream processed_data{"/tmp/SPY_chart.csv"};
     new_chart.ConvertChartToTableAndWriteToStream(processed_data);
-    ConstructCDChartGraphicAndWriteToFile(new_chart, "/tmp/SPY_chart.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/SPY_chart.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/SPY_chart.csv"));
 }
@@ -2312,7 +2315,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)  // NOLINT
                   });
     // std::cout << "chart at after loading initial data: \n\n" << chart << "\n\n";
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", {}, "no", PF_Chart::X_AxisFormat::e_show_time);
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", {}, "no", PF_Chart::X_AxisFormat::e_show_time);
 
     // std::cout << chart << '\n';
     //
@@ -2576,10 +2579,11 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg"));
 }
+
 TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick1_a.svg"))
@@ -2597,8 +2601,8 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
 
     std::istringstream prices{test_data};
 
-    PF_Chart chart("GOOG", 10, 1);
-    const auto price_data_for_graphic = chart.LoadDataCollectPricesAndSignals(&prices, "%Y-%m-%d", ",");
+    PF_Chart chart("GOOG", 10, 1, 0, BoxScale::e_Linear);
+    const auto price_data_for_graphic = chart.LoadData(&prices, "%Y-%m-%d", ",", PF_CollectAndReturnStreamedPrices::e_yes);
 
     std::cout << chart << std::endl;
 
@@ -2611,10 +2615,67 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg_a", price_data_for_graphic, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1_a.svg", price_data_for_graphic.value_or(StreamedPrices{}), "no");
 
-    ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg_a"));
+    ASSERT_TRUE(fs::exists("/tmp/candlestick1_a.svg"));
 }
+
+TEST_F(PlotChartsWithChartDirector, PlotChartWithStreamedPricesAndSignals)  // NOLINT
+{
+    if (fs::exists("/tmp/candlestick1_b.svg"))
+    {
+        fs::remove("/tmp/candlestick1_b.svg");
+    }
+
+    const fs::path csv_file_name{"./test_files/SPY_streaming_1min_2022-10-07.csv"};
+    const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
+
+    const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
+    const auto header_record = symbol_data_records.front();
+
+    auto date_column = FindColumnIndex(header_record, "date", ",");
+    BOOST_ASSERT_MSG(date_column.has_value(),
+                     std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+
+    auto close_column = FindColumnIndex(header_record, "close", ",");
+    BOOST_ASSERT_MSG(close_column.has_value(),
+                     std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+
+    StreamedPrices streamed_prices;
+
+    PF_Chart chart{"SPY", Decimal(".01"), 3, 0, BoxScale::e_Linear, 30};
+    rng::for_each(symbol_data_records | vws::drop(1),
+      [&streamed_prices, &chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+      {
+          const auto fields = split_string<std::string_view>(record, ",");
+            decimal::Decimal new_value{std::string{fields[1]}};
+            auto timept = StringToUTCTimePoint("%F %X%z", fields[0]);
+
+            auto chart_changed = chart.AddValue(new_value, timept);
+            streamed_prices.timestamp_.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(timept.time_since_epoch()).count());
+            streamed_prices.price_.push_back(dec2dbl(new_value));
+            streamed_prices.signal_type_.push_back(
+                chart_changed == PF_Column::Status::e_AcceptedWithSignal
+                    ? std::to_underlying(chart.GetSignals().back().signal_type_)
+                    : 0);
+      });
+
+    // std::cout << chart << std::endl;
+
+    // EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
+    // EXPECT_EQ(chart.size(), 9);
+    //
+    // EXPECT_EQ(chart[5].GetTop(), 1120);
+    // EXPECT_EQ(chart[5].GetBottom(), 1110);
+    // EXPECT_EQ(chart[7].GetHadReversal(), true);
+
+    //    std::cout << chart << '\n';
+
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1_b.svg", streamed_prices, "no");
+
+    ASSERT_TRUE(fs::exists("/tmp/candlestick1_b.svg"));
+}
+
 TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick.svg"))
@@ -2644,7 +2705,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
@@ -2670,7 +2731,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick2.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick2.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
@@ -2744,7 +2805,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
 
     //    std::cout << chart << '\n';
     //
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
@@ -2797,11 +2858,11 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
 
     //    std::cout << chart << '\n';
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 
-    PF_Chart chart_percent("YHOO", box_size, 3, 0, BoxScale::e_Percent);
+    PF_Chart chart_percent("YHOO", 1, 3, box_size, BoxScale::e_Percent);
 
     rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
                   [&chart_percent](const auto& e)
@@ -2816,7 +2877,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     //    std::cout << chart_percent << '\n';
     //    std::cout << "# of cols: " << chart_percent.size() << '\n';
 
-    ConstructCDChartGraphicAndWriteToFile(chart_percent, "/tmp/candlestick4.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart_percent, "/tmp/candlestick4.svg", {}, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
 }
@@ -2896,7 +2957,7 @@ TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  
 
     // std::print("Linear chart: {}\n", chart);
 
-    ConstructCDChartGraphicAndWriteToFile(chart, "/tmp/linear14.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/linear14.svg", {}, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/linear14.svg"));
 
@@ -2907,7 +2968,7 @@ TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  
         // std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
         chart_percent.AddValue(new_price, std::chrono::clock_cast<std::chrono::utc_clock>(new_date));
     }
-    ConstructCDChartGraphicAndWriteToFile(chart_percent, "/tmp/percent14.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart_percent, "/tmp/percent14.svg", {}, "no");
 
     // std::print("Percent chart: {}\n", chart_percent);
 
@@ -3042,7 +3103,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
     // recompute using all the data for rest of test
 
     auto atr = ComputeATR("AAPL", history, history_size);
-    // std::cout << "ATR using 20 days: " << atr << '\n';
+    // std::cout << "296758 ATR using 20 days: " << atr << '\n';
     EXPECT_EQ(atr.rescale(-3), Decimal{"3.211"});
 
     // next, I need to compute my average closing price over the interval
@@ -3215,14 +3276,6 @@ int main(int argc, char** argv)
     decimal::context = decimal::context_template;
 
     InitLogging();
-
-    // py::scoped_interpreter guard{false};  // start the interpreter and keep it alive
-    //
-    // py::print("Hello, World!");  // use the Python API
-    //
-    // py::exec(R"(
-    //     import PF_DrawChart_prices as PF_DrawChart
-    //     )");
 
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

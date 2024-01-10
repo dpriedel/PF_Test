@@ -36,13 +36,10 @@ namespace vws = std::ranges::views;
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <pybind11/embed.h>    // everything needed for embedding
 #include <spdlog/spdlog.h>
 
-#include <pqxx/pqxx>
-#include <pqxx/transaction.hxx>
-namespace py = pybind11;
-using namespace py::literals;
+// #include <pqxx/pqxx>
+// #include <pqxx/transaction.hxx>
 
 using namespace std::literals::chrono_literals;
 using namespace std::string_literals;
@@ -1261,13 +1258,16 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    // NOLINT
     // clang-format off
 	std::vector<std::string> tokens{"the_program",
         "--symbol-list", "AAPL,GOOG,IWM,IWR,spy,qqq,A,rsp",
+        // "--symbol-list", "A",
         // "-s", "ACY",
         "--new-data-source", "database",
         "--mode", "load",
         "--scale", "linear",
         "--price-fld-name", "split_adj_close",
-        "--destination", "database",
+        // "--destination", "database",
+        "--destination", "file",
         "--output-graph-dir", "/tmp/test_charts13",
+        "--output-chart-dir", "/tmp/test_charts13",
         "--graphics-format", "svg",
         // "--boxsize", ".1",
         "--boxsize", ".01",
@@ -1281,6 +1281,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    // NOLINT
         "--begin-date", "2017-01-01",
         "--use-MinMax",
         // "--exchange", "NYSE",
+        // "-l", "debug",
         "--max-graphic-cols", "150"
 	};
     // clang-format on
@@ -1657,13 +1658,6 @@ int main(int argc, char** argv)
 {
     InitLogging();
 
-    py::scoped_interpreter guard{false};    // start the interpreter and keep it alive
-
-    py::print("Hello, World!");    // use the Python API
-
-    py::exec(R"(
-        import PF_DrawChart_prices as PF_DrawChart
-        )");
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
