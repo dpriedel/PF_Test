@@ -1574,7 +1574,7 @@ TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData)  // NOLINT
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 6);
@@ -1598,7 +1598,7 @@ TEST_F(ChartFunctionality10X2, TestChartIteratorWithFirstSetOfTestData)  // NOLI
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), rng::size(chart));
@@ -1632,7 +1632,7 @@ TEST_F(ChartFunctionality10X2, TestChartReverseIteratorWithFirstSetOfTestData)  
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     // EXPECT_EQ(chart.size(), rng::size(rng::subrange(chart.rbegin(), chart.rend())));
@@ -1672,7 +1672,7 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     const std::vector<int32_t> values_ints_1 = {1100, 1105, 1110, 1112, 1118, 1120, 1136, 1121, 1129,
                                                 1120, 1139, 1121, 1129, 1138, 1113, 1139, 1123, 1128,
@@ -1689,13 +1689,13 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
     std::istringstream prices_1{test_data_1};
 
     PF_Chart chart_1("GOOG", 10, 2);
-    chart_1.LoadData(&prices_1, "%Y-%m-%d", ",");
+    chart_1.BuildChartFromCSVStream(&prices_1, "%Y-%m-%d", ",");
 
     const auto chart_1_json = chart_1.ToJSON();
 
     PF_Chart chart_2{chart_1_json};
     std::istringstream prices_2{test_data_2};
-    chart_2.LoadData(&prices_2, "%Y-%m-%d", ",");
+    chart_2.BuildChartFromCSVStream(&prices_2, "%Y-%m-%d", ",");
 
     // std::cout << "\n\n chart:\n" << chart;
     // std::cout << "\n\n chart_1:\n" << chart_1;
@@ -1706,13 +1706,18 @@ TEST_F(ChartFunctionality10X2, ProcessSomeDataThenToJSONThenFromJSONThenMoreData
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)  // NOLINT
 {
+    if (fs::exists("/tmp/candlestick12.svg"))
+    {
+        fs::remove("/tmp/candlestick12.svg");
+    }
+
     const fs::path file_name{"./test_files/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
     //    PF_Chart chart("AAPL", 2, 2, BoxType::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(chart.size(), 47);
@@ -1720,8 +1725,11 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)  // NO
     EXPECT_EQ(chart[46].GetTop(), 148);
     EXPECT_EQ(chart[46].GetBottom(), 146);
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick12.svg", {}, "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick12.svg", no_streamed_data, "no");
     std::cout << chart << '\n';
+    EXPECT_TRUE(fs::exists("/tmp/candlestick12.svg"));
 }
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSON)  // NOLINT
@@ -1732,7 +1740,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSON) 
 
     // PF_Chart chart("AAPL", 2, 2, BoxType::e_fractional);
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     auto json = chart.ToJSON();
 
@@ -1753,7 +1761,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFr
 
     PF_Chart chart("AAPL", 2, 2);
     //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     auto json = chart.ToJSON();
 
@@ -1862,7 +1870,7 @@ TEST_F(MiscChartFunctionality, TestChartIterators)  // NOLINT
     // start with 1 box reversal - lots of short columns
 
     PF_Chart chart1("GOOG", 10, 1);
-    chart1.LoadData(&prices, "%Y-%m-%d", ",");
+    chart1.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart1.size(), 9);
     EXPECT_EQ(rng::distance(chart1), 9);
@@ -1870,7 +1878,7 @@ TEST_F(MiscChartFunctionality, TestChartIterators)  // NOLINT
     prices.clear();
     prices.seekg(0);
     PF_Chart chart5("GOOG", 10, 5);
-    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+    chart5.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart5.size(), 1);
     EXPECT_EQ(rng::distance(chart5), 1);
@@ -1892,7 +1900,7 @@ TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithBoxes)  // NOLINT
     // start with 1 box reversal - lots of short columns
 
     PF_Chart chart1("GOOG", 10, 1);
-    chart1.LoadData(&prices, "%Y-%m-%d", ",");
+    chart1.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart1.size(), 9);
     EXPECT_EQ(chart1.GetBoxesForColumns(PF_ColumnFilter::e_up_column).size(), 9);
@@ -1901,7 +1909,7 @@ TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithBoxes)  // NOLINT
     prices.clear();
     prices.seekg(0);
     PF_Chart chart5("GOOG", 10, 5);
-    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+    chart5.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart5.size(), 1);
     EXPECT_EQ(chart5.GetBoxesForColumns(PF_ColumnFilter::e_up_column).size(), 6);
@@ -1924,7 +1932,7 @@ TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithColumns)  // NOLINT
     // start with 1 box reversal - lots of short columns
 
     PF_Chart chart1("GOOG", 10, 1);
-    chart1.LoadData(&prices, "%Y-%m-%d", ",");
+    chart1.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     std::cout << chart1 << std::endl;
 
@@ -1937,7 +1945,7 @@ TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithColumns)  // NOLINT
     prices.clear();
     prices.seekg(0);
     PF_Chart chart5("GOOG", 10, 5);
-    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+    chart5.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart5.size(), 1);
     EXPECT_EQ(chart5.GetTopBottomForColumns(PF_ColumnFilter::e_up_column).size(), 1);
@@ -1947,7 +1955,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)  // 
 {
     fs::path symbol_file_name{"./test_files/SPY_1.json"};
 
-    PF_Chart new_chart = PF_Chart::MakeChartFromJSONFile(symbol_file_name);
+    PF_Chart new_chart = PF_Chart::LoadChartFromJSONChartFile(symbol_file_name);
 
     //    std::cout << new_chart << '\n';
 
@@ -2013,7 +2021,9 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // N
                   });
     //    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
-    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick5.svg", {}, "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick5.svg", no_streamed_data, "no");
 
     // save for comparison
 
@@ -2066,7 +2076,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // N
     rng::for_each(db_data, [&new_chart](const auto& row) { new_chart.AddValue(row.price, row.tp); });
     //    std::cout << "new chart at AFTER loading new data: \n\n" << new_chart << "\n\n";
 
-    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick6.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick6.svg", no_streamed_data, "no");
 
     EXPECT_NE(new_chart, chart2);
 }
@@ -2108,7 +2118,10 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)  /
 
     std::ofstream processed_data{"/tmp/SPY_chart.csv"};
     new_chart.ConvertChartToTableAndWriteToStream(processed_data);
-    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/SPY_chart.svg", {}, "no");
+
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/SPY_chart.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/SPY_chart.csv"));
 }
@@ -2127,7 +2140,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)  // NOLINT
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 6);
@@ -2137,7 +2150,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldData)  // NOLINT
     EXPECT_EQ(chart[5].GetHadReversal(), false);
 
     PF_Chart saved_chart = chart;
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     ASSERT_EQ(chart, saved_chart);
 }
@@ -2153,7 +2166,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)  // NOLINT
     std::istringstream prices_1{test_data_1};
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices_1, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices_1, "%Y-%m-%d", ",");
 
     // EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_down);
     // EXPECT_EQ(chart.size(), 6);
@@ -2173,7 +2186,7 @@ TEST_F(MiscChartFunctionality, DontReloadOldDataButCanAddNewData)  // NOLINT
 
     std::istringstream prices_2{test_data_2};
 
-    chart.LoadData(&prices_2, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices_2, "%Y-%m-%d", ",");
 
     ASSERT_NE(chart, saved_chart);
 }
@@ -2194,7 +2207,7 @@ TEST_F(MiscChartFunctionality, CheckColumnBoxCounts)  // NOLINT
     // start with 1 box reversal - lots of short columns
 
     PF_Chart chart1("GOOG", 10, 1);
-    chart1.LoadData(&prices, "%Y-%m-%d", ",");
+    chart1.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     const std::vector<size_t> col_lens1 = {4, 2, 2, 3, 3, 2, 2, 4, 2};
 
@@ -2207,7 +2220,7 @@ TEST_F(MiscChartFunctionality, CheckColumnBoxCounts)  // NOLINT
     prices.clear();
     prices.seekg(0);
     PF_Chart chart5("GOOG", 10, 5);
-    chart5.LoadData(&prices, "%Y-%m-%d", ",");
+    chart5.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     const std::vector<size_t> col_lens5 = {6};
 
@@ -2254,7 +2267,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", atr, 2, Decimal(".01"), BoxScale::e_Percent);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     // std::print("Chart: {}\n", chart);
 
@@ -2281,7 +2294,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuy)  // NOLINT
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 3);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     //    std::cout << chart << '\n';
 
@@ -2291,6 +2304,11 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuy)  // NOLINT
 
 TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)  // NOLINT
 {
+    if (fs::exists("/tmp/candlestick7.svg"))
+    {
+        fs::remove("/tmp/candlestick7.svg");
+    }
+
     const fs::path csv_file_name{"./test_files/SPY_streaming_1min_2022-10-07.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
@@ -2315,11 +2333,15 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)  // NOLINT
                   });
     // std::cout << "chart at after loading initial data: \n\n" << chart << "\n\n";
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", {}, "no", PF_Chart::X_AxisFormat::e_show_time);
+    EXPECT_TRUE(!chart.GetSignals().empty());
 
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", no_streamed_data, "no", PF_Chart::X_AxisFormat::e_show_time);
+
+    EXPECT_TRUE(fs::exists("/tmp/candlestick7.svg"));
     // std::cout << chart << '\n';
     //
-    EXPECT_TRUE(chart.GetSignals().size() > 0);
     // ASSERT_EQ(chart.GetSignals()[0].box_, 1140);
 }
 
@@ -2383,7 +2405,7 @@ TEST_F(TestDBFunctions, TestCountSymbolsOnNYSEExchange)  // NOLINT
 
     const auto min_close_start_date_ =
         floor<std::chrono::days>(std::chrono::system_clock::now()) - std::chrono::days{183};
-    auto symbols = pf_db.ListSymbolsOnExchange("NYSE", "5.00"s, 100'000);
+    auto symbols = pf_db.ListSymbolsOnExchange("NYSE", "100000");
 
     ASSERT_LT(symbols.size(), CountNYSESymbols());
 }
@@ -2423,7 +2445,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
 
     PF_Chart chart("AAPL", 2, 2);
     //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     PF_DB::DB_Params db_params{.user_name_ = "data_updater_pg", .db_name_ = "finance", .PF_db_mode_ = "test"};
     PF_DB pf_db{db_params};
@@ -2444,7 +2466,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
 
     PF_Chart chart("AAPL", 2, 2);
     //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     PF_DB::DB_Params db_params{.user_name_ = "data_updater_pg", .db_name_ = "finance", .PF_db_mode_ = "test"};
     PF_DB pf_db{db_params};
@@ -2454,7 +2476,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
     // now, let's retrieve the stored data, construct a chart and
     // see if it's the same as the one we built directly fromt the data.
 
-    PF_Chart chart2 = PF_Chart::MakeChartFromDB(pf_db, chart.GetChartParams(), "eod");
+    PF_Chart chart2 = PF_Chart::LoadChartFromChartsDB(pf_db, chart.GetChartParams(), "eod");
 
     //    std::cout << chart << '\n';
     EXPECT_EQ(chart, chart2);
@@ -2468,7 +2490,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
 
     PF_Chart chart("AAPL", 2, 2);
     //    PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     PF_DB::DB_Params db_params{.user_name_ = "data_updater_pg", .db_name_ = "finance", .PF_db_mode_ = "test"};
     PF_DB pf_db{db_params};
@@ -2478,7 +2500,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveI
     // now, let's retrieve the stored data, construct a chart and
     // see if it's the same as the one we built directly fromt the data.
 
-    PF_Chart chart2 = PF_Chart::MakeChartFromDB(pf_db, chart.GetChartParams(), "eod");
+    PF_Chart chart2 = PF_Chart::LoadChartFromChartsDB(pf_db, chart.GetChartParams(), "eod");
     ASSERT_EQ(chart, chart2);
 
     //    std::cout << chart << '\n';
@@ -2497,7 +2519,7 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDataFromDB)  // NOLINT
 
     try
     {
-        auto price_data = the_db.RetrieveMostRecentStockDataRecordsFromDB("AAPL", StringToDateYMD("%F", "2021-10-07"),
+        auto price_data = the_db.RetrieveMostRecentStockDataRecordsFromDB("AAPL", "2021-10-07",
                                                                           history_size + 1);
         atr = ComputeATR("AAPL", price_data, history_size);
     }
@@ -2566,7 +2588,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)  // NOLINT
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 1);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     std::cout << chart << std::endl;
 
@@ -2579,7 +2601,9 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg", {}, "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg"));
 }
@@ -2602,7 +2626,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 1, 0, BoxScale::e_Linear);
-    const auto price_data_for_graphic = chart.LoadData(&prices, "%Y-%m-%d", ",", PF_CollectAndReturnStreamedPrices::e_yes);
+    const auto price_data_for_graphic = chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",", PF_CollectAndReturnStreamedPrices::e_yes);
 
     std::cout << chart << std::endl;
 
@@ -2615,7 +2639,9 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1_a.svg", price_data_for_graphic.value_or(StreamedPrices{}), "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1_a.svg", price_data_for_graphic.value_or(no_streamed_data), "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1_a.svg"));
 }
@@ -2694,7 +2720,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)  // NOLINT
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 6);
@@ -2705,7 +2731,9 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick.svg", {}, "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
 }
@@ -2721,7 +2749,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)  // NOLINT
     std::ifstream prices{file_name};
 
     PF_Chart chart("AAPL", 2, 2);
-    chart.LoadData(&prices, "%Y-%m-%d", ",");
+    chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(chart.size(), 47);
@@ -2731,7 +2759,9 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)  // NOLINT
 
     //    std::cout << chart << '\n';
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick2.svg", {}, "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick2.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
 }
@@ -2749,7 +2779,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":\s*([0-9]*\.[0-9]*))***"};
     const std::string dest{R"***("$1":"$2")***"};
-    auto result1 = std::regex_replace(hist, source, dest);
+    const std::string result1 = std::regex_replace(hist, source, dest);
     //    std::cout << "result length: " << result1.size() << '\n';
     // std::cout.write(result1.data(), 900);
     //    std::cout << " <== data\n";
@@ -2805,20 +2835,23 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
 
     //    std::cout << chart << '\n';
     //
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
+
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
 }
 
 TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithmeticAndPercent)  // NOLINT
 {
-    if (fs::exists("/tmp/candlestick3.svg"))
+    if (fs::exists("/tmp/candlestick8.svg"))
     {
-        fs::remove("/tmp/candlestick3.svg");
+        fs::remove("/tmp/candlestick8.svg");
     }
-    if (fs::exists("/tmp/candlestick4.svg"))
+    if (fs::exists("/tmp/candlestick9.svg"))
     {
-        fs::remove("/tmp/candlestick4.svg");
+        fs::remove("/tmp/candlestick9.svg");
     }
 
     const std::string hist = LoadDataFileForUse("./test_files/YAHOO.json");
@@ -2826,7 +2859,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"};
     const std::string dest{R"***("$1":"$2")***"};
-    auto result1 = std::regex_replace(hist, source, dest);
+    const std::string result1 = std::regex_replace(hist, source, dest);
 
     JSONCPP_STRING err;
     Json::Value history;
@@ -2844,7 +2877,8 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     // PF_Chart chart("YHOO", box_size, 3, BoxType::e_fractional);
     PF_Chart chart("YHOO", 1, 3, box_size, BoxScale::e_Linear, 150);
 
-    rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
+    // rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
+    rng::for_each(history | vws::reverse | vws::take(history.size() - 1),
                   [&chart](const auto& e)
                   {
                       Decimal val{e["adjClose"].asString()};
@@ -2858,13 +2892,16 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
 
     //    std::cout << chart << '\n';
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", {}, "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick8.svg", no_streamed_data, "no");
 
-    EXPECT_TRUE(fs::exists("/tmp/candlestick3.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/candlestick8.svg"));
 
     PF_Chart chart_percent("YHOO", 1, 3, box_size, BoxScale::e_Percent);
 
-    rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
+    // rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
+    rng::for_each(history | vws::reverse | vws::take(history.size() - 1),
                   [&chart_percent](const auto& e)
                   {
                       Decimal val{e["adjClose"].asString()};
@@ -2877,9 +2914,9 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     //    std::cout << chart_percent << '\n';
     //    std::cout << "# of cols: " << chart_percent.size() << '\n';
 
-    ConstructCDPFChartGraphicAndWriteToFile(chart_percent, "/tmp/candlestick4.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart_percent, "/tmp/candlestick9.svg", no_streamed_data, "no");
 
-    EXPECT_TRUE(fs::exists("/tmp/candlestick4.svg"));
+    EXPECT_TRUE(fs::exists("/tmp/candlestick9.svg"));
 }
 
 TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  // NOLINT
@@ -2899,76 +2936,25 @@ TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  
                                .stock_db_data_source_ = "new_stock_data.current_data"};
     PF_DB the_db{db_params};
 
-    Decimal close_range;
+    Decimal close_range = the_db.ComputePriceRangeForSymbolFromDB("AAPL", "2017-01-01", "2023-04-01");
 
-    std::string query =
-        "select (max(split_adj_close) - min(split_adj_close)) as range from new_stock_data.current_data where date "
-        "BETWEEN '2017-01-01' and '2023-04-01' "
-        "and symbol = 'AAPL' ; ";
-    auto Row2Range = [](const auto& r) { return Decimal{r[0].template as<const char*>()}; };
-    try
-    {
-        close_range = the_db.RunSQLQueryUsingRows<Decimal>(query, Row2Range)[0];
-        // atr = ComputeATR("AAPL", price_data, history_size);
-    }
-    catch (const std::exception& e)
-    {
-        std::cout << "Unable to comput close range from DB for 'AAPL' because: " << e.what() << std::endl;
-    }
-    //    std::cout << "history length: " << history.size() << '\n';
 
-    std::string get_symbol_prices_cmd = std::format(
-        "SELECT date, {} FROM new_stock_data.current_data WHERE date BETWEEN '2017-01-01' and '2023-04-01' AND symbol "
-        "= 'AAPL' ORDER BY "
-        "date ASC",
-        "split_adj_close");
-
-    const auto* dt_format = "%F";
-
-    std::istringstream time_stream;
-    date::utc_time<std::chrono::utc_clock::duration> tp;
-
-    // we know our database contains 'date's, but we need timepoints.
-    // we'll handle that in the conversion routine below.
-
-    auto Row2Closing = [dt_format, &time_stream, &tp](const auto& r)
-    {
-        time_stream.clear();
-        time_stream.str(std::string{std::get<0>(r)});
-        date::from_stream(time_stream, dt_format, tp);
-        std::chrono::utc_time<std::chrono::utc_clock::duration> tp1{tp.time_since_epoch()};
-        DateCloseRecord new_data{.date_ = tp1, .close_ = Decimal{std::get<1>(r)}};
-        return new_data;
-    };
-    const auto closing_prices = the_db.RunSQLQueryUsingStream<DateCloseRecord, std::string_view, const char*>(
-        get_symbol_prices_cmd, Row2Closing);
-
-    Decimal box_size{".01"};
+    Decimal box_size_modifier{".01"};
 
     // PF_Chart chart("YHOO", box_size, 3, BoxType::e_fractional);
-    PF_Chart chart("AAPL", close_range, 2, box_size, BoxScale::e_Linear, 150);
-    // std::print("Linar chart before data: {}\n", chart);
+    PF_Chart chart("AAPL", close_range, 2, box_size_modifier, BoxScale::e_Linear, 150);
+    const auto streamed_prices = chart.BuildChartFromPricesDB(db_params, "AAPL", "2017-01-01", "2023-04-01", "split_adj_close");
 
-    for (const auto& [new_date, new_price] : closing_prices)
-    {
-        // std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
-        chart.AddValue(new_price, std::chrono::clock_cast<std::chrono::utc_clock>(new_date));
-    }
-
-    // std::print("Linear chart: {}\n", chart);
-
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/linear14.svg", {}, "no");
+    const StreamedPrices no_streamed_data;
+    
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/linear14.svg", no_streamed_data, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/linear14.svg"));
 
-    PF_Chart chart_percent("AAPL", close_range, 2, box_size, BoxScale::e_Percent, 150);
+    PF_Chart chart_percent("AAPL", close_range, 2, box_size_modifier, BoxScale::e_Percent, 150);
+    const auto streamed_prices2 = chart_percent.BuildChartFromPricesDB(db_params, "AAPL", "2017-01-01", "2023-04-01", "split_adj_close");
 
-    for (const auto& [new_date, new_price] : closing_prices)
-    {
-        // std::cout << "new value: " << new_price << "\t" << new_date << std::endl;
-        chart_percent.AddValue(new_price, std::chrono::clock_cast<std::chrono::utc_clock>(new_date));
-    }
-    ConstructCDPFChartGraphicAndWriteToFile(chart_percent, "/tmp/percent14.svg", {}, "no");
+    ConstructCDPFChartGraphicAndWriteToFile(chart_percent, "/tmp/percent14.svg", no_streamed_data, "no");
 
     // std::print("Percent chart: {}\n", chart_percent);
 
