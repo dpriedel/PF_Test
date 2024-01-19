@@ -149,8 +149,11 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    // NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
 }
 
-TEST_F(ProgramOptions, TestProblemOptions)    // NOLINT
+TEST_F(ProgramOptions, DISABLED_TestProblemOptions)    // NOLINT
 {
+    //	NOTE: disabled because now I am capturing error internally which would 
+    //	have generated the exception this is testing for.
+    //
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
 
@@ -1402,7 +1405,7 @@ TEST_F(Database, DailyScan)    // NOLINT
 
     // let's see what is in the DB
 
-    auto updated_chart = PF_Chart::MakeChartFromDB(pf_db, saved_chart.GetChartParams(), "eod");
+    auto updated_chart = PF_Chart::LoadChartFromChartsDB(pf_db, saved_chart.GetChartParams(), "eod");
     std::cout << "updated chart at after after running daily scan: \n\n" << updated_chart << "\n\n";
 
     ASSERT_NE(saved_chart, updated_chart);
@@ -1577,6 +1580,7 @@ TEST_F(StreamData, TryLogarithmicCharts)    // NOLINT
         "--price-fld-name", "close",
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts_log",
+        "--use-ATR",
         "--boxsize", "0.01",
         "--reversal", "1"
 	};
