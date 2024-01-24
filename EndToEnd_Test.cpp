@@ -1411,11 +1411,102 @@ TEST_F(Database, DailyScan)    // NOLINT
     ASSERT_NE(saved_chart, updated_chart);
 }
 
-class StreamData : public Test
+class StreamEodhdData : public Test
 {
 };
 
-TEST_F(StreamData, VerifyConnectAndDisconnect)    // NOLINT
+TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)    // NOLINT
+{
+    if (fs::exists("/tmp/test_charts_Eodhd"))
+    {
+        fs::remove_all("/tmp/test_charts_Eodhd");
+    }
+
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
+
+    // clang-format off
+	std::vector<std::string> tokens{"the_program",
+        "--symbol", "SPY",
+        "--symbol", "AAPL",
+        "--new-data-source", "streaming",
+        "--streaming-data-source", "Eodhd",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_charts_Eodhd",
+        "--boxsize", "0.1",
+        "--boxsize", "0.05",
+        "--reversal", "1"
+	};
+    // clang-format on
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens);
+
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then =
+            std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+
+        int counter = 0;
+        auto timer = [&counter](const auto& stop_at)
+        {
+            while (true)
+            {
+                std::cout << "ding...\n";
+                ++counter;
+                auto now =
+                    std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                if (now.get_sys_time() >= stop_at.get_sys_time())
+                {
+                    PF_CollectDataApp::SetSignal();
+                    break;
+                }
+                std::this_thread::sleep_for(1s);
+            }
+        };
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            // add an external timer here.
+            auto timer_task = std::async(std::launch::async, timer, then);
+
+            myApp.Run();
+            myApp.Shutdown();
+
+            timer_task.get();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+    }
+
+    // catch any problems trying to setup application
+
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {    // handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+    }
+    ASSERT_TRUE(fs::exists("/tmp/test_charts_Eodhd/SPY_0.05X1_linear.json"));
+}
+
+class StreamTiingoData : public Test
+{
+};
+
+TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
@@ -1501,7 +1592,7 @@ TEST_F(StreamData, VerifyConnectAndDisconnect)    // NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.json"));
 }
 
-TEST_F(StreamData, DISABLED_VerifySignalHandling)    // NOLINT
+TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
@@ -1560,7 +1651,7 @@ TEST_F(StreamData, DISABLED_VerifySignalHandling)    // NOLINT
     EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.05X1_linear.svg"));
 }
 
-TEST_F(StreamData, TryLogarithmicCharts)    // NOLINT
+TEST_F(StreamTiingoData, TryLogarithmicCharts)    // NOLINT
 {
     if (fs::exists("/tmp/test_charts_log"))
     {

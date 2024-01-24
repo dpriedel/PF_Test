@@ -53,7 +53,9 @@ SRCS2 := $(SDIR2)/Boxes.cpp \
 		$(SDIR2)/ConstructChartGraphic.cpp  \
 		$(SDIR2)/PF_Signals.cpp  \
 		$(SDIR2)/PointAndFigureDB.cpp \
-		$(SDIR2)/Tiingo.cpp 
+		$(SDIR2)/Tiingo.cpp \
+		$(SDIR2)/Eodhd.cpp
+
 
 SDIR4 := $(UTILITYDIR)/src
 SRCS4 := $(SDIR4)/utilities.cpp \

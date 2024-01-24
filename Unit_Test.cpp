@@ -83,6 +83,8 @@ using namespace testing;
 #include "Tiingo.h"
 #include "utilities.h"
 
+#include "Eodhd.h"
+
 // NOLINTBEGIN(*-magic-numbers)
 //
 
@@ -3185,7 +3187,7 @@ TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)  // 
     //                e["date"].asString(), e["close"].asString(), e["split_adj_close"].asString(), 0); });
 }
 
-class WebSocketSynchronous : public Test
+class WebSocketSynchronousTiingo : public Test
 {
     std::string LoadApiKey(std::string file_name)
     {
@@ -3203,7 +3205,7 @@ class WebSocketSynchronous : public Test
     const std::string api_key = LoadApiKey("./tiingo_key.dat");
 };
 
-TEST_F(WebSocketSynchronous, ConnectAndDisconnect)  // NOLINT
+TEST_F(WebSocketSynchronousTiingo, ConnectAndDisconnect)  // NOLINT
 {
     auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                          floor<std::chrono::seconds>(std::chrono::system_clock::now()));
@@ -3212,7 +3214,7 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)  // NOLINT
 
     if (!can_we_stream)
     {
-        //        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
         return;
     }
 
@@ -3237,6 +3239,64 @@ TEST_F(WebSocketSynchronous, ConnectAndDisconnect)  // NOLINT
     //        std::cout << value << '\n';
     //    }
     ASSERT_TRUE(!streamed_data.empty());  // we need an actual test here
+}
+
+class WebSocketSynchronousEodhd : public Test
+{
+    std::string LoadApiKey(std::string file_name)
+    {
+        if (!fs::exists(file_name))
+        {
+            throw std::runtime_error("Can't find key file.");
+        }
+        std::ifstream key_file(file_name);
+        std::string result;
+        key_file >> result;
+        return result;
+    }
+
+   public:
+    const std::string api_key = LoadApiKey("./Eodhd_key.dat");
+};
+
+TEST_F(WebSocketSynchronousEodhd, ConnectAndDisconnect)  // NOLINT
+{
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                         floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
+                                            current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    if (!can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        // return;
+    }
+
+    Eodhd quotes{"ws.eodhistoricaldata.com", "443", "/ws/us?api_token="s + api_key, std::vector<std::string>{"aapl", "msft", "tsla"}};
+    quotes.Connect();
+    
+    bool time_to_stop = false;
+
+    std::mutex data_mutex;
+    std::queue<std::string> streamed_data;
+
+    auto streaming_task =
+        std::async(std::launch::async, &Eodhd::StreamData, &quotes, &time_to_stop, &data_mutex, &streamed_data);
+
+    std::this_thread::sleep_for(5s);
+    time_to_stop = true;
+    streaming_task.get();
+    //    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
+    quotes.Disconnect();
+
+    ASSERT_TRUE(!streamed_data.empty());  // we need an actual test here
+
+    while (! streamed_data.empty())
+    {
+        std::string new_data = streamed_data.front();
+        streamed_data.pop();
+        std::cout << quotes.ExtractData(new_data) << '\n';
+    }
 }
 
 // NOLINTEND(*-magic-numbers)
