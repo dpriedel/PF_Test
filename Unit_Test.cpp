@@ -58,6 +58,9 @@ namespace vws = std::ranges::views;
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
 #include <range/v3/range/conversion.hpp>
@@ -1354,8 +1357,8 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     };
 
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
-    EXPECT_EQ(col.GetTop(), Decimal("1151.672"));
-    EXPECT_EQ(col.GetBottom(), Decimal("1125.836"));
+    EXPECT_EQ(col.GetTop(), Decimal("1151.67348"));
+    EXPECT_EQ(col.GetBottom(), Decimal("1125.83674"));
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 5);
 }
@@ -1847,8 +1850,8 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(chart.size(), 5);
-    EXPECT_EQ(chart[4].GetTop(), Decimal("1151.672"));
-    EXPECT_EQ(chart[4].GetBottom(), Decimal("1125.836"));
+    EXPECT_EQ(chart[4].GetTop(), Decimal("1151.67348"));
+    EXPECT_EQ(chart[4].GetBottom(), Decimal("1125.83674"));
     EXPECT_EQ(chart[4].GetHadReversal(), false);
 }
 
@@ -3239,6 +3242,44 @@ TEST_F(WebSocketSynchronousTiingo, ConnectAndDisconnect)  // NOLINT
     //        std::cout << value << '\n';
     //    }
     ASSERT_TRUE(!streamed_data.empty());  // we need an actual test here
+}
+
+class EodhdATR : public Test
+{
+    std::string LoadApiKey(std::string file_name) const
+    {
+        if (!fs::exists(file_name))
+        {
+            throw std::runtime_error("Can't find key file.");
+        }
+        std::ifstream key_file(file_name);
+        std::string result;
+        key_file >> result;
+        return result;
+    }
+
+   public:
+    const std::string api_key_ = LoadApiKey("./Eodhd_key.dat");
+};
+
+TEST_F(EodhdATR, RetrievePreviousData)  // NOLINT
+{
+    std::chrono::year which_year = 2021y;
+    auto holidays = MakeHolidayList(which_year);
+
+    Eodhd history_getter{"eodhd.com", "443", api_key_};
+
+    const auto history = history_getter.GetMostRecentTickerData(
+        "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 14, UseAdjusted::e_No, &holidays);
+
+    for (const auto&h : history) 
+    { std::cout << std::format("{}\n", h); };
+
+    EXPECT_EQ(history.size(), 14);
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_),
+              std::chrono::year_month_day{2021y / std::chrono::October / 7});
+    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13].date_),
+              std::chrono::year_month_day{2021y / std::chrono::September / 20});
 }
 
 class WebSocketSynchronousEodhd : public Test
