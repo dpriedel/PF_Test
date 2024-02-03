@@ -1458,7 +1458,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
     };
 
-    std::cout << boxes; 
+    std::cout << boxes;
 
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), Decimal("1144.664"));
@@ -1731,7 +1731,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts)  // NO
     EXPECT_EQ(chart[46].GetBottom(), 146);
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick12.svg", no_streamed_data, "no");
     std::cout << chart << '\n';
     EXPECT_TRUE(fs::exists("/tmp/candlestick12.svg"));
@@ -1862,10 +1862,10 @@ class MiscChartFunctionality : public Test
 TEST_F(MiscChartFunctionality, TestChartIterators)  // NOLINT
 {
     const std::string data =
-            "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
-            "1108 1092 1129 "
-            "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
-            "1159 1136 1127";
+        "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+        "1108 1092 1129 "
+        "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+        "1159 1136 1127";
 
     std::string test_data =
         MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
@@ -1892,10 +1892,10 @@ TEST_F(MiscChartFunctionality, TestChartIterators)  // NOLINT
 TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithBoxes)  // NOLINT
 {
     const std::string data =
-            "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
-            "1108 1092 1129 "
-            "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
-            "1159 1136 1127";
+        "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+        "1108 1092 1129 "
+        "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+        "1159 1136 1127";
 
     std::string test_data =
         MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
@@ -1924,10 +1924,10 @@ TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithBoxes)  // NOLINT
 TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithColumns)  // NOLINT
 {
     const std::string data =
-            "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
-            "1108 1092 1129 "
-            "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
-            "1159 1136 1127";
+        "1100 1105 1110 1112 1118 1120 1136 1121 1129 1120 1139 1121 1129 1138 1113 1139 1123 1128 1136 1111 1095 1102 "
+        "1108 1092 1129 "
+        "1122 1133 1125 1139 1105 1132 1122 1131 1127 1138 1111 1122 1111 1128 1115 1117 1120 1119 1132 1133 1147 1131 "
+        "1159 1136 1127";
 
     std::string test_data =
         MakeSimpleTestData(data, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]}, " ");
@@ -2027,7 +2027,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // N
     //    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/candlestick5.svg", no_streamed_data, "no");
 
     // save for comparison
@@ -2125,7 +2125,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV)  /
     new_chart.ConvertChartToTableAndWriteToStream(processed_data);
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(new_chart, "/tmp/SPY_chart.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/SPY_chart.csv"));
@@ -2217,7 +2217,7 @@ TEST_F(MiscChartFunctionality, CheckColumnBoxCounts)  // NOLINT
     const std::vector<size_t> col_lens1 = {4, 2, 2, 3, 3, 2, 2, 4, 2};
 
     std::vector<size_t> found_lens1;
-    rng::for_each(chart1, [&found_lens1] (const auto& col) { found_lens1.push_back(col.GetColumnBoxes().size()); });
+    rng::for_each(chart1, [&found_lens1](const auto& col) { found_lens1.push_back(col.GetColumnBoxes().size()); });
     EXPECT_EQ(col_lens1, found_lens1);
 
     // next 5 box reversal - 1 long column
@@ -2230,7 +2230,7 @@ TEST_F(MiscChartFunctionality, CheckColumnBoxCounts)  // NOLINT
     const std::vector<size_t> col_lens5 = {6};
 
     std::vector<size_t> found_lens5;
-    rng::for_each(chart5, [&found_lens5] (const auto& col) { found_lens5.push_back(col.GetColumnBoxes().size()); });
+    rng::for_each(chart5, [&found_lens5](const auto& col) { found_lens5.push_back(col.GetColumnBoxes().size()); });
     EXPECT_EQ(col_lens5, found_lens5);
 }
 // use ATR computed box size instead of predefined box size with logarithmic charts
@@ -2341,8 +2341,9 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)  // NOLINT
     EXPECT_TRUE(!chart.GetSignals().empty());
 
     const StreamedPrices no_streamed_data;
-    
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", no_streamed_data, "no", PF_Chart::X_AxisFormat::e_show_time);
+
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", no_streamed_data, "no",
+                                            PF_Chart::X_AxisFormat::e_show_time);
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick7.svg"));
     // std::cout << chart << '\n';
@@ -2524,8 +2525,7 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDataFromDB)  // NOLINT
 
     try
     {
-        auto price_data = the_db.RetrieveMostRecentStockDataRecordsFromDB("AAPL", "2021-10-07",
-                                                                          history_size + 1);
+        auto price_data = the_db.RetrieveMostRecentStockDataRecordsFromDB("AAPL", "2021-10-07", history_size + 1);
         atr = ComputeATR("AAPL", price_data, history_size);
     }
     catch (const std::exception& e)
@@ -2607,7 +2607,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1Chart)  // NOLINT
     //    std::cout << chart << '\n';
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1.svg"));
@@ -2631,7 +2631,8 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
     std::istringstream prices{test_data};
 
     PF_Chart chart("GOOG", 10, 1, 0, BoxScale::e_Linear);
-    const auto price_data_for_graphic = chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",", PF_CollectAndReturnStreamedPrices::e_yes);
+    const auto price_data_for_graphic =
+        chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",", PF_CollectAndReturnStreamedPrices::e_yes);
 
     std::cout << chart << std::endl;
 
@@ -2645,8 +2646,9 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices)  // NOLINT
     //    std::cout << chart << '\n';
 
     const StreamedPrices no_streamed_data;
-    
-    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1_a.svg", price_data_for_graphic.value_or(no_streamed_data), "no");
+
+    ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick1_a.svg",
+                                            price_data_for_graphic.value_or(no_streamed_data), "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick1_a.svg"));
 }
@@ -2675,21 +2677,22 @@ TEST_F(PlotChartsWithChartDirector, PlotChartWithStreamedPricesAndSignals)  // N
     StreamedPrices streamed_prices;
 
     PF_Chart chart{"SPY", Decimal(".01"), 3, 0, BoxScale::e_Linear, 30};
-    rng::for_each(symbol_data_records | vws::drop(1),
-      [&streamed_prices, &chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
-      {
-          const auto fields = split_string<std::string_view>(record, ",");
+    rng::for_each(
+        symbol_data_records | vws::drop(1),
+        [&streamed_prices, &chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
+        {
+            const auto fields = split_string<std::string_view>(record, ",");
             decimal::Decimal new_value{std::string{fields[1]}};
             auto timept = StringToUTCTimePoint("%F %X%z", fields[0]);
 
             auto chart_changed = chart.AddValue(new_value, timept);
-            streamed_prices.timestamp_.push_back(std::chrono::duration_cast<std::chrono::nanoseconds>(timept.time_since_epoch()).count());
+            streamed_prices.timestamp_.push_back(
+                std::chrono::duration_cast<std::chrono::nanoseconds>(timept.time_since_epoch()).count());
             streamed_prices.price_.push_back(dec2dbl(new_value));
-            streamed_prices.signal_type_.push_back(
-                chart_changed == PF_Column::Status::e_AcceptedWithSignal
-                    ? std::to_underlying(chart.GetSignals().back().signal_type_)
-                    : 0);
-      });
+            streamed_prices.signal_type_.push_back(chart_changed == PF_Column::Status::e_AcceptedWithSignal
+                                                       ? std::to_underlying(chart.GetSignals().back().signal_type_)
+                                                       : 0);
+        });
 
     // std::cout << chart << std::endl;
 
@@ -2737,7 +2740,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X2Chart)  // NOLINT
     //    std::cout << chart << '\n';
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick.svg"));
@@ -2765,7 +2768,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData)  // NOLINT
     //    std::cout << chart << '\n';
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick2.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick2.svg"));
@@ -2842,7 +2845,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     //
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick3.svg", no_streamed_data, "no");
 
     ASSERT_TRUE(fs::exists("/tmp/candlestick3.svg"));
@@ -2898,7 +2901,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     //    std::cout << chart << '\n';
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick8.svg", no_streamed_data, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick8.svg"));
@@ -2943,21 +2946,22 @@ TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  
 
     Decimal close_range = the_db.ComputePriceRangeForSymbolFromDB("AAPL", "2017-01-01", "2023-04-01");
 
-
     Decimal box_size_modifier{".01"};
 
     // PF_Chart chart("YHOO", box_size, 3, BoxType::e_fractional);
     PF_Chart chart("AAPL", close_range, 2, box_size_modifier, BoxScale::e_Linear, 150);
-    const auto streamed_prices = chart.BuildChartFromPricesDB(db_params, "AAPL", "2017-01-01", "2023-04-01", "split_adj_close");
+    const auto streamed_prices =
+        chart.BuildChartFromPricesDB(db_params, "AAPL", "2017-01-01", "2023-04-01", "split_adj_close");
 
     const StreamedPrices no_streamed_data;
-    
+
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/linear14.svg", no_streamed_data, "no");
 
     EXPECT_TRUE(fs::exists("/tmp/linear14.svg"));
 
     PF_Chart chart_percent("AAPL", close_range, 2, box_size_modifier, BoxScale::e_Percent, 150);
-    const auto streamed_prices2 = chart_percent.BuildChartFromPricesDB(db_params, "AAPL", "2017-01-01", "2023-04-01", "split_adj_close");
+    const auto streamed_prices2 =
+        chart_percent.BuildChartFromPricesDB(db_params, "AAPL", "2017-01-01", "2023-04-01", "split_adj_close");
 
     ConstructCDPFChartGraphicAndWriteToFile(chart_percent, "/tmp/percent14.svg", no_streamed_data, "no");
 
@@ -3267,13 +3271,15 @@ TEST_F(EodhdATR, RetrievePreviousData)  // NOLINT
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
-    Eodhd history_getter{"eodhd.com", "443", api_key_};
+    Eodhd history_getter(Eodhd::Host{"eodhd.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{api_key_});
 
     const auto history = history_getter.GetMostRecentTickerData(
         "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 14, UseAdjusted::e_No, &holidays);
 
-    for (const auto&h : history) 
-    { std::cout << std::format("{}\n", h); };
+    for (const auto& h : history)
+    {
+        std::cout << std::format("{}\n", h);
+    };
 
     EXPECT_EQ(history.size(), 14);
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_),
@@ -3313,9 +3319,9 @@ TEST_F(WebSocketSynchronousEodhd, ConnectAndDisconnect)  // NOLINT
         // return;
     }
 
-    Eodhd quotes{"ws.eodhistoricaldata.com", "443", "/ws/us?api_token="s + api_key, std::vector<std::string>{"aapl", "msft", "tsla"}};
-    quotes.Connect();
-    
+    Eodhd quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"},
+                 Eodhd::Prefix{"/ws/us?api_token="s + api_key}, std::vector<std::string>{"aapl", "msft", "tsla"}};
+
     bool time_to_stop = false;
 
     std::mutex data_mutex;
@@ -3328,11 +3334,10 @@ TEST_F(WebSocketSynchronousEodhd, ConnectAndDisconnect)  // NOLINT
     time_to_stop = true;
     streaming_task.get();
     //    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
-    quotes.Disconnect();
 
     ASSERT_TRUE(!streamed_data.empty());  // we need an actual test here
 
-    while (! streamed_data.empty())
+    while (!streamed_data.empty())
     {
         std::string new_data = streamed_data.front();
         streamed_data.pop();
