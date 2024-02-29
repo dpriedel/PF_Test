@@ -1366,7 +1366,7 @@ TEST_F(Database, DailyScan)    // NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
-        "--begin-date", "2021-11-24",
+        "--begin-date", "2024-02-24",
         "-l", "debug"
 	};
     // clang-format on
