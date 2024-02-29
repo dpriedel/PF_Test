@@ -2686,7 +2686,7 @@ TEST_F(PlotChartsWithChartDirector, PlotChartWithStreamedPricesAndSignals)  // N
             auto timept = StringToUTCTimePoint("%F %X%z", fields[0]);
 
             auto chart_changed = chart.AddValue(new_value, timept);
-            streamed_prices.timestamp_.push_back(
+            streamed_prices.timestamp_seconds_.push_back(
                 std::chrono::duration_cast<std::chrono::nanoseconds>(timept.time_since_epoch()).count());
             streamed_prices.price_.push_back(dec2dbl(new_value));
             streamed_prices.signal_type_.push_back(chart_changed == PF_Column::Status::e_AcceptedWithSignal
@@ -3316,7 +3316,7 @@ TEST_F(WebSocketSynchronousEodhd, ConnectAndDisconnect)  // NOLINT
     if (!can_we_stream)
     {
         std::cout << "Market not open for trading now so we can't stream quotes.\n";
-        // return;
+        return;
     }
 
     Eodhd quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"},
