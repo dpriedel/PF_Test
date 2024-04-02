@@ -83,10 +83,10 @@ using namespace testing;
 #include "PF_Column.h"
 #include "PF_Signals.h"
 #include "PointAndFigureDB.h"
-#include "Tiingo.h"
 #include "utilities.h"
 
 #include "Eodhd.h"
+#include "Tiingo.h"
 
 // NOLINTBEGIN(*-magic-numbers)
 //
@@ -2970,231 +2970,6 @@ TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  
     EXPECT_TRUE(fs::exists("/tmp/percent14.svg"));
 }
 
-class TiingoATR : public Test
-{
-    std::string LoadApiKey(std::string file_name) const
-    {
-        if (!fs::exists(file_name))
-        {
-            throw std::runtime_error("Can't find key file.");
-        }
-        std::ifstream key_file(file_name);
-        std::string result;
-        key_file >> result;
-        return result;
-    }
-
-   public:
-    const std::string api_key_ = LoadApiKey("./tiingo_key.dat");
-};
-
-TEST_F(TiingoATR, RetrievePreviousData)  // NOLINT
-{
-    // std::chrono::year which_year = 2021y;
-    // auto holidays = MakeHolidayList(which_year);
-    //
-    // Tiingo history_getter{"api.tiingo.com", "443", api_key_};
-    //
-    // auto history = history_getter.GetMostRecentTickerData(
-    //     "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 14, UseAdjusted::e_No, &holidays);
-    //
-    // EXPECT_EQ(history.size(), 14);
-    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_),
-    //           std::chrono::year_month_day{2021y / std::chrono::October / 7});
-    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13].date_),
-    //           std::chrono::year_month_day{2021y / std::chrono::September / 20});
-}
-
-TEST_F(TiingoATR, RetrievePreviousCloseAndCurrentOpen)  // NOLINT
-{
-    // // for streaming, we want to retrieve the previous day's close and, if the markets
-    // // are already open, the day's open.  We do this to capture 'gaps' and to set
-    // // the direction at little sooner.
-    //
-    // auto today = std::chrono::year_month_day{floor<std::chrono::days>(std::chrono::system_clock::now())};
-    // std::chrono::year which_year = today.year();
-    // auto holidays = MakeHolidayList(which_year);
-    // rng::copy(MakeHolidayList(--which_year), std::back_inserter(holidays));
-    //
-    // auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
-    //                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-    // auto market_status =
-    //     GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
-    //     current_local_time.get_local_time());
-    //
-    // if (market_status != US_MarketStatus::e_NotOpenYet && market_status != US_MarketStatus::e_OpenForTrading)
-    // {
-    //     //        std::cout << "Market not open for trading now so we can't stream tiingod_quotes.\n";
-    //     return;
-    // }
-    //
-    // Tiingo history_getter{"api.tiingo.com", "443", "/iex", api_key_, std::vector<std::string>{"spy", "uso", "rsp"}};
-    //
-    // if (market_status == US_MarketStatus::e_NotOpenYet)
-    // {
-    //     auto history = history_getter.GetMostRecentTickerData("AAPL", today, 2, UseAdjusted::e_No, &holidays);
-    //
-    //     EXPECT_EQ(history.size(), 1);
-    //     auto business_days = ConstructeBusinessDayRange(today, 2, UpOrDown::e_Down, &holidays);
-    //     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_), business_days.second);
-    // }
-    // if (market_status == US_MarketStatus::e_OpenForTrading)
-    // {
-    //     auto history = history_getter.GetTopOfBookAndLastClose();
-    //     for (const auto& e : history)
-    //     {
-    //         const std::string ticker = e["ticker"].asString();
-    //         const std::string tstmp = e["timestamp"].asString();
-    //         const auto time_stamp = StringToUTCTimePoint("%FT%T%z", tstmp);
-    //
-    //         //            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " <<
-    //         //            std::format("{}", time_stamp) <<
-    //         //            '\n';
-    //     }
-    //     //        std::cout << history << '\n';
-    //     EXPECT_EQ(history.size(), 3);
-    // }
-}
-
-TEST_F(TiingoATR, RetrievePreviousDataThenComputeAverageTrueRange)  // NOLINT
-{
-    // std::chrono::year which_year = 2021y;
-    // auto holidays = MakeHolidayList(which_year);
-    //
-    // Tiingo history_getter{"api.tiingo.com", "443", api_key_};
-    //
-    // auto history = history_getter.GetMostRecentTickerData(
-    //     "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 15, UseAdjusted::e_No, &holidays);
-    // //    // rng::for_each(history, [](const auto& e){ std::print("{}\n", e); });
-    //
-    // EXPECT_EQ(history.size(), 15);
-    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_),
-    //           std::chrono::year_month_day{2021y / std::chrono::October / 7});
-    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[4].date_),
-    //           std::chrono::year_month_day{2021y / std::chrono::October / 1});
-    //
-    // // auto atr = ComputeATRUsingJSON("AAPL", history, 4);
-    // auto atr = ComputeATR("AAPL", history, 4);
-    // // std::print("ATR: {}\n", atr);
-    // ASSERT_TRUE(atr == Decimal{"3.369"});
-}
-
-TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
-{
-    // std::chrono::year which_year = 2021y;
-    // auto holidays = MakeHolidayList(which_year);
-    //
-    // Tiingo history_getter{"api.tiingo.com", "443", api_key_};
-    //
-    // constexpr int history_size = 20;
-    // const auto history =
-    //     history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7},
-    //                                            history_size + 1, UseAdjusted::e_No, &holidays);
-    // // rng::for_each(history, [](const auto& h) { std::cout << std::format("{}\n", h); });
-    //
-    // //     auto atr = ComputeATRUsingJSON("AAPL", history, 4);
-    // // //    std::cout << "ATR: " << atr << '\n';
-    // //     EXPECT_TRUE(atr == Decimal{"3.36875"});
-    //
-    // // recompute using all the data for rest of test
-    //
-    // auto atr = ComputeATR("AAPL", history, history_size);
-    // // std::cout << "296758 ATR using 20 days: " << atr << '\n';
-    // EXPECT_EQ(atr.rescale(-3), Decimal{"3.211"});
-    //
-    // // next, I need to compute my average closing price over the interval
-    // // but excluding the 'extra' value included for computing the ATR
-    //
-    // auto bkwd_data = history | vws::reverse | vws::take(history_size) |
-    //                  vws::transform([](const StockDataRecord& e) { /* std::cout << std::format("{}\n", e); */
-    //                                                                return e.close_;
-    //                  });
-    // Decimal sum = std::accumulate(bkwd_data.begin(), bkwd_data.end(), Decimal{0}, std::plus<>());
-    // // std::cout << "sum: " << sum << '\n';
-    // Decimal box_size = atr / (sum / history_size);
-    //
-    // std::cout << "atr: " << atr << '\n';
-    // box_size = box_size.rescale(-5);
-    // std::cout << "rescaled box size: " << box_size << '\n';
-    //
-    // PF_Chart chart("AAPL", atr, 2, box_size, BoxScale::e_Linear);
-    //
-    // // ticker data retrieved above is in descending order by date, so let's read it backwards
-    // // but, there are no reverse iterator provided so let's see if ranges will come to the rescue
-    //
-    // //    auto backwards = history | vws::reverse;
-    //
-    // rng::for_each(history | vws::reverse | vws::take(history_size),
-    //               [&chart](const auto& e)
-    //               {
-    //                   // std::string_view date{e.date_.data(), e.date_.data() + e.date_.find('T')};
-    //                   auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
-    //                   chart.AddValue(e.close_, the_date);
-    //               });
-    //
-    // //   std::cout << chart << '\n';
-}
-
-TEST_F(TiingoATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)  // NOLINT
-{
-    // std::chrono::year which_year = 2021y;
-    // auto holidays = MakeHolidayList(which_year);
-    //
-    // Tiingo history_getter{"api.tiingo.com", "443", api_key_};
-    //
-    // constexpr int history_size = 20;
-    // const auto history =
-    //     history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7},
-    //                                            history_size + 1, UseAdjusted::e_No, &holidays);
-    // //    // rng::for_each(history, [](const auto& e) { std::print("{}\n", e); });
-    //
-    // auto atr = ComputeATR("AAPL", history, 4);
-    // //    std::cout << "ATR: " << atr << '\n';
-    // EXPECT_EQ(atr, Decimal{"3.369"});
-    //
-    // // recompute using all the data for rest of test
-    //
-    // atr = ComputeATR("AAPL", history, history_size);
-    //
-    // // next, I need to compute my average closing price over the interval
-    // // but excluding the 'extra' value included for computing the ATR
-    //
-    // // Decimal sum = rng::accumulate(history | vws::reverse | vws::take(history_size),
-    // //         Decimal{}, std::plus<>(),
-    // //         [](const StockDataRecord& e) { return e.close_; });
-    // //
-    // // Decimal box_size = atr / (sum / history_size);
-    //
-    // //    std::cout << "box size: " << box_size << '\n';
-    // // box_size.Rescale(-5);
-    // //    std::cout << "rescaled box size: " << box_size << '\n';
-    //
-    // PF_Chart chart("AAPL", atr, 2, Decimal(".01"), BoxScale::e_Percent);
-    //
-    // // ticker data retrieved above is in descending order by date, so let's read it backwards
-    // // but, there are no reverse iterator provided so let's see if ranges will come to the rescue
-    //
-    // //    auto backwards = history | vws::reverse;
-    //
-    // rng::for_each(history | vws::reverse | vws::take(history_size),
-    //               [&chart](const auto& e)
-    //               {
-    //                   auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
-    //                   auto status = chart.AddValue(e.close_, the_date);
-    //                   //            std::print("value: {} status: {}\n", e.close_, status);
-    //               });
-    //
-    // std::cout << std::format("AAPL chart: {}\n", chart);
-    //
-    // // TODO(dpriedel): I've lost the plot on this test and don't remember what else I
-    // // wanted to do. So, I'll leave this output so I'll be reminded when I run these tests.
-    //
-    // //    rng::for_each(history | vws::reverse , [](const auto& e) { std::cout << std::format("date: {} close: {}
-    // //    adjusted close: {} delta:
-    // //    {} \n",
-    // //                e["date"].asString(), e["close"].asString(), e["split_adj_close"].asString(), 0); });
-}
-
 class WebSocketSynchronousTiingo : public Test
 {
     std::string LoadApiKey(std::string file_name)
@@ -3211,43 +2986,6 @@ class WebSocketSynchronousTiingo : public Test
 
    public:
 };
-
-TEST_F(WebSocketSynchronousTiingo, ConnectAndDisconnect)  // NOLINT
-{
-    // auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
-    //                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-    // auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
-    //                                         current_local_time.get_local_time()) ==
-    //                                         US_MarketStatus::e_OpenForTrading;
-    //
-    // if (!can_we_stream)
-    // {
-    //     std::cout << "Market not open for trading now so we can't stream quotes.\n";
-    //     return;
-    // }
-    //
-    // Tiingo quotes{"api.tiingo.com", "443", "/iex", api_key, std::vector<std::string>{"spy", "uso", "rsp"}};
-    // quotes.Connect();
-    // bool time_to_stop = false;
-    //
-    // std::mutex data_mutex;
-    // std::queue<std::string> streamed_data;
-    //
-    // auto eod_streaming_task =
-    //     std::async(std::launch::async, &Tiingo::StreamData, &quotes, &time_to_stop, &data_mutex, &streamed_data);
-    //
-    // std::this_thread::sleep_for(10s);
-    // time_to_stop = true;
-    // streaming_task.get();
-    // //    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
-    // quotes.Disconnect();
-    //
-    // //    for (const auto & value: streamed_data)
-    // //    {
-    // //        std::cout << value << '\n';
-    // //    }
-    // ASSERT_TRUE(!streamed_data.empty());  // we need an actual test here
-}
 
 class StreamerATR : public Test
 {
@@ -3340,13 +3078,7 @@ TEST_F(StreamerATR, RetrievePreviousCloseAndCurrentOpen)  // NOLINT
         auto eod_history = eod_history_getter.GetTopOfBookAndLastClose();
         for (const auto& e : eod_history)
         {
-            const std::string ticker = e["ticker"].asString();
-            const std::string tstmp = e["timestamp"].asString();
-            const auto time_stamp = StringToUTCTimePoint("%FT%T%z", tstmp);
-
-            //            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " <<
-            //            std::format("{}", time_stamp) <<
-            //            '\n';
+            std::cout << std::format("{}, {}, {}, {}\n", e.symbol_, e.time_stamp_nsecs_, e.open_, e.last_);
         }
         //        std::cout << eod_history << '\n';
         EXPECT_EQ(eod_history.size(), 3);
@@ -3373,13 +3105,7 @@ TEST_F(StreamerATR, RetrievePreviousCloseAndCurrentOpen)  // NOLINT
         auto tiingo_history = tiingo_history_getter.GetTopOfBookAndLastClose();
         for (const auto& e : tiingo_history)
         {
-            const std::string ticker = e["ticker"].asString();
-            const std::string tstmp = e["timestamp"].asString();
-            const auto time_stamp = StringToUTCTimePoint("%FT%T%z", tstmp);
-
-            //            std::cout << "ticker: " << ticker << " tstmp: " << tstmp << " time stamp: " <<
-            //            std::format("{}", time_stamp) <<
-            //            '\n';
+            std::cout << std::format("{}, {}, {}, {}\n", e.symbol_, e.time_stamp_nsecs_, e.open_, e.last_);
         }
         //        std::cout << tiingo_history << '\n';
         EXPECT_EQ(tiingo_history.size(), 3);
@@ -3430,10 +3156,7 @@ TEST_F(StreamerATR, RetrievePreviousDataThenComputeAverageTrueRange)  // NOLINT
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[4].date_),
               std::chrono::year_month_day{2021y / std::chrono::October / 1});
 
-    // auto atr = ComputeATRUsingJSON("AAPL", eod_history, 4);
     auto tiingo_atr = ComputeATR("AAPL", tiingo_history, 4);
-    std::cout << std::format("tiingo_atr: {}\n", tiingo_atr);
-    rng::for_each(tiingo_history | vws::take(4), [](const auto& hist) { std::cout << std::format("{}\n", hist); });
 
     ASSERT_EQ(tiingo_atr, Decimal{"3.369"});
 }
@@ -3467,9 +3190,11 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
     // std::cout << "sum: " << sum << '\n';
     Decimal eod_box_size = eod_atr / (eod_sum / eod_history_size);
 
-    std::cout << "atr: " << eod_atr << '\n';
+    std::cout << "eod atr: " << eod_atr << '\n';
     eod_box_size = eod_box_size.rescale(-5);
     std::cout << "rescaled eod box size: " << eod_box_size << '\n';
+
+    std::cout << "Tried Eod. Trying Tiingo...\n";
 
     const auto tiingo_key = LoadApiKey("./tiingo_key.dat");
 
@@ -3496,9 +3221,12 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
     // std::cout << "sum: " << sum << '\n';
     Decimal tiingo_box_size = tiingo_atr / (tiingo_sum / tiingo_history_size);
 
-    std::cout << "atr: " << tiingo_atr << '\n';
+    std::cout << "tiingo atr: " << tiingo_atr << '\n';
     tiingo_box_size = tiingo_box_size.rescale(-5);
-    std::cout << "rescaled eod box size: " << tiingo_box_size << '\n';
+    std::cout << "rescaled tiingo box size: " << tiingo_box_size << '\n';
+
+    EXPECT_EQ(eod_atr, tiingo_atr);
+    EXPECT_EQ(eod_box_size, tiingo_box_size);
 
     // PF_Chart chart("AAPL", atr, 2, box_size, BoxScale::e_Linear);
     //
@@ -3518,9 +3246,9 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
     //   std::cout << chart << '\n';
 }
 
-TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)  // NOLINT
+TEST_F(StreamerATR, DISABLED_ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)  // NOLINT
 {
-    // quotes std::chrono::year which_year = 2021y;
+    // std::chrono::year which_year = 2021y;
     // auto holidays = MakeHolidayList(which_year);
     //
     // const auto eod_key = LoadApiKey("./Eodhd_key.dat");
@@ -3579,103 +3307,6 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues)  /
     // //    {} \n",
     // //                e["date"].asString(), e["close"].asString(), e["split_adj_close"].asString(), 0); });
 }
-// class EodhdATR : public Test
-// {
-//     std::string LoadApiKey(std::string file_name) const
-//     {
-//         if (!fs::exists(file_name))
-//         {
-//             throw std::runtime_error("Can't find key file.");
-//         }
-//         std::ifstream key_file(file_name);
-//         std::string result;
-//         key_file >> result;
-//         return result;
-//     }
-//
-//    public:
-//     const std::string api_key_ = LoadApiKey("./Eodhd_key.dat");
-// };
-//
-// TEST_F(EodhdATR, RetrievePreviousData)  // NOLINT
-// {
-//     std::chrono::year which_year = 2021y;
-//     auto holidays = MakeHolidayList(which_year);
-//
-//     Eodhd history_getter(Eodhd::Host{"eodhd.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{api_key_});
-//
-//     const auto history = history_getter.GetMostRecentTickerData(
-//         "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 14, UseAdjusted::e_No, &holidays);
-//
-//     for (const auto& h : history)
-//     {
-//         std::cout << std::format("{}\n", h);
-//     };
-//
-//     EXPECT_EQ(history.size(), 14);
-//     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[0].date_),
-//               std::chrono::year_month_day{2021y / std::chrono::October / 7});
-//     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", history[13].date_),
-//               std::chrono::year_month_day{2021y / std::chrono::September / 20});
-// }
-//
-// class WebSocketSynchronousEodhd : public Test
-// {
-//     std::string LoadApiKey(std::string file_name)
-//     {
-//         if (!fs::exists(file_name))
-//         {
-//             throw std::runtime_error("Can't find key file.");
-//         }
-//         std::ifstream key_file(file_name);
-//         std::string result;
-//         key_file >> result;
-//         return result;
-//     }
-//
-//    public:
-//     const std::string api_key = LoadApiKey("./Eodhd_key.dat");
-// };
-//
-// TEST_F(WebSocketSynchronousEodhd, ConnectAndDisconnect)  // NOLINT
-// {
-//     auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
-//                                                          floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-//     auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
-//                                             current_local_time.get_local_time()) ==
-//                                             US_MarketStatus::e_OpenForTrading;
-//
-//     if (!can_we_stream)
-//     {
-//         std::cout << "Market not open for trading now so we can't stream quotes.\n";
-//         return;
-//     }
-//
-//     Eodhd quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"},
-//                  Eodhd::Prefix{"/ws/us?api_token="s + api_key}, std::vector<std::string>{"aapl", "msft", "tsla"}};
-//
-//     bool time_to_stop = false;
-//
-//     std::mutex data_mutex;
-//     std::queue<std::string> streamed_data;
-//
-//     auto streaming_task =
-//         std::async(std::launch::async, &Eodhd::StreamData, &quotes, &time_to_stop, &data_mutex, &streamed_data);
-//
-//     std::this_thread::sleep_for(5s);
-//     time_to_stop = true;
-//     streaming_task.get();
-//     //    ASSERT_EXIT((the_task.get()),::testing::KilledBySignal(SIGINT),".*");
-//
-//     ASSERT_TRUE(!streamed_data.empty());  // we need an actual test here
-//
-//     while (!streamed_data.empty())
-//     {
-//         std::string new_data = streamed_data.front();
-//         streamed_data.pop();
-//         std::cout << quotes.ExtractData(new_data) << '\n';
-//     }
-// }
 
 class StreamerWebSocket : public Test
 {
