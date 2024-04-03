@@ -3421,10 +3421,10 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData)  // NOLINT
         std::string new_data = streamed_data.front();
         // std::cout << std::format("data: {}\n", new_data);
         streamed_data.pop();
-        auto extracted = tiingo_quotes.ExtractData(new_data);
+        auto extracted = tiingo_quotes.ExtractStreamedData(new_data);
         if (!extracted.ticker_.empty())
         {
-            std::cout << std::format("{}\n", extracted);
+            std::cout << extracted << '\n';
         }
     }
 }
