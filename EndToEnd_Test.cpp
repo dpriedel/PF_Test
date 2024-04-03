@@ -67,7 +67,8 @@ std::optional<int> FindColumnIndex(std::string_view header, std::string_view col
             {
                 return false;
             }
-            return rng::equal(column_name, field_name, [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
+            return rng::equal(column_name, field_name,
+                              [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
         });
 
     if (auto found_it = rng::find_if(fields, do_compare); found_it != rng::end(fields))
@@ -76,13 +77,13 @@ std::optional<int> FindColumnIndex(std::string_view header, std::string_view col
     }
     return {};
 
-}    // -----  end of method PF_CollectDataApp::FindColumnIndex  -----
+}  // -----  end of method PF_CollectDataApp::FindColumnIndex  -----
 
 class ProgramOptions : public Test
 {
 };
 
-TEST_F(ProgramOptions, TestMixAndMatchOptions)    // NOLINT
+TEST_F(ProgramOptions, TestMixAndMatchOptions)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
@@ -142,16 +143,16 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
 }
 
-TEST_F(ProgramOptions, DISABLED_TestProblemOptions)    // NOLINT
+TEST_F(ProgramOptions, DISABLED_TestProblemOptions)  // NOLINT
 {
-    //	NOTE: disabled because now I am capturing error internally which would 
+    //	NOTE: disabled because now I am capturing error internally which would
     //	have generated the exception this is testing for.
     //
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
@@ -206,12 +207,12 @@ TEST_F(ProgramOptions, DISABLED_TestProblemOptions)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 }
 
-TEST_F(ProgramOptions, TestMinMaxOptions)    // NOLINT
+TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
 {
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
@@ -258,7 +259,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -303,7 +304,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -350,7 +351,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -396,12 +397,12 @@ TEST_F(ProgramOptions, TestMinMaxOptions)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 }
 
-TEST_F(ProgramOptions, TestExchangesList)    // NOLINT
+TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
 {
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
@@ -448,7 +449,7 @@ TEST_F(ProgramOptions, TestExchangesList)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -495,7 +496,7 @@ TEST_F(ProgramOptions, TestExchangesList)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 }
@@ -504,7 +505,7 @@ class SingleFileEndToEnd : public Test
 {
 };
 
-TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    // NOLINT
+TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
@@ -556,13 +557,13 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
 }
 
-TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    // NOLINT
+TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
@@ -623,7 +624,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
@@ -677,7 +678,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"));
@@ -732,7 +733,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -749,7 +750,7 @@ class LoadAndUpdate : public Test
 {
 };
 
-TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    // NOLINT
+TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts_updates"))
     {
@@ -803,7 +804,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -838,7 +839,7 @@ class Database : public Test
     }
 };
 
-TEST_F(Database, LoadDataFromDB)    // NOLINT
+TEST_F(Database, LoadDataFromDB)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
@@ -898,14 +899,14 @@ TEST_F(Database, LoadDataFromDB)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_1X3_linear_eod.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.1X1_linear_eod.json"));
 }
 
-TEST_F(Database, DISABLED_BulkLoadDataFromDB)    // NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDB)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
@@ -967,14 +968,14 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
-TEST_F(Database, UpdateUsingDataFromDB)    // NOLINT
+TEST_F(Database, UpdateUsingDataFromDB)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts2"))
     {
@@ -991,10 +992,12 @@ TEST_F(Database, UpdateUsingDataFromDB)    // NOLINT
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ",");
-    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(),
+                     std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
 
     auto close_column = FindColumnIndex(header_record, "Close", ",");
-    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(),
+                     std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -1008,7 +1011,8 @@ TEST_F(Database, UpdateUsingDataFromDB)    // NOLINT
 
     fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.MakeChartFileName("eod", "json"));
     std::ofstream new_file{chart_file_path, std::ios::out | std::ios::binary};
-    BOOST_ASSERT_MSG(new_file.is_open(), std::format("Unable to open file: {} to write updated data.", chart_file_path).c_str());
+    BOOST_ASSERT_MSG(new_file.is_open(),
+                     std::format("Unable to open file: {} to write updated data.", chart_file_path).c_str());
     new_chart.ConvertChartToJsonAndWriteToStream(new_file);
     new_file.close();
 
@@ -1067,7 +1071,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -1077,7 +1081,7 @@ TEST_F(Database, UpdateUsingDataFromDB)    // NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
-TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    // NOLINT
+TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts9"))
     {
@@ -1091,10 +1095,12 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    // NOLINT
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ",");
-    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(),
+                     std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
 
     auto close_column = FindColumnIndex(header_record, "Close", ",");
-    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(),
+                     std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -1169,7 +1175,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -1179,7 +1185,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)    // NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
-TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    // NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
@@ -1241,14 +1247,14 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
-TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    // NOLINT
+TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts13"))
     {
@@ -1315,13 +1321,13 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     ASSERT_TRUE(fs::exists("/tmp/test_charts13/SPY_0.01X1_linear_eod.svg"));
 }
 
-TEST_F(Database, DailyScan)    // NOLINT
+TEST_F(Database, DailyScan)  // NOLINT
 {
     // construct a chart using some test data and save it.
     fs::path csv_file_name{SPY_EOD_CSV};
@@ -1331,10 +1337,12 @@ TEST_F(Database, DailyScan)    // NOLINT
     const auto header_record = symbol_data_records.front();
 
     auto date_column = FindColumnIndex(header_record, "date", ",");
-    BOOST_ASSERT_MSG(date_column.has_value(), std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(date_column.has_value(),
+                     std::format("Can't find 'date' field in header record: {}.", header_record).c_str());
 
     auto close_column = FindColumnIndex(header_record, "Close", ",");
-    BOOST_ASSERT_MSG(close_column.has_value(), std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
+    BOOST_ASSERT_MSG(close_column.has_value(),
+                     std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
     PF_Chart new_chart{"SPY", 10, 1};
 
@@ -1397,7 +1405,7 @@ TEST_F(Database, DailyScan)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -1415,7 +1423,7 @@ class StreamEodhdData : public Test
 {
 };
 
-TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)    // NOLINT
+TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts_Eodhd"))
     {
@@ -1430,6 +1438,8 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)    // NOLINT
         "--symbol", "SPY",
         "--symbol", "AAPL",
         "--new-data-source", "streaming",
+        "--quote-host", "eodhd.com",
+        "--streaming-host", "ws.eodhistoricaldata.com",
         "--streaming-data-source", "Eodhd",
         "--mode", "load",
         "--interval", "live",
@@ -1450,9 +1460,10 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)    // NOLINT
         const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
-        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then =
-            std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
         auto timer = [&counter](const auto& stop_at)
@@ -1461,8 +1472,8 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)    // NOLINT
             {
                 std::cout << "ding...\n";
                 ++counter;
-                auto now =
-                    std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
                     PF_CollectDataApp::SetSignal();
@@ -1496,7 +1507,7 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     ASSERT_TRUE(fs::exists("/tmp/test_charts_Eodhd/SPY_0.05X1_linear.json"));
@@ -1506,11 +1517,11 @@ class StreamTiingoData : public Test
 {
 };
 
-TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)    // NOLINT
+TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)  // NOLINT
 {
-    if (fs::exists("/tmp/test_charts"))
+    if (fs::exists("/tmp/test_charts_T"))
     {
-        fs::remove_all("/tmp/test_charts");
+        fs::remove_all("/tmp/test_charts_T");
     }
 
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
@@ -1521,12 +1532,15 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)    // NOLINT
         "--symbol", "SPY",
         "--symbol", "AAPL",
         "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
         "--mode", "load",
         "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
         "--destination", "file",
-        "--output-chart-dir", "/tmp/test_charts",
+        "--output-chart-dir", "/tmp/test_charts_T",
         "--boxsize", "0.1",
         "--boxsize", "0.05",
         "--reversal", "1"
@@ -1540,9 +1554,10 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)    // NOLINT
         const auto* test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
-        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then =
-            std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
         auto timer = [&counter](const auto& stop_at)
@@ -1551,8 +1566,8 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)    // NOLINT
             {
                 std::cout << "ding...\n";
                 ++counter;
-                auto now =
-                    std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
                     PF_CollectDataApp::SetSignal();
@@ -1586,13 +1601,13 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
-    ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.json"));
+    ASSERT_TRUE(fs::exists("/tmp/test_charts_T/SPY_0.05X1_linear.json"));
 }
 
-TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)    // NOLINT
+TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
@@ -1642,7 +1657,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.json"));
@@ -1651,7 +1666,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)    // NOLINT
     EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.05X1_linear.svg"));
 }
 
-TEST_F(StreamTiingoData, TryLogarithmicCharts)    // NOLINT
+TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
 {
     if (fs::exists("/tmp/test_charts_log"))
     {
@@ -1665,6 +1680,9 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)    // NOLINT
         "--symbol", "GOOG",
         "--symbol", "AAPL",
         "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
         "--mode", "load",
         "--interval", "live",
         "--scale", "percent",
@@ -1686,9 +1704,10 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)    // NOLINT
 
         bool startup_OK = myApp.Startup();
 
-        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then =
-            std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
         auto timer = [&counter](const auto& stop_at)
@@ -1697,8 +1716,8 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)    // NOLINT
             {
                 std::cout << "ding...\n";
                 ++counter;
-                auto now =
-                    std::chrono::zoned_seconds(std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
                     PF_CollectDataApp::SetSignal();
@@ -1729,7 +1748,7 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)    // NOLINT
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {    // handle exception: unspecified
+    {  // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts_log/GOOG_0.01%X1_percent.json"));
