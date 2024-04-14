@@ -161,7 +161,7 @@ std::optional<int> FindColumnIndex(std::string_view header, std::string_view col
         // return rng::size(rng::subrange(rng::begin(fields), found_it));
     }
     return {};
-
+    // uni
 }  // -----  end of method PF_CollectDataApp::FindColumnIndex  -----
 
 class RangeSplitterBasicFunctionality : public Test
@@ -1960,7 +1960,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)  // 
 {
     fs::path symbol_file_name{"./test_files/SPY_1.json"};
 
-    PF_Chart new_chart = PF_Chart::LoadChartFromJSONChartFile(symbol_file_name);
+    PF_Chart new_chart = PF_Chart::LoadChartFromJSONPF_ChartFile(symbol_file_name);
 
     //    std::cout << new_chart << '\n';
 
@@ -1991,6 +1991,14 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)  // 
     //    std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
 }
 
+TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileWithMissingValues)
+{
+    fs::path symbol_file_name{"./test_files_update_charts/AIA_0.1X1_linear_eod.json"};
+    PF_Chart new_chart;
+    EXPECT_NO_THROW(new_chart = PF_Chart::LoadChartFromJSONPF_ChartFile(symbol_file_name));
+
+    std::cout << new_chart << '\n';
+}
 TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB)  // NOLINT
 {
     if (fs::exists("/tmp/candlestick5.svg"))
