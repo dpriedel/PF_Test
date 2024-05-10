@@ -19,8 +19,8 @@
 #
 MAKE=gmake
 
-BOOSTDIR := /extra/boost/boost-1.84_gcc-13
-GCCDIR := /extra/gcc/gcc-13
+BOOSTDIR := /extra/boost/boost-1.85_gcc-14
+GCCDIR := /extra/gcc/gcc-14
 GTESTDIR := /usr/local/include
 UTILITYDIR := ${HOME}/projects/PF_Project/common_utilities
 CPP := $(GCCDIR)/bin/g++
@@ -88,13 +88,13 @@ CFG_LIB := -L/usr/local/lib \
 		-lpq \
 		-L/usr/local/lib/ChartDirector \
 		-lchartdir \
+		-L$(GCCDIR)/lib64 \
+		-lstdc++ \
 		-L/usr/lib \
 		-lmpdec++ \
 		-lmpdec \
 		-lssl -lcrypto \
-		-ljsoncpp \
-		-L$(GCCDIR)/lib64
-
+		-ljsoncpp 
 
 OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
 OBJS2=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS2)))))
