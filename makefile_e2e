@@ -19,8 +19,8 @@
 #
 MAKE=gmake
 
-BOOSTDIR := /extra/boost/boost-1.84_gcc-13
-GCCDIR := /extra/gcc/gcc-13
+BOOSTDIR := /extra/boost/boost-1.85_gcc-14
+GCCDIR := /extra/gcc/gcc-14
 GTESTDIR := /usr/local/include
 UTILITYDIR := ${HOME}/projects/PF_Project/common_utilities
 CPP := $(GCCDIR)/bin/g++
@@ -81,12 +81,13 @@ CFG_LIB := -L../lib_PF_Chart \
 		-lpq \
 		-L/usr/local/lib/ChartDirector \
 		-lchartdir \
+		-L$(GCCDIR)/lib64 \
+		-lstdc++ \
 		-L/usr/lib \
 		-lmpdec++ \
 		-lmpdec \
 		-lssl -lcrypto \
 		-ljsoncpp \
-		-L$(GCCDIR)/lib64 \
 		-L$(BOOSTDIR)/lib \
 		-lboost_program_options-mt-x64 
 

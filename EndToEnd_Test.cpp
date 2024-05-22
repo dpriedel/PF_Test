@@ -1329,6 +1329,87 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)  // NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts13/SPY_0.01X1_linear_eod.svg"));
 }
 
+TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLINT
+{
+    if (fs::exists("/tmp/test_charts13a"))
+    {
+        fs::remove_all("/tmp/test_charts13a");
+    }
+
+    //	NOTE: the program name 'the_program' in the command line below is ignored in the
+    //	the test program.
+
+    // clang-format off
+	std::vector<std::string> tokens{"the_program",
+        "--symbol", "CECO",
+        // "--symbol-list", "A",
+        // "-s", "ACY",
+        "--new-data-source", "database",
+        "--chart-data-source", "database",
+        "--mode", "load",
+        "--scale", "linear",
+        "--price-fld-name", "split_adj_close",
+        // "--destination", "database",
+        "--destination", "database",
+        "--output-graph-dir", "/tmp/test_charts13a",
+        "--output-chart-dir", "/tmp/test_charts13a",
+        "--graphics-format", "csv",
+        // "--boxsize", ".1",
+        "--boxsize", ".01",
+        "--boxsize", ".005",
+        "--reversal", "1",
+        "-r", "2",
+        "-r", "3",
+        "--db-mode", "test",
+        "--db-user", "data_updater_pg",
+        "--db-name", "finance",
+        "--stock-db-data-source", "new_stock_data.current_data",
+        "--begin-date", "2017-01-01",
+        "--use-MinMax",
+        // "--exchange", "NYSE",
+        // "-l", "debug",
+        "--max-graphic-cols", "150"
+	};
+    // clang-format on
+
+    PF_Chart updated_chart;
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens);
+
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            updated_chart = myApp.GetCharts()[0].second;
+            myApp.Shutdown();
+        }
+        else
+        {
+            std::cout << "Problems starting program.  No processing done.\n";
+        }
+    }
+
+    // catch any problems trying to setup application
+
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {  // handle exception: unspecified
+        spdlog::error("Something totally unexpected happened.");
+    }
+
+    std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
+
+    ASSERT_TRUE(fs::exists("/tmp/test_charts13a/SPY_0.01X1_linear_eod.svg"));
+}
+
 TEST_F(Database, DailyScan)  // NOLINT
 {
     // construct a chart using some test data and save it.
@@ -1354,7 +1435,7 @@ TEST_F(Database, DailyScan)  // NOLINT
                       const auto fields = split_string<std::string_view>(record, ",");
                       new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
                   });
-    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+    // std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
     PF_DB::DB_Params db_info{.user_name_ = "data_updater_pg", .db_name_ = "finance", .PF_db_mode_ = "test"};
     PF_DB pf_db(db_info);
@@ -1376,7 +1457,7 @@ TEST_F(Database, DailyScan)  // NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
-        "--begin-date", "2024-03-24",
+        "--begin-date", "2024-04-24",
         "-l", "debug"
 	};
     // clang-format on
@@ -1416,7 +1497,7 @@ TEST_F(Database, DailyScan)  // NOLINT
     // let's see what is in the DB
 
     auto updated_chart = PF_Chart::LoadChartFromChartsDB(pf_db, saved_chart.GetChartParams(), "eod");
-    std::cout << "updated chart at after after running daily scan: \n\n" << updated_chart << "\n\n";
+    // std::cout << "updated chart at after after running daily scan: \n\n" << updated_chart << "\n\n";
 
     ASSERT_NE(saved_chart, updated_chart);
 }

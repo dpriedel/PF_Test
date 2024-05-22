@@ -39,11 +39,13 @@
 #include <array>
 #include <chrono>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <functional>
 #include <future>
 #include <iterator>
 #include <numeric>
+#include <print>
 #include <ranges>
 #include <regex>
 #include <sstream>
@@ -58,8 +60,8 @@ namespace vws = std::ranges::views;
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
+// #include <fmt/format.h>
+// #include <fmt/ranges.h>
 
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
@@ -638,9 +640,9 @@ TEST_F(Combinatorial, BasicFunctionlity)  // NOLINT
     std::vector<std::string_view> c = {"def", "hij", "mnop"};
 
     auto abc = vws::cartesian_product(a, b, c);
-    //    rng::for_each(abc, [](const auto& x) {std::print("{}\n", x); });
+    // rng::for_each(abc, [](const auto& x) { std::print("{}\n", x); });
 
-    //    std::print("{}\n", abc);
+    // std::print("{}\n", abc);
 
     ASSERT_EQ(rng::size(abc), 18);
 }
@@ -1960,7 +1962,8 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV)  // 
 {
     fs::path symbol_file_name{"./test_files/SPY_1.json"};
 
-    PF_Chart new_chart = PF_Chart::LoadChartFromJSONPF_ChartFile(symbol_file_name);
+    PF_Chart new_chart;
+    PF_Chart::LoadChartFromJSONPF_ChartFile(new_chart, symbol_file_name);
 
     //    std::cout << new_chart << '\n';
 
@@ -1995,7 +1998,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileWithMissingValues)
 {
     fs::path symbol_file_name{"./test_files_update_charts/AIA_0.1X1_linear_eod.json"};
     PF_Chart new_chart;
-    EXPECT_NO_THROW(new_chart = PF_Chart::LoadChartFromJSONPF_ChartFile(symbol_file_name));
+    EXPECT_NO_THROW(PF_Chart::LoadChartFromJSONPF_ChartFile(new_chart, symbol_file_name));
 
     std::cout << new_chart << '\n';
 }
@@ -2351,7 +2354,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart)  // NOLINT
     const StreamedPrices no_streamed_data;
 
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick7.svg", no_streamed_data, "no",
-                                            PF_Chart::X_AxisFormat::e_show_time);
+                                            X_AxisFormat::e_show_time);
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick7.svg"));
     // std::cout << chart << '\n';
@@ -2469,7 +2472,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
     auto how_many = CountRows();
     ASSERT_EQ(how_many, 1);
 
-    //    std::cout << chart << '\n';
+    std::cout << chart << '\n';
 }
 
 TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBThenRetrieveIntoJson)  // NOLINT
