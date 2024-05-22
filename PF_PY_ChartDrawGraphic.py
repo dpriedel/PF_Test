@@ -9,8 +9,6 @@ an SVG image of that chart in the specified output directory.
 """
 
 import argparse
-import datetime
-import itertools
 import logging
 import os
 import sys
@@ -78,7 +76,7 @@ def GetArgs():
     parser.add_argument(
         "--format",
         action="store",
-        dest="y_axis_format_",
+        dest="x_axis_format_",
         required=True,
         help="Use 'time' or 'date' for y-axis labels.",
     )
@@ -172,7 +170,7 @@ def makes_sense_to_run(args):
         )
         return False
 
-    if args.y_axis_format_ != "date" and args.y_axis_format_ != "time":
+    if args.x_axis_format_ != "date" and args.x_axis_format_ != "time":
         print("Format: %s must be either: 'date' or 'time'.")
         return False
 
@@ -180,12 +178,25 @@ def makes_sense_to_run(args):
 
 
 def DrawChart(args):
-    my_chart = PY_PF_Chart.PY_PF_Chart()
-    my_chart.LoadChartFromJSONChartFile(args.input_file_name_)
-    my_chart.SavePFChartGraphicToFile(
-        "/tmp/spy.svg", PY_PF_Chart.PY_X_AxisFormat.e_show_date
+    graphic_file_name = os.path.basename(args.input_file_name_)
+    graphic_file_name = os.path.join(
+        args.output_directory_name_, os.path.splitext(graphic_file_name)[0] + ".svg"
     )
-    pass
+
+    x_axis_scale = (
+        PY_PF_Chart.PF_X_AxisFormat.e_show_date
+        if args.x_axis_format_ == "date"
+        else PY_PF_Chart.PF_X_AxisFormat.e_show_time
+    )
+
+    my_chart = PY_PF_Chart.PY_PF_Chart()
+
+    DoDrawGraphic(my_chart, args.input_file_name_, graphic_file_name, x_axis_scale)
+
+
+def DoDrawGraphic(pf_chart, json_file_name, graphic_file_name, x_axis_scale):
+    PY_PF_Chart.PY_PF_Chart.LoadChartFromJSONChartFile(pf_chart, json_file_name)
+    pf_chart.SavePFChartGraphicToFile(graphic_file_name, x_axis_scale)
 
 
 if __name__ == "__main__":
