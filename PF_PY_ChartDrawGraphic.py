@@ -171,13 +171,15 @@ def makes_sense_to_run(args):
         return False
 
     if args.x_axis_format_ != "date" and args.x_axis_format_ != "time":
-        print("Format: %s must be either: 'date' or 'time'.")
+        print("Format: %s must be either: 'date' or 'time'." % args.x_axis_format_)
         return False
 
     return True
 
 
 def DrawChart(args):
+    # construct output file name based on input file name
+
     graphic_file_name = os.path.basename(args.input_file_name_)
     graphic_file_name = os.path.join(
         args.output_directory_name_, os.path.splitext(graphic_file_name)[0] + ".svg"
