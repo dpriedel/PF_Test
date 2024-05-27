@@ -8,6 +8,7 @@ an SVG image of that chart in the specified output directory.
 
 """
 
+# %%
 import argparse
 import logging
 import os
@@ -25,6 +26,8 @@ THE_LOGGER.addHandler(handler)
 
 sys.path.insert(0, os.path.expanduser("~/projects/PF_Project/PY_PF_Chart"))
 import PY_PF_Chart
+
+# %%
 
 
 def Main():
@@ -51,6 +54,9 @@ def Main():
         result = 6
 
     return result
+
+
+# %%
 
 
 def GetArgs():
@@ -158,6 +164,9 @@ def GetArgs():
     return args
 
 
+# %%
+
+
 def makes_sense_to_run(args):
     if not os.path.exists(args.input_file_name_):
         print("Unable to find specified PY_Chart JSON file: %s" % args.input_file_name_)
@@ -175,6 +184,9 @@ def makes_sense_to_run(args):
         return False
 
     return True
+
+
+# %%
 
 
 def DrawChart(args):
@@ -196,10 +208,16 @@ def DrawChart(args):
     DoDrawGraphic(my_chart, args.input_file_name_, graphic_file_name, x_axis_scale)
 
 
+# %%
+
+
 def DoDrawGraphic(pf_chart, json_file_name, graphic_file_name, x_axis_scale):
     PY_PF_Chart.PY_PF_Chart.LoadChartFromJSONChartFile(pf_chart, json_file_name)
     pf_chart.SavePFChartGraphicToFile(graphic_file_name, x_axis_scale)
 
 
+# %%
+
 if __name__ == "__main__":
     sys.exit(Main())
+# %%
