@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -85,6 +86,8 @@ class ProgramOptions : public Test
 
 TEST_F(ProgramOptions, TestMixAndMatchOptions)  // NOLINT
 {
+    // setenv("PF_COLLECT_DATA_CONFIG_DIR", "/home/dpriedel/.config/PF_CollectData", true);
+
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
         fs::remove("/tmp/test_charts/SPY_10X3_linear_eod.json");
@@ -1457,7 +1460,7 @@ TEST_F(Database, DailyScan)  // NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
-        "--begin-date", "2024-04-24",
+        "--begin-date", "2024-05-24",
         "-l", "debug"
 	};
     // clang-format on
@@ -1853,6 +1856,8 @@ void InitLogging()
 
 int main(int argc, char** argv)
 {
+    setenv("PF_COLLECT_DATA_CONFIG_DIR", "/home/dpriedel/.config/PF_CollectData", true);
+
     InitLogging();
 
     InitGoogleTest(&argc, argv);
