@@ -2981,34 +2981,22 @@ TEST_F(PlotChartsWithChartDirector, LoadDataFromLiveDBUseMinMaxForLinearChart)  
     EXPECT_TRUE(fs::exists("/tmp/percent14.svg"));
 }
 
-class WebSocketSynchronousTiingo : public Test
-{
-    std::string LoadApiKey(std::string file_name)
-    {
-        if (!fs::exists(file_name))
-        {
-            throw std::runtime_error("Can't find key file.");
-        }
-        std::ifstream key_file(file_name);
-        std::string result;
-        key_file >> result;
-        return result;
-    }
-
-   public:
-};
-
 class StreamerATR : public Test
 {
    public:
     static std::string LoadApiKey(std::string file_name)
     {
-        if (!fs::exists(file_name))
+        const fs::path config_dir{"/home/dpriedel/.config/PF_CollectData"};
+
+        const fs::path config_file = config_dir / file_name;
+        // std::print("config file: {}\n", config_file);
+
+        if (!fs::exists(config_file))
         {
             throw std::runtime_error("Can't find key file.");
         }
         std::string api_key;
-        std::ifstream key_file(file_name);
+        std::ifstream key_file(config_file);
         key_file >> api_key;
         return api_key;
     }
@@ -3016,7 +3004,7 @@ class StreamerATR : public Test
 
 TEST_F(StreamerATR, RetrievePreviousData)  // NOLINT
 {
-    const auto eod_key = LoadApiKey("./Eodhd_key.dat");
+    const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
@@ -3034,7 +3022,7 @@ TEST_F(StreamerATR, RetrievePreviousData)  // NOLINT
 
     std::cout << "Eod works. Trying Tiingo...\n";
 
-    const auto tiingo_key = LoadApiKey("./tiingo_key.dat");
+    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
 
     Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
                                  Tiingo::Prefix{}};
@@ -3071,7 +3059,7 @@ TEST_F(StreamerATR, RetrievePreviousCloseAndCurrentOpen)  // NOLINT
         return;
     }
 
-    const auto eod_key = LoadApiKey("./Eodhd_key.dat");
+    const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     Eodhd eod_history_getter{Eodhd::Host{"eodhd.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key}, Eodhd::Prefix{}};
     eod_history_getter.UseSymbols({"spy", "uso", "rsp"});
@@ -3096,7 +3084,7 @@ TEST_F(StreamerATR, RetrievePreviousCloseAndCurrentOpen)  // NOLINT
     }
     std::cout << "Tried Eod. Trying Tiingo...\n";
 
-    const auto tiingo_key = LoadApiKey("./tiingo_key.dat");
+    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
 
     Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
                                  Tiingo::Prefix{"/iex"}};
@@ -3128,7 +3116,7 @@ TEST_F(StreamerATR, RetrievePreviousDataThenComputeAverageTrueRange)  // NOLINT
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
-    const auto eod_key = LoadApiKey("./Eodhd_key.dat");
+    const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     Eodhd eod_history_getter{Eodhd::Host{"eodhd.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key}, Eodhd::Prefix{}};
 
@@ -3152,7 +3140,7 @@ TEST_F(StreamerATR, RetrievePreviousDataThenComputeAverageTrueRange)  // NOLINT
 
     std::cout << "Tried Eod. Trying Tiingo...\n";
 
-    const auto tiingo_key = LoadApiKey("./tiingo_key.dat");
+    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
 
     Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
                                  Tiingo::Prefix{}};
@@ -3177,7 +3165,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
     std::chrono::year which_year = 2021y;
     auto holidays = MakeHolidayList(which_year);
 
-    const auto eod_key = LoadApiKey("./Eodhd_key.dat");
+    const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     Eodhd eod_history_getter{Eodhd::Host{"eodhd.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key}, Eodhd::Prefix{}};
 
@@ -3207,7 +3195,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints)  // NOLINT
 
     std::cout << "Tried Eod. Trying Tiingo...\n";
 
-    const auto tiingo_key = LoadApiKey("./tiingo_key.dat");
+    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
 
     Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
                                  Tiingo::Prefix{}};
@@ -3324,12 +3312,17 @@ class StreamerWebSocket : public Test
    public:
     static std::string LoadApiKey(std::string file_name)
     {
-        if (!fs::exists(file_name))
+        const fs::path config_dir{"/home/dpriedel/.config/PF_CollectData"};
+
+        const fs::path config_file = config_dir / file_name;
+        // std::print("config file: {}\n", config_file);
+
+        if (!fs::exists(config_file))
         {
             throw std::runtime_error("Can't find key file.");
         }
         std::string api_key;
-        std::ifstream key_file(file_name);
+        std::ifstream key_file(config_file);
         key_file >> api_key;
         return api_key;
     }
@@ -3348,7 +3341,7 @@ TEST_F(StreamerWebSocket, ConnectAndDisconnect)  // NOLINT
         return;
     }
 
-    const auto eod_key = LoadApiKey("./Eodhd_key.dat");
+    const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     Eodhd eod_streamer{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key},
                        Eodhd::Prefix{"/ws/us?api_token="s + eod_key}};
@@ -3357,7 +3350,7 @@ TEST_F(StreamerWebSocket, ConnectAndDisconnect)  // NOLINT
 
     std::cout << "Eod works. Trying Tiingo...\n";
 
-    const auto tiingo_key = LoadApiKey("./tiingo_key.dat");
+    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
 
     Tiingo tiingo_streamer{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
                            Tiingo::Prefix{"/iex"}};
@@ -3383,7 +3376,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData)  // NOLINT
     std::mutex data_mutex;
     std::queue<std::string> streamed_data;
 
-    const auto eod_key = LoadApiKey("./Eodhd_key.dat");
+    const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     Eodhd eod_quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key},
                      Eodhd::Prefix{"/ws/us?api_token="s + eod_key}};
@@ -3408,7 +3401,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData)  // NOLINT
 
     std::cout << "Eod works. Trying Tiingo...\n";
 
-    const auto tiingo_key = LoadApiKey("./tiingo_key.dat");
+    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
 
     Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
                          Tiingo::Prefix{"/iex"}};
