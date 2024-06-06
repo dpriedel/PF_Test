@@ -768,6 +768,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
         "--new-data-source", "file",
         "--quote-host", "eodhd.com",
         "--quote-data-source", "Eodhd",
+        "--quote-api-key", "Tiingo_key.dat",
         "--new-data-dir", "./test_files_update_EOD",
         "--source-format", "csv",
         "--mode", "update",
@@ -841,6 +842,24 @@ class Database : public Test
         auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
         trxn.commit();
         return row[0].as<int>();
+    }
+
+    bool CompareDatesEqual()
+    {
+        std::string date_query =
+            " SELECT a = b FROM ( SELECT ( SELECT ( to_timestamp( (chart_data -> 'current_column' -> "
+            "'last_entry')::BIGINT / 1000000000) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts WHERE "
+            "symbol = 'CECO' LIMIT 1) AS b, ( SELECT (max(last_checked_date) AT TIME ZONE 'utc')::DATE FROM "
+            "test_point_and_figure.pf_charts WHERE symbol = 'CECO') AS a); ";
+
+        pqxx::connection c{"dbname=finance user=data_updater_pg"};
+        pqxx::nontransaction trxn{c};
+
+        // make sure the DB is empty before we start
+
+        bool dates_are_equal = trxn.query_value<bool>(date_query);
+        trxn.commit();
+        return dates_are_equal;
     }
 };
 
@@ -1352,8 +1371,8 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLIN
         "--mode", "load",
         "--scale", "linear",
         "--price-fld-name", "split_adj_close",
-        // "--destination", "database",
         "--destination", "database",
+        // "--destination", "file",
         "--output-graph-dir", "/tmp/test_charts13a",
         "--output-chart-dir", "/tmp/test_charts13a",
         "--graphics-format", "csv",
@@ -1408,9 +1427,9 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLIN
         spdlog::error("Something totally unexpected happened.");
     }
 
-    std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
+    // std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
 
-    ASSERT_TRUE(fs::exists("/tmp/test_charts13a/SPY_0.01X1_linear_eod.svg"));
+    ASSERT_TRUE(CompareDatesEqual());
 }
 
 TEST_F(Database, DailyScan)  // NOLINT
@@ -1525,8 +1544,11 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)  // NOLINT
         "--symbol", "AAPL",
         "--new-data-source", "streaming",
         "--quote-host", "eodhd.com",
-        "--streaming-host", "ws.eodhistoricaldata.com",
         "--quote-data-source", "Eodhd",
+        "--quote-api-key", "Eodhd_key.dat",
+        "--streaming-host", "ws.eodhistoricaldata.com",
+        "--streaming-data-source", "Eodhd",
+        "--streaming-api-key", "Eodhd_key.dat",
         "--mode", "load",
         "--interval", "live",
         "--scale", "linear",
@@ -1619,8 +1641,13 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)  // NOLINT
         "--symbol", "AAPL",
         "--new-data-source", "streaming",
         "--quote-host", "api.tiingo.com",
-        "--streaming-host", "api.tiingo.com",
         "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+
         "--mode", "load",
         "--interval", "live",
         "--scale", "linear",
