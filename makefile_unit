@@ -90,6 +90,7 @@ CFG_LIB := -L/usr/local/lib \
 		-lchartdir \
 		-L$(GCCDIR)/lib64 \
 		-lstdc++ \
+		-lstdc++exp \
 		-L/usr/lib \
 		-lmpdec++ \
 		-lmpdec \
