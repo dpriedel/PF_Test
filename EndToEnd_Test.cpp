@@ -768,7 +768,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
         "--new-data-source", "file",
         "--quote-host", "eodhd.com",
         "--quote-data-source", "Eodhd",
-        "--quote-api-key", "Tiingo_key.dat",
+        "--quote-api-key", "Eodhd_key.dat",
         "--new-data-dir", "./test_files_update_EOD",
         "--source-format", "csv",
         "--mode", "update",
@@ -814,7 +814,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
         spdlog::error("Something totally unexpected happened.");
     }
 
-    EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/ADIV_0.1X3_linear_eod.json"));
+    EXPECT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear_eod.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts_updates/CBRL_0.1X3_linear_eod.svg"));
 }
 
@@ -1794,8 +1794,12 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
         "--symbol", "AAPL",
         "--new-data-source", "streaming",
         "--quote-host", "api.tiingo.com",
-        "--streaming-host", "api.tiingo.com",
         "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
         "--mode", "load",
         "--interval", "live",
         "--scale", "percent",
