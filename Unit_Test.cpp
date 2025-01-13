@@ -241,16 +241,28 @@ TEST_F(BusinessDateRange, GenerateMarketHolidays1)  // NOLINT
 
     EXPECT_EQ(holidays.size(), 9);  // no new years market holiday for 2022
 
-    for (const auto& [name, date] : holidays)
-    {
-        //        std::cout << name << '\t' << date << '\n';
-    }
+    // for (const auto& [name, date] : holidays)
+    // {
+    //            std::cout << name << '\t' << date << '\n';
+    // }
 
     which_year = 2021y;
 
     holidays = MakeHolidayList(which_year);
 
     EXPECT_EQ(holidays.size(), 9);  // no new years market holiday for 2022
+
+    //     for (const auto& [name, date] : holidays)
+    //     {
+    // //        std::cout << name << '\t' << date << '\n';
+    //     }
+
+    // 2025 includes trading holiday for President Carter's memorial day.
+    which_year = 2025y;
+
+    holidays = MakeHolidayList(which_year);
+
+    EXPECT_EQ(holidays.size(), 11);
 
     //     for (const auto& [name, date] : holidays)
     //     {
@@ -2383,9 +2395,9 @@ class TestDBFunctions : public Test
 
         // make sure the DB is empty before we start
 
-        auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
+        int count = trxn.query_value<int>("SELECT count(*) FROM test_point_and_figure.pf_charts");
         trxn.commit();
-        return row[0].as<int>();
+        return count;
     }
 
     int CountNYSESymbols()
@@ -2395,10 +2407,10 @@ class TestDBFunctions : public Test
 
         // make sure the DB is empty before we start
 
-        auto row =
-            trxn.exec1("SELECT COUNT(DISTINCT(symbol)) FROM new_stock_data.names_and_symbols WHERE exchange = 'NYSE'");
+        int count = trxn.query_value<int>(
+            "SELECT COUNT(DISTINCT(symbol)) FROM new_stock_data.names_and_symbols WHERE exchange = 'NYSE'");
         trxn.commit();
-        return row[0].as<int>();
+        return count;
     }
 };
 
@@ -2410,8 +2422,9 @@ TEST_F(TestDBFunctions, TestRetrieveListOfExchangesInStocksDB)  // NOLINT
 
     auto exchanges = pf_db.ListExchanges();
 
-    ASSERT_EQ(exchanges, (std::vector<std::string>{"AMEX", "BATS", "INDX", "NASDAQ", "NMFQS", "NYSE", "OTC", "OTCBB",
-                                                   "OTCCE", "OTCGREY", "OTCMKTS", "OTCQB", "OTCQX", "PINK", "US"}));
+    ASSERT_EQ(exchanges,
+              (std::vector<std::string>{"AMEX", "BATS", "INDX", "NASDAQ", "NMFQS", "NYSE", "OTC", "OTCBB", "OTCCE",
+                                        "OTCGREY", "OTCMKTS", "OTCMTKS", "OTCQB", "OTCQX", "PINK", "US"}));
 }
 
 TEST_F(TestDBFunctions, TestCountSymbolsOnNYSEExchange)  // NOLINT
@@ -2448,9 +2461,9 @@ class TestChartDBFunctions : public Test
 
         // make sure the DB is empty before we start
 
-        auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
+        int count = trxn.query_value<int>("SELECT count(*) FROM test_point_and_figure.pf_charts");
         trxn.commit();
-        return row[0].as<int>();
+        return count;
     }
 };
 
