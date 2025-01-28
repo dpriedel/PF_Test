@@ -839,9 +839,9 @@ class Database : public Test
 
         // make sure the DB is empty before we start
 
-        auto row = trxn.exec1("SELECT count(*) FROM test_point_and_figure.pf_charts");
+        int count = trxn.query_value<int>("SELECT count(*) FROM test_point_and_figure.pf_charts");
         trxn.commit();
-        return row[0].as<int>();
+        return count;
     }
 
     bool CompareDatesEqual()
@@ -1479,7 +1479,7 @@ TEST_F(Database, DailyScan)  // NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
-        "--begin-date", "2024-05-24",
+        "--begin-date", "2025-01-01",
         "-l", "debug"
 	};
     // clang-format on
