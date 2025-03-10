@@ -3470,6 +3470,8 @@ int main(int argc, char** argv)
 
     InitLogging();
 
+    // dummy comment for git
+
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
