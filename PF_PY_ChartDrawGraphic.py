@@ -1,4 +1,4 @@
-#!/usr/local/python-3.12/bin/python3
+#!/bin/python3
 
 
 """
