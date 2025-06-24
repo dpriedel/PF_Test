@@ -22,12 +22,14 @@
 
 #include <algorithm>
 #include <chrono>
-#include <cstdlib>
 #include <filesystem>
 #include <format>
 #include <fstream>
 #include <future>
 #include <ranges>
+
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
 #include "PF_CollectDataApp.h"
 #include "utilities.h"
@@ -37,7 +39,6 @@ namespace vws = std::ranges::views;
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <spdlog/spdlog.h>
 
 // #include <pqxx/pqxx>
 // #include <pqxx/transaction.hxx>
@@ -52,25 +53,21 @@ const fs::path SPY_EOD_CSV{"./test_files/SPY.csv"};
 
 using namespace testing;
 
-std::shared_ptr<spdlog::logger> DEFAULT_LOGGER;
-
 std::optional<int> FindColumnIndex(std::string_view header, std::string_view column_name, std::string_view delim)
 {
     auto fields = rng_split_string<std::string_view>(header, delim);
-    auto do_compare(
-        [&column_name](const auto& field_name)
-        {
-            // need case insensitive compare
-            // found this on StackOverflow (but modified for my use)
-            // (https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c)
+    auto do_compare([&column_name](const auto &field_name) {
+        // need case insensitive compare
+        // found this on StackOverflow (but modified for my use)
+        // (https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c)
 
-            if (column_name.size() != field_name.size())
-            {
-                return false;
-            }
-            return rng::equal(column_name, field_name,
-                              [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
-        });
+        if (column_name.size() != field_name.size())
+        {
+            return false;
+        }
+        return rng::equal(column_name, field_name,
+                          [](unsigned char a, unsigned char b) { return tolower(a) == tolower(b); });
+    });
 
     if (auto found_it = rng::find_if(fields, do_compare); found_it != rng::end(fields))
     {
@@ -78,13 +75,13 @@ std::optional<int> FindColumnIndex(std::string_view header, std::string_view col
     }
     return {};
 
-}  // -----  end of method PF_CollectDataApp::FindColumnIndex  -----
+} // -----  end of method PF_CollectDataApp::FindColumnIndex  -----
 
 class ProgramOptions : public Test
 {
 };
 
-TEST_F(ProgramOptions, TestMixAndMatchOptions)  // NOLINT
+TEST_F(ProgramOptions, TestMixAndMatchOptions) // NOLINT
 {
     // setenv("PF_COLLECT_DATA_CONFIG_DIR", "/home/dpriedel/.config/PF_CollectData", true);
 
@@ -116,7 +113,8 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)  // NOLINT
         "--boxsize", "10",
         "--boxsize", "1",
         "--reversal", "3",
-        "--reversal", "1"
+        "--reversal", "1",
+        "--log-path", "/tmp/PF_Collect/test01.log"
 	};
     // clang-format on
 
@@ -124,7 +122,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -141,19 +139,19 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
 }
 
-TEST_F(ProgramOptions, DISABLED_TestProblemOptions)  // NOLINT
+TEST_F(ProgramOptions, DISABLED_TestProblemOptions) // NOLINT
 {
     //	NOTE: disabled because now I am capturing error internally which would
     //	have generated the exception this is testing for.
@@ -178,7 +176,8 @@ TEST_F(ProgramOptions, DISABLED_TestProblemOptions)  // NOLINT
         "--boxsize", ".1",
         "--boxsize", ".01",
         "--reversal", "1",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test02.log"
 	};
     // clang-format on
 
@@ -186,7 +185,7 @@ TEST_F(ProgramOptions, DISABLED_TestProblemOptions)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -205,17 +204,17 @@ TEST_F(ProgramOptions, DISABLED_TestProblemOptions)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 }
 
-TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
+TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
 {
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
@@ -238,7 +237,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
         "--boxsize", ".1",
         "--boxsize", ".01",
         "--reversal", "1",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test03.log"
 	};
     // clang-format on
 
@@ -246,7 +246,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -257,12 +257,12 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -283,7 +283,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
         "--boxsize", ".1",
         "--boxsize", ".01",
         "--reversal", "1",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test04.log"
 	};
     // clang-format on
 
@@ -291,7 +292,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens2);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -302,12 +303,12 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -330,7 +331,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
         "--boxsize", ".1",
         "--boxsize", ".01",
         "--reversal", "1",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test05.log"
 	};
     // clang-format on
 
@@ -338,7 +340,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens3);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -349,12 +351,12 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -378,7 +380,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
         "--boxsize", ".1",
         "--boxsize", ".01",
         "--reversal", "1",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test06.log"
 	};
     // clang-format on
 
@@ -386,7 +389,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens4);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -395,17 +398,17 @@ TEST_F(ProgramOptions, TestMinMaxOptions)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 }
 
-TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
+TEST_F(ProgramOptions, TestExchangesList) // NOLINT
 {
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
@@ -428,7 +431,8 @@ TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
         "--boxsize", ".01",
         "--reversal", "1",
         "--reversal", "3",
-        "--exchange-list", "NYSE,nasdaq"
+        "--exchange-list", "NYSE,nasdaq",
+        "--log-path", "/tmp/PF_Collect/test07.log"
 	};
     // clang-format on
 
@@ -436,7 +440,7 @@ TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -447,12 +451,12 @@ TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -475,7 +479,8 @@ TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2017-01-01",
-        "--exchange-list", "NYSE,nasdax"
+        "--exchange-list", "NYSE,nasdax",
+        "--log-path", "/tmp/PF_Collect/test08.log"
 	};
     // clang-format on
 
@@ -483,7 +488,7 @@ TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens2);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -494,12 +499,12 @@ TEST_F(ProgramOptions, TestExchangesList)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 }
@@ -508,7 +513,7 @@ class SingleFileEndToEnd : public Test
 {
 };
 
-TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)  // NOLINT
+TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile) // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
@@ -530,7 +535,8 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)  // NOLINT
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "10",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test09.log"
 	};
     // clang-format on
 
@@ -538,7 +544,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -555,18 +561,18 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
 }
 
-TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
+TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
 {
     if (fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"))
     {
@@ -596,7 +602,8 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "10",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test10.log"
 	};
     // clang-format on
 
@@ -604,7 +611,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -622,12 +629,12 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_10X3_linear_eod.json"));
@@ -650,7 +657,8 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts2",
         "--boxsize", "10",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test11.log"
 	};
     // clang-format on
 
@@ -658,7 +666,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens2);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -676,12 +684,12 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"));
@@ -705,7 +713,8 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts2",
         "--boxsize", "10",
-        "--reversal", "3"
+        "--reversal", "3",
+        "--log-path", "/tmp/PF_Collect/test12.log"
 	};
     // clang-format on
 
@@ -713,7 +722,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens3);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -731,12 +740,12 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -753,7 +762,7 @@ class LoadAndUpdate : public Test
 {
 };
 
-TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
+TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData) // NOLINT
 {
     if (fs::exists("/tmp/test_charts_updates"))
     {
@@ -780,7 +789,8 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
         "--output-chart-dir", "/tmp/test_charts_updates",
         "--use-ATR",
         "--boxsize", ".1",
-        "--reversal", "3", "--reversal", "1"
+        "--reversal", "3", "--reversal", "1",
+        "--log-path", "/tmp/PF_Collect/test13.log"
 	};
     // clang-format on
 
@@ -788,7 +798,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -805,12 +815,12 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -820,7 +830,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData)  // NOLINT
 
 class Database : public Test
 {
-   public:
+public:
     void SetUp() override
     {
         pqxx::connection c{"dbname=finance user=data_updater_pg"};
@@ -863,7 +873,7 @@ class Database : public Test
     }
 };
 
-TEST_F(Database, LoadDataFromDB)  // NOLINT
+TEST_F(Database, LoadDataFromDB) // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
@@ -893,7 +903,8 @@ TEST_F(Database, LoadDataFromDB)  // NOLINT
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2017-01-01",
         "--use-ATR",
-        "--max-graphic-cols", "150"
+        "--max-graphic-cols", "150",
+        "--log-path", "/tmp/PF_Collect/test14.log"
 	};
     // clang-format on
 
@@ -901,7 +912,7 @@ TEST_F(Database, LoadDataFromDB)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -918,19 +929,19 @@ TEST_F(Database, LoadDataFromDB)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_1X3_linear_eod.json"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_0.1X1_linear_eod.json"));
 }
 
-TEST_F(Database, DISABLED_BulkLoadDataFromDB)  // NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDB) // NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
@@ -962,7 +973,8 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)  // NOLINT
         "--begin-date", "2022-06-01",
         "--use-MinMax",
         "--exchange-list", "amex,bats",
-        "--max-graphic-cols", "150"
+        "--max-graphic-cols", "150",
+        "--log-path", "/tmp/PF_Collect/test15.log"
 	};
     // clang-format on
 
@@ -970,7 +982,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -987,19 +999,19 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
-TEST_F(Database, UpdateUsingDataFromDB)  // NOLINT
+TEST_F(Database, UpdateUsingDataFromDB) // NOLINT
 {
     if (fs::exists("/tmp/test_charts2"))
     {
@@ -1026,8 +1038,7 @@ TEST_F(Database, UpdateUsingDataFromDB)  // NOLINT
     PF_Chart new_chart{"SPY", 10, 1};
 
     rng::for_each(symbol_data_records | vws::drop(1),
-                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
-                  {
+                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
                       new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
                   });
@@ -1062,7 +1073,8 @@ TEST_F(Database, UpdateUsingDataFromDB)  // NOLINT
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2021-11-24",
-        "--max-graphic-cols", "150"
+        "--max-graphic-cols", "150",
+        "--log-path", "/tmp/PF_Collect/test16.log"
 	};
     // clang-format on
 
@@ -1072,7 +1084,7 @@ TEST_F(Database, UpdateUsingDataFromDB)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1090,12 +1102,12 @@ TEST_F(Database, UpdateUsingDataFromDB)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -1105,7 +1117,7 @@ TEST_F(Database, UpdateUsingDataFromDB)  // NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
-TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)  // NOLINT
+TEST_F(Database, UpdateDatainDBUsingNewDataFromDB) // NOLINT
 {
     if (fs::exists("/tmp/test_charts9"))
     {
@@ -1129,8 +1141,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)  // NOLINT
     PF_Chart new_chart{"SPY", 10, 1};
 
     rng::for_each(symbol_data_records | vws::drop(1),
-                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
-                  {
+                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
                       new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
                   });
@@ -1166,7 +1177,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)  // NOLINT
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2021-11-24",
         "--max-graphic-cols", "150",
-        "-l", "debug"
+        "--log-path", "/tmp/PF_Collect/test17.log"
 	};
     // clang-format on
 
@@ -1176,7 +1187,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1194,12 +1205,12 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -1209,7 +1220,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB)  // NOLINT
     ASSERT_NE(new_chart, updated_chart);
 }
 
-TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)  // NOLINT
+TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB) // NOLINT
 {
     if (fs::exists("/tmp/test_charts3"))
     {
@@ -1241,7 +1252,8 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)  // NOLINT
         "--begin-date", "2022-01-01",
         "--use-ATR",
         "--exchange", "NYSE",
-        "--max-graphic-cols", "150"
+        "--max-graphic-cols", "150",
+        "--log-path", "/tmp/PF_Collect/test18.log"
 	};
     // clang-format on
 
@@ -1249,7 +1261,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1266,19 +1278,19 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.01%X1_percent_eod.csv"));
     ASSERT_TRUE(fs::exists("/tmp/test_charts3/SPY_0.001%X1_percent_eod.json"));
 }
 
-TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)  // NOLINT
+TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory) // NOLINT
 {
     if (fs::exists("/tmp/test_charts13"))
     {
@@ -1315,7 +1327,8 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)  // NOLINT
         "--use-MinMax",
         // "--exchange", "NYSE",
         // "-l", "debug",
-        "--max-graphic-cols", "150"
+        "--max-graphic-cols", "150",
+        "--log-path", "/tmp/PF_Collect/test19.log"
 	};
     // clang-format on
 
@@ -1323,7 +1336,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1340,18 +1353,18 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     ASSERT_TRUE(fs::exists("/tmp/test_charts13/SPY_0.01X1_linear_eod.svg"));
 }
 
-TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLINT
+TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
 {
     if (fs::exists("/tmp/test_charts13a"))
     {
@@ -1390,7 +1403,8 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLIN
         "--use-MinMax",
         // "--exchange", "NYSE",
         // "-l", "debug",
-        "--max-graphic-cols", "150"
+        "--max-graphic-cols", "150",
+        "--log-path", "/tmp/PF_Collect/test20.log"
 	};
     // clang-format on
 
@@ -1400,14 +1414,13 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLIN
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
             myApp.Run();
-            updated_chart = myApp.GetCharts()[0].second;
             myApp.Shutdown();
         }
         else
@@ -1418,12 +1431,12 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLIN
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -1432,7 +1445,7 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch)  // NOLIN
     ASSERT_TRUE(CompareDatesEqual());
 }
 
-TEST_F(Database, DailyScan)  // NOLINT
+TEST_F(Database, DailyScan) // NOLINT
 {
     // construct a chart using some test data and save it.
     fs::path csv_file_name{SPY_EOD_CSV};
@@ -1452,8 +1465,7 @@ TEST_F(Database, DailyScan)  // NOLINT
     PF_Chart new_chart{"SPY", 10, 1};
 
     rng::for_each(symbol_data_records | vws::drop(1),
-                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record)
-                  {
+                  [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
                       new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
                   });
@@ -1480,7 +1492,7 @@ TEST_F(Database, DailyScan)  // NOLINT
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2025-04-01",
-        "-l", "debug"
+        "--log-path", "/tmp/PF_Collect/test21.log"
 	};
     // clang-format on
 
@@ -1488,7 +1500,7 @@ TEST_F(Database, DailyScan)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1505,12 +1517,12 @@ TEST_F(Database, DailyScan)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
 
@@ -1528,7 +1540,7 @@ class StreamEodhdData : public Test
 {
 };
 
-TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)  // NOLINT
+TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
 {
     if (fs::exists("/tmp/test_charts_Eodhd"))
     {
@@ -1557,7 +1569,8 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)  // NOLINT
         "--output-chart-dir", "/tmp/test_charts_Eodhd",
         "--boxsize", "0.1",
         "--boxsize", "0.05",
-        "--reversal", "1"
+        "--reversal", "1",
+        "--log-path", "/tmp/PF_Collect/test22.log"
 	};
     // clang-format on
 
@@ -1565,7 +1578,7 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
@@ -1574,8 +1587,7 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)  // NOLINT
                                                floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
-        auto timer = [&counter](const auto& stop_at)
-        {
+        auto timer = [&counter](const auto &stop_at) {
             while (true)
             {
                 std::cout << "ding...\n";
@@ -1610,12 +1622,12 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     ASSERT_TRUE(fs::exists("/tmp/test_charts_Eodhd/SPY_0.05X1_linear.json"));
@@ -1625,7 +1637,7 @@ class StreamTiingoData : public Test
 {
 };
 
-TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)  // NOLINT
+TEST_F(StreamTiingoData, VerifyConnectAndDisconnect) // NOLINT
 {
     if (fs::exists("/tmp/test_charts_T"))
     {
@@ -1656,7 +1668,8 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)  // NOLINT
         "--output-chart-dir", "/tmp/test_charts_T",
         "--boxsize", "0.1",
         "--boxsize", "0.05",
-        "--reversal", "1"
+        "--reversal", "1",
+        "--log-path", "/tmp/PF_Collect/test23.log"
 	};
     // clang-format on
 
@@ -1664,7 +1677,7 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
@@ -1673,8 +1686,7 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)  // NOLINT
                                                floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
-        auto timer = [&counter](const auto& stop_at)
-        {
+        auto timer = [&counter](const auto &stop_at) {
             while (true)
             {
                 std::cout << "ding...\n";
@@ -1709,18 +1721,18 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     ASSERT_TRUE(fs::exists("/tmp/test_charts_T/SPY_0.05X1_linear.json"));
 }
 
-TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)  // NOLINT
+TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling) // NOLINT
 {
     if (fs::exists("/tmp/test_charts"))
     {
@@ -1740,7 +1752,8 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)  // NOLINT
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "0.05",
-        "--reversal", "1"
+        "--reversal", "1",
+        "--log-path", "/tmp/PF_Collect/test24.log"
 	};
     // clang-format on
 
@@ -1748,7 +1761,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1765,12 +1778,12 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts/SPY_0.05X1_linear.json"));
@@ -1779,7 +1792,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling)  // NOLINT
     EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.05X1_linear.svg"));
 }
 
-TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
+TEST_F(StreamTiingoData, TryLogarithmicCharts) // NOLINT
 {
     if (fs::exists("/tmp/test_charts_log"))
     {
@@ -1808,7 +1821,8 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
         "--output-chart-dir", "/tmp/test_charts_log",
         "--use-ATR",
         "--boxsize", "0.01",
-        "--reversal", "1"
+        "--reversal", "1",
+        "--log-path", "/tmp/PF_Collect/test25.log"
 	};
     // clang-format on
 
@@ -1816,7 +1830,7 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
     {
         PF_CollectDataApp myApp(tokens);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
@@ -1827,8 +1841,7 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
                                                floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
 
         int counter = 0;
-        auto timer = [&counter](const auto& stop_at)
-        {
+        auto timer = [&counter](const auto &stop_at) {
             while (true)
             {
                 std::cout << "ding...\n";
@@ -1860,12 +1873,12 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
 
     // catch any problems trying to setup application
 
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
     catch (...)
-    {  // handle exception: unspecified
+    { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
     EXPECT_TRUE(fs::exists("/tmp/test_charts_log/GOOG_0.01%X1_percent.json"));
@@ -1876,8 +1889,6 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts)  // NOLINT
 
 void InitLogging()
 {
-    DEFAULT_LOGGER = spdlog::default_logger();
-
     //    nothing to do for now.
     //    logging::core::get()->set_filter
     //    (
@@ -1885,11 +1896,23 @@ void InitLogging()
     //    );
 } /* -----  end of function InitLogging  ----- */
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
+    // simpler logging setup than unit test because here
+    // the app class will set up required logging.
+
+    auto my_default_logger = spdlog::stdout_color_mt("testing_logger");
+    spdlog::set_default_logger(my_default_logger);
+    spdlog::set_level(spdlog::level::info);
+
+    if (fs::exists("/tmp/PF_Collect"))
+    {
+        fs::remove_all("/tmp/PF_Collect");
+    }
+
     setenv("PF_COLLECT_DATA_CONFIG_DIR", "/home/dpriedel/.config/PF_CollectData", true);
 
-    InitLogging();
+    // InitLogging();
 
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
