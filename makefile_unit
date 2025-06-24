@@ -19,8 +19,9 @@
 #
 MAKE=gmake
 
-BOOSTDIR := /extra/boost/boost-1.87_gcc-14
-GCCDIR := /extra/gcc/gcc-14
+BOOSTDIR := /extra/boost/boost-1.88_gcc-15
+GCCDIR := /extra/gcc/gcc-15
+# GCCDIR := 
 GTESTDIR := /usr/local/include
 UTILITYDIR := ${HOME}/projects/PF_Project/common_utilities
 CPP := $(GCCDIR)/bin/g++
@@ -81,9 +82,7 @@ OUTDIR := Debug_unit
 #
 CFG_LIB := -L/usr/local/lib \
 		-lgtest -lgtest_main \
-		-ldate-tz \
 		-lspdlog \
-		-lfmt \
 		-lpqxx \
 		-lpq \
 		-L/usr/local/lib/ChartDirector \
