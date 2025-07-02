@@ -1,0 +1,122 @@
+
+# This file is part of Extractor_Markup.
+
+# Extractor_Markup is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# Extractor_Markup is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with Extractor_Markup.  If not, see <http://www.gnu.org/licenses/>.
+
+# see link below for make file dependency magic
+#
+# http://bruno.defraine.net/techtips/makefile-auto-dependencies-with-gcc/
+#
+MAKE=gmake
+
+BOOSTDIR := /extra/boost/boost-1.88_gcc-15
+GCCDIR := /extra/gcc/gcc-15
+# GCCDIR := 
+GTESTDIR := /usr/local/include
+UTILITYDIR := ${HOME}/projects/PF_Project/common_utilities
+CPP := $(GCCDIR)/bin/g++
+GCC := $(GCCDIR)/bin/gcc
+
+# If no configuration is specified, "Debug" will be used
+ifndef "CFG"
+	CFG := Debug
+endif
+
+#	common definitions
+
+OUTFILE := MakeHolidaysList
+
+CFG_INC := -I${HOME}/projects/PF_Project/point_figure/src \
+	-I$(GTESTDIR) \
+	-isystem$(BOOSTDIR) \
+	-I$(UTILITYDIR)/include 
+
+RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib
+
+SDIR1 := .
+SRCS1 := $(SDIR1)/make_market_holidays_list.cpp
+
+
+SDIR4 := $(UTILITYDIR)/src
+SRCS4 := $(SDIR4)/utilities.cpp \
+		 $(SDIR4)/calfaq.c
+
+SRCS := $(SRCS1) $(SRCS4)
+
+VPATH := $(SDIR1):$(SDIR4)
+
+#
+# Configuration: Debug
+#
+ifeq "$(CFG)" "Debug"
+
+OUTDIR := Debug_holidays
+
+CFG_LIB := -L/usr/local/lib \
+		-lgtest -lgtest_main \
+		-lspdlog \
+		-L$(GCCDIR)/lib64 \
+		-lstdc++ \
+		-lstdc++exp \
+		-L/usr/lib \
+		-lmpdec++ \
+		-lmpdec \
+		-ljsoncpp 
+
+OBJS1=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS1)))))
+OBJS4=$(addprefix $(OUTDIR)/, $(addsuffix .o, $(basename $(notdir $(SRCS4)))))
+
+OBJS=$(OBJS1) $(OBJS4)
+
+DEPS=$(OBJS:.o=.d)
+
+COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++26 -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DSPDLOG_USE_STD_FORMAT -DUSE_OS_TZDB -DSHOW_STRACE -fPIC -o $@ $(CFG_INC) $< -march=native -mtune=native -MMD -MP
+# COMPILE=$(CPP) -c  -x c++  -O0  -g3 -std=c++26 -DBOOST_ENABLE_ASSERT_HANDLER -D_DEBUG -DSPDLOG_USE_STD_FORMAT -fconcepts-diagnostics-depth=2 -fPIC -o $@ $(CFG_INC) $< -march=native -mtune=native -MMD -MP
+CCOMPILE=$(GCC) -c  -O0  -g3 -D_DEBUG -fPIC -o $@ $(CFG_INC) $< -march=native -mtune=native -MMD -MP
+
+# the noinhibit-exec seems to overcome the problem with duplcated symbols in the decimal library
+LINK := $(CPP)  -g -o $(OUTFILE) $(OBJS) $(CFG_LIB) -Wl,-E $(RPATH_LIB) 
+
+endif #	DEBUG configuration
+
+# Build rules
+all: $(OUTFILE)
+
+$(OUTDIR)/%.o : %.cpp
+	$(COMPILE)
+
+$(OUTDIR)/%.o : %.c
+	$(CCOMPILE)
+
+$(OUTFILE): $(OUTDIR) $(OBJS1) $(OBJS2)  $(OBJS4)
+	$(LINK)
+
+-include $(DEPS)
+
+$(OUTDIR):
+	mkdir -p "$(OUTDIR)"
+
+# Rebuild this project
+rebuild: cleanall all
+
+# Clean this project
+clean:
+	rm -f $(OUTFILE)
+	rm -f $(OBJS)
+	rm -f $(OUTDIR)/*.P
+	rm -f $(OUTDIR)/*.d
+	rm -f $(OUTDIR)/*.o
+
+# Clean this project and all dependencies
+cleanall: clean
