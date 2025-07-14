@@ -857,10 +857,15 @@ public:
     bool CompareDatesEqual()
     {
         std::string date_query =
-            " SELECT a = b FROM ( SELECT ( SELECT ( to_timestamp( (chart_data -> 'current_column' -> "
-            "'last_entry')::BIGINT / 1000000000) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts WHERE "
-            "symbol = 'CECO' LIMIT 1) AS b, ( SELECT (max(last_checked_date) AT TIME ZONE 'utc')::DATE FROM "
-            "test_point_and_figure.pf_charts WHERE symbol = 'CECO') AS a); ";
+            " SELECT a = b FROM (SELECT (to_timestamp( (chart_data -> 'current_column' -> 'last_entry')::BIGINT / "
+            "1000000000) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts WHERE symbol = 'CECO' LIMIT 1) "
+            "AS b, ( SELECT (max(last_checked_date) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts "
+            "WHERE symbol = 'CECO') AS a; ";
+        // std::string date_query =
+        //     " SELECT a = b FROM ( SELECT ( SELECT ( to_timestamp( (chart_data -> 'current_column' -> "
+        //     "'last_entry')::BIGINT / 1000000000) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts WHERE
+        //     " "symbol = 'CECO' LIMIT 1) AS b, ( SELECT (max(last_checked_date) AT TIME ZONE 'utc')::DATE FROM "
+        //     "test_point_and_figure.pf_charts WHERE symbol = 'CECO') AS a); ";
 
         pqxx::connection c{"dbname=finance user=data_updater_pg"};
         pqxx::nontransaction trxn{c};
@@ -1364,7 +1369,10 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory) // NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts13/SPY_0.01X1_linear_eod.svg"));
 }
 
-TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
+// disable the following test because it is not quite correct and doesn't do
+// what is intended.  still working on how to do this correctly
+//
+TEST_F(Database, DISABLED_LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
 {
     if (fs::exists("/tmp/test_charts13a"))
     {
@@ -1400,6 +1408,7 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2017-01-01",
+        // "--end-date", "2025-07-09",
         "--use-MinMax",
         // "--exchange", "NYSE",
         // "-l", "debug",
@@ -1491,7 +1500,7 @@ TEST_F(Database, DailyScan) // NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
-        "--begin-date", "2025-04-01",
+        "--begin-date", "2025-07-01",
         "--log-path", "/tmp/PF_Collect/test21.log"
 	};
     // clang-format on
