@@ -854,12 +854,12 @@ public:
         return count;
     }
 
-    bool CompareDatesEqual()
+    bool CheckLastUpdateDateEqualsLastCheckDate()
     {
         std::string date_query =
             " SELECT a = b FROM (SELECT (to_timestamp( (chart_data -> 'current_column' -> 'last_entry')::BIGINT / "
             "1000000000) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts WHERE symbol = 'CECO' LIMIT 1) "
-            "AS b, ( SELECT (max(last_checked_date) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts "
+            "AS b, ( SELECT (max(last_change_date) AT TIME ZONE 'utc')::DATE FROM test_point_and_figure.pf_charts "
             "WHERE symbol = 'CECO') AS a; ";
         // std::string date_query =
         //     " SELECT a = b FROM ( SELECT ( SELECT ( to_timestamp( (chart_data -> 'current_column' -> "
@@ -869,8 +869,6 @@ public:
 
         pqxx::connection c{"dbname=finance user=data_updater_pg"};
         pqxx::nontransaction trxn{c};
-
-        // make sure the DB is empty before we start
 
         bool dates_are_equal = trxn.query_value<bool>(date_query);
         trxn.commit();
@@ -1369,10 +1367,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory) // NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts13/SPY_0.01X1_linear_eod.svg"));
 }
 
-// disable the following test because it is not quite correct and doesn't do
-// what is intended.  still working on how to do this correctly
-//
-TEST_F(Database, DISABLED_LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
+TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
 {
     if (fs::exists("/tmp/test_charts13a"))
     {
@@ -1451,7 +1446,7 @@ TEST_F(Database, DISABLED_LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) 
 
     // std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
 
-    ASSERT_TRUE(CompareDatesEqual());
+    ASSERT_TRUE(CheckLastUpdateDateEqualsLastCheckDate());
 }
 
 TEST_F(Database, DailyScan) // NOLINT
