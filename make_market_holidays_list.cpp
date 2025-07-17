@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         for (const auto &holiday : holidays)
         {
             // Format: Holiday Name <TAB> YYYY-MM-DD
-            output_file << std::format("{}\t{:%Y-%m-%d}\n", holiday.first, holiday.second);
+            output_file << std::format("{:%Y-%m-%d}\t{}\n", holiday.second, holiday.first);
         }
     }
 
