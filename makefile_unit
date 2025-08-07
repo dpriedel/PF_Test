@@ -61,6 +61,7 @@ SRCS2 := $(SDIR2)/Boxes.cpp \
 
 SDIR4 := $(UTILITYDIR)/src
 SRCS4 := $(SDIR4)/utilities.cpp \
+		 $(SDIR4)/us_holidays.cpp \
 		 $(SDIR4)/calfaq.c
 
 SRCS := $(SRCS1) $(SRCS2)  $(SRCS4)
