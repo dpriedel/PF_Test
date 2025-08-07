@@ -45,6 +45,7 @@
 #include <future>
 #include <iterator>
 #include <numeric>
+#include <print>
 #include <ranges>
 #include <regex>
 #include <spdlog/async.h>
@@ -338,15 +339,17 @@ TEST_F(BusinessDateRange, SpanAWeekWithHoliday) // NOLINT
 TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays) // NOLINT
 {
     // this test spans prior to Thanksgiving till after MLK day
-    // but Christmas and New Years are not observed because they
-    // fall on weekends
+    // but New Years is not observed because it falls on weekend.
 
     auto holidays = MakeHolidayList(2021y);
     rng::copy(MakeHolidayList(2022y), std::back_inserter(holidays));
+    std::print("\nHoliday List: {}\n", holidays);
 
     std::chrono::year_month_day start_here{2021y / std::chrono::November / 22};
 
     auto result = ConstructeBusinessDayRange(start_here, 43, UpOrDown::e_Up, &holidays);
+
+    std::print("{}\n", result);
 
     //    std::cout << result.first << " : " << result.second << '\n';
 
