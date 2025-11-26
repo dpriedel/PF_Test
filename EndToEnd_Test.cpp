@@ -1574,6 +1574,7 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
         "--boxsize", "0.1",
         "--boxsize", "0.05",
         "--reversal", "1",
+        "-l", "debug",
         "--log-path", "/tmp/PF_Collect/test22.log"
 	};
     // clang-format on
@@ -1673,6 +1674,8 @@ TEST_F(StreamTiingoData, VerifyConnectAndDisconnect) // NOLINT
         "--boxsize", "0.1",
         "--boxsize", "0.05",
         "--reversal", "1",
+        "--use-ATR",
+        "-l", "debug",
         "--log-path", "/tmp/PF_Collect/test23.log"
 	};
     // clang-format on
@@ -1757,6 +1760,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling) // NOLINT
         "--output-chart-dir", "/tmp/test_charts",
         "--boxsize", "0.05",
         "--reversal", "1",
+        "-l", "debug",
         "--log-path", "/tmp/PF_Collect/test24.log"
 	};
     // clang-format on
@@ -1826,6 +1830,7 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts) // NOLINT
         "--use-ATR",
         "--boxsize", "0.01",
         "--reversal", "1",
+        "-l", "debug",
         "--log-path", "/tmp/PF_Collect/test25.log"
 	};
     // clang-format on
