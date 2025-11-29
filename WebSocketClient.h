@@ -87,27 +87,27 @@ private:
     void on_write(boost::system::error_code ec, std::size_t);
 };
 
-// class SignalHandler
-// {
-// private:
-//     net::io_context &ioc_;
-//     net::steady_timer timer_;
-//
-// public:
-//     SignalHandler(net::io_context &ioc) : ioc_(ioc), timer_(ioc)
-//     {
-//     }
-//
-//     void setup_stop_timer(std::chrono::seconds delay, std::function<void()> stop_callback)
-//     {
-//         timer_.expires_after(delay);
-//         timer_.async_wait([stop_callback](boost::system::error_code) {
-//             if (stop_callback)
-//             {
-//                 stop_callback();
-//             }
-//         });
-//     }
-// };
+class SignalHandler
+{
+private:
+    net::io_context &ioc_;
+    net::steady_timer timer_;
+
+public:
+    SignalHandler(net::io_context &ioc) : ioc_(ioc), timer_(ioc)
+    {
+    }
+
+    void setup_stop_timer(std::chrono::seconds delay, std::function<void()> stop_callback)
+    {
+        timer_.expires_after(delay);
+        timer_.async_wait([stop_callback](boost::system::error_code) {
+            if (stop_callback)
+            {
+                stop_callback();
+            }
+        });
+    }
+};
 
 #endif /* WEBSOCKETCLIENT_H_ */
