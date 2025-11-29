@@ -48,7 +48,6 @@
 #include <print>
 #include <ranges>
 #include <regex>
-#include <spdlog/async.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <sstream>
 #include <string>
@@ -3376,9 +3375,6 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
 
     bool time_to_stop = false;
 
-    std::mutex data_mutex;
-    std::queue<std::string> streamed_data;
-
     const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     Eodhd eod_quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key},
@@ -3386,14 +3382,16 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
 
     eod_quotes.UseSymbols({"aapl", "msft", "tsla"});
 
+    RemoteDataSource::StreamerContext streamer_context;
+
     auto eod_streaming_task =
-        std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, &data_mutex, &streamed_data);
+        std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, std::ref(streamer_context));
 
     std::this_thread::sleep_for(5s);
     time_to_stop = true;
     eod_streaming_task.get();
 
-    EXPECT_TRUE(!streamed_data.empty()); // we need an actual test here
+    EXPECT_TRUE(!streamer_context.streamed_data_.empty()); // we need an actual test here
 
     // while (!streamed_data.empty())
     // {
@@ -3411,23 +3409,24 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
 
     tiingo_quotes.UseSymbols({"aapl", "msft", "tsla"});
 
+    RemoteDataSource::StreamerContext streamer_context2;
+
     time_to_stop = false;
-    streamed_data = {};
 
     auto tiingo_streaming_task =
-        std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop, &data_mutex, &streamed_data);
+        std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop, std::ref(streamer_context2));
 
     std::this_thread::sleep_for(5s);
     time_to_stop = true;
     tiingo_streaming_task.get();
 
-    EXPECT_TRUE(!streamed_data.empty()); // we need an actual test here
+    EXPECT_TRUE(!streamer_context2.streamed_data_.empty()); // we need an actual test here
 
-    while (!streamed_data.empty())
+    while (!streamer_context2.streamed_data_.empty())
     {
-        std::string new_data = streamed_data.front();
+        std::string new_data = streamer_context2.streamed_data_.front();
         // std::cout << std::format("data: {}\n", new_data);
-        streamed_data.pop();
+        streamer_context2.streamed_data_.pop();
         auto extracted = tiingo_quotes.ExtractStreamedData(new_data);
         if (!extracted.ticker_.empty())
         {
@@ -3456,16 +3455,12 @@ int main(int argc, char **argv)
 {
     // we might do some async tests so...
 
-    spdlog::init_thread_pool(8192, 1);
     auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
 
-    // 3. Create an asynchronous logger using the console sink.
-    auto async_logger = std::make_shared<spdlog::async_logger>("UTest_logger", // Name for the console logger
-                                                               spdlog::sinks_init_list{console_sink},
-                                                               spdlog::thread_pool(),
-                                                               spdlog::async_overflow_policy::block);
+    auto test_logger = std::make_shared<spdlog::logger>("UTest_logger", // Name for the console logger
+                                                        console_sink);
 
-    spdlog::set_default_logger(async_logger);
+    spdlog::set_default_logger(test_logger);
     spdlog::set_level(spdlog::level::info);
 
     // InitLogging();
