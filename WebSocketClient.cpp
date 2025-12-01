@@ -14,6 +14,7 @@
  *
  * =====================================================================================
  */
+#include <iostream>
 
 #include "WebSocketClient.h"
 
@@ -61,11 +62,6 @@ void WebSocketClient::stop()
             stop_callback_();
         }
     });
-}
-
-bool WebSocketClient::is_connected() const
-{
-    return connected_.load();
 }
 
 void WebSocketClient::send_message(const std::string &message)

@@ -26,12 +26,11 @@
 #include <boost/beast/ssl.hpp>
 #include <deque>
 #include <functional>
-#include <iostream>
-#include <memory>
+// #include <memory>
 #include <string>
 
 namespace beast = boost::beast;
-namespace http = beast::http;
+// namespace http = beast::http;
 namespace websocket = beast::websocket;
 namespace net = boost::asio;
 namespace ssl = net::ssl;
