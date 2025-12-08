@@ -3249,64 +3249,62 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
 
 TEST_F(StreamerATR, DISABLED_ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentValues) // NOLINT
 {
-    // std::chrono::year which_year = 2021y;
-    // auto holidays = MakeHolidayList(which_year);
+    std::chrono::year which_year = 2021y;
+    auto holidays = MakeHolidayList(which_year);
+
+    const auto eod_key = LoadApiKey("./Eodhd_key.dat");
+
+    Eodhd history_getter{Eodhd::Host{"eodhd.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key}, Eodhd::Prefix{}};
+
+    constexpr int history_size = 20;
+    const auto history =
+        history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7},
+                                               history_size + 1, UseAdjusted::e_No, &holidays);
+    //    // rng::for_each(history, [](const auto& e) { std::print("{}\n", e); });
+
+    auto atr = ComputeATR("AAPL", history, 4);
+    //    std::cout << "ATR: " << atr <<quotes '\n';
+    EXPECT_EQ(atr, Decimal{"3.369"});
+
+    // recompute using all the data for rest of test
+
+    atr = ComputeATR("AAPL", history, history_size);
+
+    // next, I need to compute my average closing price over the interval
+    // but excluding the 'extra' value included for computing the ATR
+
+    // Decimal sum = rng::accumulate(history | vws::reverse | vws::take(history_size),
+    //         Decimal{}, std::plus<>(),
+    //         [](const StockDataRecord& e) { return e.close_; });
     //
-    // const auto eod_key = LoadApiKey("./Eodhd_key.dat");
-    //
-    // Eodhd history_getter{Eodhd::Host{"eodhd.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key}, Eodhd::Prefix{}};
-    //
-    // constexpr int history_size = 20;
-    // const auto history =
-    //     history_getter.GetMostRecentTickerData("AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7},
-    //                                            history_size + 1, UseAdjusted::e_No, &holidays);
-    // //    // rng::for_each(history, [](const auto& e) { std::print("{}\n", e); });
-    //
-    // auto atr = ComputeATR("AAPL", history, 4);
-    // //    std::cout << "ATR: " << atr <<quotes '\n';
-    // EXPECT_EQ(atr, Decimal{"3.369"});
-    //
-    // // recompute using all the data for rest of test
-    //
-    // atr = ComputeATR("AAPL", history, history_size);
-    //
-    // // next, I need to compute my average closing price over the interval
-    // // but excluding the 'extra' value included for computing the ATR
-    //
-    // // Decimal sum = rng::accumulate(history | vws::reverse | vws::take(history_size),
-    // //         Decimal{}, std::plus<>(),
-    // //         [](const StockDataRecord& e) { return e.close_; });
-    // //
-    // // Decimal box_size = atr / (sum / history_size);
-    //
-    // //    std::cout << "box size: " << box_size << '\n';
-    // // box_size.Rescale(-5);
-    // //    std::cout << "rescaled box size: " << box_size << '\n';
-    //
-    // PF_Chart chart("AAPL", atr, 2, Decimal(".01"), BoxScale::e_Percent);
-    //
-    // // ticker data retrieved above is in descending order by date, so let's read it backwards
-    // // but, there are no reverse iterator provided so let's see if ranges will come to the rescue
-    //
-    // //    auto backwards = history | vws::reverse;
-    //
-    // rng::for_each(history | vws::reverse | vws::take(history_size),
-    //               [&chart](const auto& e)
-    //               {
-    //                   auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
-    //                   auto status = chart.AddValue(e.close_, the_date);
-    //                   //            std::print("value: {} status: {}\n", e.close_, status);
-    //               });
-    //
-    // std::cout << std::format("AAPL chart: {}\n", chart);
-    //
-    // // TODO(dpriedel): I've lost the plot on this test and don't remember what else I
-    // // wanted to do. So, I'll leave this output so I'll be reminded when I run these tests.
-    //
-    // //    rng::for_each(history | vws::reverse , [](const auto& e) { std::cout << std::format("date: {} close: {}
-    // //    adjusted close: {} delta:
-    // //    {} \n",
-    // //                e["date"].asString(), e["close"].asString(), e["split_adj_close"].asString(), 0); });
+    // Decimal box_size = atr / (sum / history_size);
+
+    //    std::cout << "box size: " << box_size << '\n';
+    // box_size.Rescale(-5);
+    //    std::cout << "rescaled box size: " << box_size << '\n';
+
+    PF_Chart chart("AAPL", atr, 2, Decimal(".01"), BoxScale::e_Percent);
+
+    // ticker data retrieved above is in descending order by date, so let's read it backwards
+    // but, there are no reverse iterator provided so let's see if ranges will come to the rescue
+
+    //    auto backwards = history | vws::reverse;
+
+    rng::for_each(history | vws::reverse | vws::take(history_size), [&chart](const auto &e) {
+        auto the_date = StringToUTCTimePoint("%Y-%m-%d", e.date_);
+        auto status = chart.AddValue(e.close_, the_date);
+        //            std::print("value: {} status: {}\n", e.close_, status);
+    });
+
+    std::cout << std::format("AAPL chart: {}\n", chart);
+
+    // TODO(dpriedel): I've lost the plot on this test and don't remember what else I
+    // wanted to do. So, I'll leave this output so I'll be reminded when I run these tests.
+
+    //    rng::for_each(history | vws::reverse , [](const auto& e) { std::cout << std::format("date: {} close: {}
+    //    adjusted close: {} delta:
+    //    {} \n",
+    //                e["date"].asString(), e["close"].asString(), e["split_adj_close"].asString(), 0); });
 }
 
 class StreamerWebSocket : public Test
@@ -3358,6 +3356,8 @@ TEST_F(StreamerWebSocket, ConnectAndDisconnect) // NOLINT
                            Tiingo::Prefix{"/iex"}};
     EXPECT_NO_THROW(tiingo_streamer.ConnectWS());
     tiingo_streamer.DisconnectWS();
+
+    std::cout << "Looks like Tiingo worked too...\n";
 }
 
 TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
@@ -3389,16 +3389,18 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
 
     std::this_thread::sleep_for(5s);
     time_to_stop = true;
+    // eod_quotes.RequestStop();
+
     eod_streaming_task.get();
 
     EXPECT_TRUE(!streamer_context.streamed_data_.empty()); // we need an actual test here
 
-    // while (!streamed_data.empty())
-    // {
-    //     std::string new_data = streamed_data.front();
-    //     streamed_data.pop();
-    //     std::cout << std::format("{}\n", eod_quotes.ExtractData(new_data));
-    // }
+    while (!streamer_context.streamed_data_.empty())
+    {
+        std::string new_data = streamer_context.streamed_data_.front();
+        streamer_context.streamed_data_.pop();
+        std::cout << std::format("{}\n", eod_quotes.ExtractStreamedData(new_data));
+    }
 
     std::cout << "Eod works. Trying Tiingo...\n";
 
@@ -3418,6 +3420,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
 
     std::this_thread::sleep_for(5s);
     time_to_stop = true;
+    // tiingo_quotes.RequestStop();
     tiingo_streaming_task.get();
 
     EXPECT_TRUE(!streamer_context2.streamed_data_.empty()); // we need an actual test here
