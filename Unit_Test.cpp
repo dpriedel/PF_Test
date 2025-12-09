@@ -3399,7 +3399,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
     {
         std::string new_data = streamer_context.streamed_data_.front();
         streamer_context.streamed_data_.pop();
-        std::cout << std::format("{}\n", eod_quotes.ExtractStreamedData(new_data));
+        std::cout << eod_quotes.ExtractStreamedData(new_data) << std::endl;
     }
 
     std::cout << "Eod works. Trying Tiingo...\n";
