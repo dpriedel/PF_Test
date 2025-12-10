@@ -3081,7 +3081,7 @@ TEST_F(StreamerATR, RetrievePreviousCloseAndCurrentOpen) // NOLINT
         {
             std::cout << std::format("{}, {}, {}, {}\n", e.symbol_, e.time_stamp_nsecs_, e.open_, e.last_);
         }
-        //        std::cout << eod_history << '\n';
+        // std::cout << std::format("{}\n", eod_history);
         EXPECT_EQ(eod_history.size(), 3);
     }
     std::cout << "Tried Eod. Trying Tiingo...\n";
