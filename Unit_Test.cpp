@@ -3479,7 +3479,7 @@ void processor_task(RemoteDataSource::ProcessorContext &processor_context)
 
 void parser(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_context,
             std::vector<RemoteDataSource::ProcessorContext> &processor_contexts,
-            std::map<std::string, int> &context_map)
+            std::map<std::string, int> &symbol_to_context_map)
 {
     while (true)
     {
@@ -3508,7 +3508,7 @@ void parser(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_conte
         try
         {
             const Eodhd::PF_Data extracted_data = eod_quotes.ExtractStreamedData(new_data);
-            auto &processor_ctx = processor_contexts[context_map.at(extracted_data.ticker_)];
+            auto &processor_ctx = processor_contexts[symbol_to_context_map.at(extracted_data.ticker_)];
 
             // push our data on to the next step
 
@@ -3561,11 +3561,11 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
 
     // so now we want to access our extractor_contexts via symbol;
     // extractor_contexts[context_map[<symbol>]]
-    std::map<std::string, int> context_map;
+    std::map<std::string, int> symbol_to_context_map;
     int indx = 0;
     for (const auto &symbol : symbols)
     {
-        context_map[symbol] = indx++;
+        symbol_to_context_map[symbol] = indx++;
     }
 
     // the new part -- use a thread pool for the low level processing tasks which are the most
@@ -3578,7 +3578,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     }
 
     auto parsing_task = std::async(std::launch::async, &parser, std::ref(eod_quotes), std::ref(streamer_context),
-                                   std::ref(processor_contexts), std::ref(context_map));
+                                   std::ref(processor_contexts), std::ref(symbol_to_context_map));
     auto eod_streaming_task =
 
         std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, std::ref(streamer_context));
