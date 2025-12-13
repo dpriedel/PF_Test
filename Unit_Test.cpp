@@ -35,6 +35,7 @@
 //  Description:
 // =====================================================================================
 
+#include <BS_thread_pool/BS_thread_pool.hpp>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -44,6 +45,7 @@
 #include <functional>
 #include <future>
 #include <iterator>
+#include <map>
 #include <numeric>
 #include <print>
 #include <ranges>
@@ -53,7 +55,6 @@
 #include <string>
 #include <string_view>
 #include <thread>
-
 namespace rng = std::ranges;
 namespace vws = std::ranges::views;
 
@@ -3438,6 +3439,204 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
     }
 }
 
+// here's a task to simulate processing the streamed and now extracted data from the websocket
+
+void processor_task(RemoteDataSource::ExtractorContext &extractor_context)
+{
+    while (true)
+    {
+        std::unique_lock<std::mutex> lock(extractor_context.mtx_);
+
+        extractor_context.cv_.wait(lock, [&extractor_context] {
+            return !extractor_context.extracted_data_.empty() || extractor_context.done_;
+        });
+
+        if (extractor_context.done_ && extractor_context.extracted_data_.empty())
+        {
+            // std::println("Consumer: Work complete.");
+            break;
+        }
+
+        if (extractor_context.extracted_data_.empty())
+        {
+            continue;
+        }
+        Eodhd::PF_Data new_data = extractor_context.extracted_data_.front();
+        extractor_context.extracted_data_.pop();
+
+        lock.unlock();
+
+        // just for testing
+
+        std::cout << new_data << std::endl;
+
+        std::this_thread::sleep_for(10ms);
+    }
+};
+
+// here's a task to parse the streamed buffer of data and xlate it to a PF_Data struct.
+// and then add it to the appropriate extractor_contexts buffer for processing.
+
+void parser_task(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_context,
+                 std::vector<RemoteDataSource::ExtractorContext> &extractor_contexts,
+                 std::map<std::string, int> &context_map)
+{
+    while (true)
+    {
+        std::unique_lock<std::mutex> lock(streamer_context.mtx_);
+
+        streamer_context.cv_.wait(
+            lock, [&streamer_context] { return !streamer_context.streamed_data_.empty() || streamer_context.done_; });
+
+        if (streamer_context.done_ && streamer_context.streamed_data_.empty())
+        {
+            // std::println("Consumer: Work complete.");
+            break;
+        }
+
+        if (streamer_context.streamed_data_.empty())
+        {
+            continue;
+        }
+        std::string new_data = streamer_context.streamed_data_.front();
+        streamer_context.streamed_data_.pop();
+
+        lock.unlock();
+
+        const Eodhd::PF_Data extracted_data = eod_quotes.ExtractStreamedData(new_data);
+        auto &extractor_ctx = extractor_contexts[context_map[extracted_data.ticker_]];
+
+        // push our data on to the next step
+
+        {
+            std::unique_lock<std::mutex> lock(extractor_ctx.mtx_);
+            extractor_ctx.extracted_data_.emplace(extracted_data);
+        }
+
+        extractor_ctx.cv_.notify_one();
+    }
+};
+
+TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
+{
+    constexpr int thread_pool_threads = 3;
+
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                         floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
+                                            current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    // if (!can_we_stream)
+    // {
+    //     std::cout << "Market not open for trading now so we can't stream quotes.\n";
+    //     return;
+    // }
+
+    bool time_to_stop = false;
+
+    const auto eod_key = LoadApiKey("Eodhd_key.dat");
+
+    Eodhd eod_quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key},
+                     Eodhd::Prefix{"/ws/us?api_token="s + eod_key}};
+
+    std::vector<std::string> symbols = {"aapl", "msft", "tsla", "goog", "spy"};
+    eod_quotes.UseSymbols(symbols);
+
+    RemoteDataSource::StreamerContext streamer_context;
+
+    // data structure to manage processing data extracted from stream.
+    // because the context struct includes a mutux and a condition_variable which are
+    // not copyable or assignable, we need to be slightly indirect here.
+
+    std::vector<RemoteDataSource::ExtractorContext> extractor_contexts(symbols.size());
+
+    // so now we want to access our extractor_contexts via symbol;
+    // extractor_contexts[context_map[<symbol>]]
+    std::map<std::string, int> context_map;
+    int indx = 0;
+    for (const auto &symbol : symbols)
+    {
+        context_map[symbol] = indx++;
+    }
+
+    // the new part -- use a thread pool for the low level processing tasks which are the most
+    // time-consuming part. add a task for each symbol we are processing data for.
+
+    BS::thread_pool thread_pool(thread_pool_threads);
+    for (auto &context : extractor_contexts)
+    {
+        thread_pool.detach_task([&context]() { processor_task(context); });
+    }
+
+    auto extracting_task = std::async(std::launch::async, &parser_task, std::ref(eod_quotes),
+                                      std::ref(streamer_context), std::ref(extractor_contexts), std::ref(context_map));
+    auto eod_streaming_task =
+
+        std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, std::ref(streamer_context));
+
+    std::this_thread::sleep_for(10s);
+    time_to_stop = true;
+    // eod_quotes.RequestStop();
+
+    eod_streaming_task.get();
+    // close down tasks.
+    streamer_context.done_ = true;
+    streamer_context.cv_.notify_one();
+    extracting_task.get();
+
+    for (auto &context : extractor_contexts)
+    {
+        context.done_ = true;
+        context.cv_.notify_one();
+    }
+    thread_pool.wait();
+
+    EXPECT_TRUE(!streamer_context.streamed_data_.empty()); // we need an actual test here
+
+    while (!streamer_context.streamed_data_.empty())
+    {
+        std::string new_data = streamer_context.streamed_data_.front();
+        streamer_context.streamed_data_.pop();
+        std::cout << eod_quotes.ExtractStreamedData(new_data) << std::endl;
+    }
+
+    std::cout << "Eod works. Trying Tiingo...\n";
+
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                      Tiingo::Prefix{"/iex"}};
+    //
+    // tiingo_quotes.UseSymbols({"aapl", "msft", "tsla"});
+    //
+    // RemoteDataSource::StreamerContext streamer_context2;
+
+    //
+    // time_to_stop = false;
+    //
+    // auto tiingo_streaming_task =
+    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop,
+    //     std::ref(streamer_context2));
+    //
+    // std::this_thread::sleep_for(5s);
+    // time_to_stop = true;
+    // // tiingo_quotes.RequestStop();
+    // tiingo_streaming_task.get();
+    //
+    // EXPECT_TRUE(!streamer_context2.streamed_data_.empty()); // we need an actual test here
+    //
+    // while (!streamer_context2.streamed_data_.empty())
+    // {
+    //     std::string new_data = streamer_context2.streamed_data_.front();
+    //     // std::cout << std::format("data: {}\n", new_data);
+    //     streamer_context2.streamed_data_.pop();
+    //     auto extracted = tiingo_quotes.ExtractStreamedData(new_data);
+    //     if (!extracted.ticker_.empty())
+    //     {
+    //         std::cout << extracted << '\n';
+    //     }
+    // }
+}
 // NOLINTEND(*-magic-numbers)
 
 //===  FUNCTION  ======================================================================
