@@ -3441,28 +3441,28 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
 
 // here's a task to simulate processing the streamed and now extracted data from the websocket
 
-void processor_task(RemoteDataSource::ExtractorContext &extractor_context)
+void processor_task(RemoteDataSource::ProcessorContext &processor_context)
 {
     while (true)
     {
-        std::unique_lock<std::mutex> lock(extractor_context.mtx_);
+        std::unique_lock<std::mutex> lock(processor_context.mtx_);
 
-        extractor_context.cv_.wait(lock, [&extractor_context] {
-            return !extractor_context.extracted_data_.empty() || extractor_context.done_;
+        processor_context.cv_.wait(lock, [&processor_context] {
+            return !processor_context.extracted_data_.empty() || processor_context.done_;
         });
 
-        if (extractor_context.done_ && extractor_context.extracted_data_.empty())
+        if (processor_context.done_ && processor_context.extracted_data_.empty())
         {
             // std::println("Consumer: Work complete.");
             break;
         }
 
-        if (extractor_context.extracted_data_.empty())
+        if (processor_context.extracted_data_.empty())
         {
             continue;
         }
-        Eodhd::PF_Data new_data = extractor_context.extracted_data_.front();
-        extractor_context.extracted_data_.pop();
+        Eodhd::PF_Data new_data = std::move(processor_context.extracted_data_.front());
+        processor_context.extracted_data_.pop();
 
         lock.unlock();
 
@@ -3475,45 +3475,54 @@ void processor_task(RemoteDataSource::ExtractorContext &extractor_context)
 };
 
 // here's a task to parse the streamed buffer of data and xlate it to a PF_Data struct.
-// and then add it to the appropriate extractor_contexts buffer for processing.
+// and then add it to the appropriate processor_contexts buffer for processing.
 
-void parser_task(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_context,
-                 std::vector<RemoteDataSource::ExtractorContext> &extractor_contexts,
-                 std::map<std::string, int> &context_map)
+void parser(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_context,
+            std::vector<RemoteDataSource::ProcessorContext> &processor_contexts,
+            std::map<std::string, int> &context_map)
 {
     while (true)
     {
-        std::unique_lock<std::mutex> lock(streamer_context.mtx_);
-
-        streamer_context.cv_.wait(
-            lock, [&streamer_context] { return !streamer_context.streamed_data_.empty() || streamer_context.done_; });
-
-        if (streamer_context.done_ && streamer_context.streamed_data_.empty())
+        std::string new_data;
         {
-            // std::println("Consumer: Work complete.");
-            break;
+            std::unique_lock<std::mutex> lock(streamer_context.mtx_);
+
+            streamer_context.cv_.wait(lock, [&streamer_context] {
+                return !streamer_context.streamed_data_.empty() || streamer_context.done_;
+            });
+
+            if (streamer_context.done_ && streamer_context.streamed_data_.empty())
+            {
+                // std::println("Consumer: Work complete.");
+                break;
+            }
+
+            if (streamer_context.streamed_data_.empty())
+            {
+                continue;
+            }
+            new_data = std::move(streamer_context.streamed_data_.front());
+            streamer_context.streamed_data_.pop();
         }
 
-        if (streamer_context.streamed_data_.empty())
+        try
         {
-            continue;
+            const Eodhd::PF_Data extracted_data = eod_quotes.ExtractStreamedData(new_data);
+            auto &processor_ctx = processor_contexts[context_map.at(extracted_data.ticker_)];
+
+            // push our data on to the next step
+
+            {
+                std::lock_guard<std::mutex> lock(processor_ctx.mtx_);
+                processor_ctx.extracted_data_.emplace(extracted_data);
+            }
+
+            processor_ctx.cv_.notify_one();
         }
-        std::string new_data = streamer_context.streamed_data_.front();
-        streamer_context.streamed_data_.pop();
-
-        lock.unlock();
-
-        const Eodhd::PF_Data extracted_data = eod_quotes.ExtractStreamedData(new_data);
-        auto &extractor_ctx = extractor_contexts[context_map[extracted_data.ticker_]];
-
-        // push our data on to the next step
-
+        catch (const std::exception &e)
         {
-            std::unique_lock<std::mutex> lock(extractor_ctx.mtx_);
-            extractor_ctx.extracted_data_.emplace(extracted_data);
+            spdlog::error("Error parsing websocket data: {}", e.what());
         }
-
-        extractor_ctx.cv_.notify_one();
     }
 };
 
@@ -3548,7 +3557,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     // because the context struct includes a mutux and a condition_variable which are
     // not copyable or assignable, we need to be slightly indirect here.
 
-    std::vector<RemoteDataSource::ExtractorContext> extractor_contexts(symbols.size());
+    std::vector<RemoteDataSource::ProcessorContext> processor_contexts(symbols.size());
 
     // so now we want to access our extractor_contexts via symbol;
     // extractor_contexts[context_map[<symbol>]]
@@ -3562,14 +3571,14 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     // the new part -- use a thread pool for the low level processing tasks which are the most
     // time-consuming part. add a task for each symbol we are processing data for.
 
-    BS::thread_pool thread_pool(thread_pool_threads);
-    for (auto &context : extractor_contexts)
+    BS::thread_pool processor_thread_pool(thread_pool_threads);
+    for (auto &context : processor_contexts)
     {
-        thread_pool.detach_task([&context]() { processor_task(context); });
+        processor_thread_pool.detach_task([&context]() { processor_task(context); });
     }
 
-    auto extracting_task = std::async(std::launch::async, &parser_task, std::ref(eod_quotes),
-                                      std::ref(streamer_context), std::ref(extractor_contexts), std::ref(context_map));
+    auto parsing_task = std::async(std::launch::async, &parser, std::ref(eod_quotes), std::ref(streamer_context),
+                                   std::ref(processor_contexts), std::ref(context_map));
     auto eod_streaming_task =
 
         std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, std::ref(streamer_context));
@@ -3582,14 +3591,14 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     // close down tasks.
     streamer_context.done_ = true;
     streamer_context.cv_.notify_one();
-    extracting_task.get();
+    parsing_task.get();
 
-    for (auto &context : extractor_contexts)
+    for (auto &context : processor_contexts)
     {
         context.done_ = true;
         context.cv_.notify_one();
     }
-    thread_pool.wait();
+    processor_thread_pool.wait();
 
     EXPECT_TRUE(!streamer_context.streamed_data_.empty()); // we need an actual test here
 
