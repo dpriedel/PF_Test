@@ -3510,7 +3510,7 @@ void parser(RemoteDataSource *streamer_quotes, RemoteDataSource::StreamerContext
             const RemoteDataSource::PF_Data extracted_data = streamer_quotes->ExtractStreamedData(new_data);
             if (extracted_data.ticker_.empty())
             {
-                // Tiingo sends 'hartbeat' messages with no data
+                // Tiingo sends 'heartbeat' messages with no data
                 continue;
             }
             auto &processor_ctx = processor_contexts[symbol_to_context_map.at(extracted_data.ticker_)];
