@@ -3477,7 +3477,7 @@ void processor_task(RemoteDataSource::ProcessorContext &processor_context)
 // here's a task to parse the streamed buffer of data and xlate it to a PF_Data struct.
 // and then add it to the appropriate processor_contexts buffer for processing.
 
-void parser(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_context,
+void parser(RemoteDataSource *streamer_quotes, RemoteDataSource::StreamerContext &streamer_context,
             std::vector<RemoteDataSource::ProcessorContext> &processor_contexts,
             std::map<std::string, int> &symbol_to_context_map)
 {
@@ -3507,7 +3507,12 @@ void parser(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_conte
 
         try
         {
-            const Eodhd::PF_Data extracted_data = eod_quotes.ExtractStreamedData(new_data);
+            const RemoteDataSource::PF_Data extracted_data = streamer_quotes->ExtractStreamedData(new_data);
+            if (extracted_data.ticker_.empty())
+            {
+                // Tiingo sends 'hartbeat' messages with no data
+                continue;
+            }
             auto &processor_ctx = processor_contexts[symbol_to_context_map.at(extracted_data.ticker_)];
 
             // push our data on to the next step
@@ -3521,7 +3526,7 @@ void parser(Eodhd &eod_quotes, RemoteDataSource::StreamerContext &streamer_conte
         }
         catch (const std::exception &e)
         {
-            spdlog::error("Error parsing websocket data: {}", e.what());
+            spdlog::error("Error parsing websocket data: {}\n{}", new_data, e.what());
         }
     }
 };
@@ -3548,7 +3553,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     Eodhd eod_quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key},
                      Eodhd::Prefix{"/ws/us?api_token="s + eod_key}};
 
-    std::vector<std::string> symbols = {"aapl", "msft", "tsla", "goog", "spy"};
+    std::vector<std::string> symbols = {"AAPL", "MSFT", "TSLA", "GOOG", "SPY"};
     eod_quotes.UseSymbols(symbols);
 
     RemoteDataSource::StreamerContext streamer_context;
@@ -3577,13 +3582,12 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
         processor_thread_pool.detach_task([&context]() { processor_task(context); });
     }
 
-    auto parsing_task = std::async(std::launch::async, &parser, std::ref(eod_quotes), std::ref(streamer_context),
+    auto parsing_task = std::async(std::launch::async, &parser, &eod_quotes, std::ref(streamer_context),
                                    std::ref(processor_contexts), std::ref(symbol_to_context_map));
     auto eod_streaming_task =
-
         std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, std::ref(streamer_context));
 
-    std::this_thread::sleep_for(10s);
+    std::this_thread::sleep_for(5s);
     time_to_stop = true;
     // eod_quotes.RequestStop();
 
@@ -3600,51 +3604,50 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     }
     processor_thread_pool.wait();
 
-    EXPECT_TRUE(!streamer_context.streamed_data_.empty()); // we need an actual test here
-
-    while (!streamer_context.streamed_data_.empty())
-    {
-        std::string new_data = streamer_context.streamed_data_.front();
-        streamer_context.streamed_data_.pop();
-        std::cout << eod_quotes.ExtractStreamedData(new_data) << std::endl;
-    }
+    EXPECT_TRUE(streamer_context.streamed_data_.empty()); // we need an actual test here
 
     std::cout << "Eod works. Trying Tiingo...\n";
 
-    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-    //
-    // Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-    //                      Tiingo::Prefix{"/iex"}};
-    //
-    // tiingo_quotes.UseSymbols({"aapl", "msft", "tsla"});
-    //
-    // RemoteDataSource::StreamerContext streamer_context2;
+    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
 
-    //
-    // time_to_stop = false;
-    //
-    // auto tiingo_streaming_task =
-    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop,
-    //     std::ref(streamer_context2));
-    //
-    // std::this_thread::sleep_for(5s);
-    // time_to_stop = true;
-    // // tiingo_quotes.RequestStop();
-    // tiingo_streaming_task.get();
-    //
-    // EXPECT_TRUE(!streamer_context2.streamed_data_.empty()); // we need an actual test here
-    //
-    // while (!streamer_context2.streamed_data_.empty())
-    // {
-    //     std::string new_data = streamer_context2.streamed_data_.front();
-    //     // std::cout << std::format("data: {}\n", new_data);
-    //     streamer_context2.streamed_data_.pop();
-    //     auto extracted = tiingo_quotes.ExtractStreamedData(new_data);
-    //     if (!extracted.ticker_.empty())
-    //     {
-    //         std::cout << extracted << '\n';
-    //     }
-    // }
+    Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+                         Tiingo::Prefix{"/iex"}};
+
+    tiingo_quotes.UseSymbols(symbols);
+
+    RemoteDataSource::StreamerContext streamer_context2;
+
+    std::vector<RemoteDataSource::ProcessorContext> processor_contexts2(symbols.size());
+
+    BS::thread_pool processor_thread_pool2(thread_pool_threads);
+    for (auto &context : processor_contexts2)
+    {
+        processor_thread_pool2.detach_task([&context]() { processor_task(context); });
+    }
+
+    time_to_stop = false;
+
+    auto parsing_task2 = std::async(std::launch::async, &parser, &tiingo_quotes, std::ref(streamer_context2),
+                                    std::ref(processor_contexts2), std::ref(symbol_to_context_map));
+    auto tiingo_streaming_task =
+        std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop, std::ref(streamer_context2));
+
+    std::this_thread::sleep_for(5s);
+    time_to_stop = true;
+    // tiingo_quotes.RequestStop();
+    tiingo_streaming_task.get();
+
+    streamer_context2.done_ = true;
+    streamer_context2.cv_.notify_one();
+    parsing_task2.get();
+
+    for (auto &context : processor_contexts2)
+    {
+        context.done_ = true;
+        context.cv_.notify_one();
+    }
+    processor_thread_pool2.wait();
+    EXPECT_TRUE(streamer_context2.streamed_data_.empty()); // we need an actual test here
 }
 // NOLINTEND(*-magic-numbers)
 
