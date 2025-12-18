@@ -8,6 +8,7 @@ EndToEnd_Test
 
 Debug_unit/*
 Debug_e2e/*
+Debug_holidays/*
 .cache/*
 test_files*/*
 collected_charts*/*
@@ -25,6 +26,11 @@ PF_DrawChart*
 SPY*
 Splits.txt
 *.json
+*.svg
+
+# some experiments
+ws_*.cpp
+reconnect.*
 
 .sqlfluff
 
