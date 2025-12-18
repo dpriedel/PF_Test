@@ -35,7 +35,6 @@
 //  Description:
 // =====================================================================================
 
-#include <BS_thread_pool/BS_thread_pool.hpp>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -3461,7 +3460,7 @@ void processor_task(RemoteDataSource::ProcessorContext &processor_context)
         {
             continue;
         }
-        Eodhd::PF_Data new_data = std::move(processor_context.extracted_data_.front());
+        RemoteDataSource::PF_Data new_data = std::move(processor_context.extracted_data_.front());
         processor_context.extracted_data_.pop();
 
         lock.unlock();
@@ -3533,8 +3532,6 @@ void parser(RemoteDataSource *streamer_quotes, RemoteDataSource::StreamerContext
 
 TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
 {
-    constexpr int thread_pool_threads = 3;
-
     auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                          floor<std::chrono::seconds>(std::chrono::system_clock::now()));
     auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
@@ -3576,10 +3573,10 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     // the new part -- use a thread pool for the low level processing tasks which are the most
     // time-consuming part. add a task for each symbol we are processing data for.
 
-    BS::thread_pool processor_thread_pool(thread_pool_threads);
+    std::vector<std::thread> processor_threads;
     for (auto &context : processor_contexts)
     {
-        processor_thread_pool.detach_task([&context]() { processor_task(context); });
+        processor_threads.emplace_back(&processor_task, std::ref(context));
     }
 
     auto parsing_task = std::async(std::launch::async, &parser, &eod_quotes, std::ref(streamer_context),
@@ -3602,7 +3599,10 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
         context.done_ = true;
         context.cv_.notify_one();
     }
-    processor_thread_pool.wait();
+    for (auto &thread : processor_threads)
+    {
+        thread.join();
+    }
 
     EXPECT_TRUE(streamer_context.streamed_data_.empty()); // we need an actual test here
 
@@ -3619,10 +3619,11 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
 
     std::vector<RemoteDataSource::ProcessorContext> processor_contexts2(symbols.size());
 
-    BS::thread_pool processor_thread_pool2(thread_pool_threads);
+    processor_threads.clear();
+
     for (auto &context : processor_contexts2)
     {
-        processor_thread_pool2.detach_task([&context]() { processor_task(context); });
+        processor_threads.emplace_back(&processor_task, std::ref(context));
     }
 
     time_to_stop = false;
@@ -3646,7 +3647,11 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
         context.done_ = true;
         context.cv_.notify_one();
     }
-    processor_thread_pool2.wait();
+    for (auto &thread : processor_threads)
+    {
+        thread.join();
+    }
+
     EXPECT_TRUE(streamer_context2.streamed_data_.empty()); // we need an actual test here
 }
 // NOLINTEND(*-magic-numbers)
