@@ -26,6 +26,7 @@
 #include <format>
 #include <fstream>
 #include <future>
+#include <print>
 #include <ranges>
 
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -151,11 +152,8 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions) // NOLINT
     ASSERT_TRUE(fs::exists("/tmp/test_charts/SPY_10X1_linear_eod.json"));
 }
 
-TEST_F(ProgramOptions, DISABLED_TestProblemOptions) // NOLINT
+TEST_F(ProgramOptions, TestProblemOptions) // NOLINT
 {
-    //	NOTE: disabled because now I am capturing error internally which would
-    //	have generated the exception this is testing for.
-    //
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
 
@@ -164,6 +162,9 @@ TEST_F(ProgramOptions, DISABLED_TestProblemOptions) // NOLINT
         "-s", "qqqq",
         "-s", "spy",
         "--new-data-source", "streaming",
+        // "--streaming-host", "ws.eodhistoricaldata.com",
+        // "--streaming-data-source", "Eodhd",
+        "--streaming-api-key", "Eodhd_key.dat",
         "--new-data-dir", "./test_files",
         "--source-format", "csv",
         "--mode", "load",
@@ -173,6 +174,9 @@ TEST_F(ProgramOptions, DISABLED_TestProblemOptions) // NOLINT
         "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts",
         "--use-ATR",
+        "--quote-host", "eodhd.com",
+        "--quote-data-source", "Eodhd",
+        "--quote-api-key", "Eodhd_key.dat",
         "--boxsize", ".1",
         "--boxsize", ".01",
         "--reversal", "1",
@@ -266,6 +270,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         spdlog::error("Something totally unexpected happened.");
     }
 
+    std::println("---------------------------------------------------------");
+
     // clang-format off
 	std::vector<std::string> tokens2{"the_program",
         "-s", "qqqq",
@@ -311,6 +317,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
     { // handle exception: unspecified
         spdlog::error("Something totally unexpected happened.");
     }
+
+    std::println("---------------------------------------------------------");
 
     // clang-format off
 	std::vector<std::string> tokens3{"the_program",
@@ -360,6 +368,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         spdlog::error("Something totally unexpected happened.");
     }
 
+    std::println("---------------------------------------------------------");
+
     // clang-format off
 	std::vector<std::string> tokens4{"the_program",
         "-s", "qqqq",
@@ -393,6 +403,9 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         bool startup_OK = myApp.Startup();
+
+        // qqqq is an invalid symbol but we haven't tried to use it yet
+        // so startup should be good.
         EXPECT_TRUE(startup_OK);
     }
 
@@ -888,9 +901,9 @@ TEST_F(Database, LoadDataFromDB) // NOLINT
 
     // clang-format off
 	std::vector<std::string> tokens{"the_program",
-        "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
-        "--symbol", "AAPL",
-        "--symbol-list", "IWR,iwm,t",
+        // "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
+        // "--symbol", "AAPL",
+        "--symbol-list", "SPY,AAPL,IWR,iwm,t",
         "--new-data-source", "database",
         "--mode", "load",
         "--scale", "linear",
@@ -1495,7 +1508,7 @@ TEST_F(Database, DailyScan) // NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
-        "--begin-date", "2025-07-01",
+        "--begin-date", "2025-12-18",
         "--log-path", "/tmp/PF_Collect/test21.log"
 	};
     // clang-format on
