@@ -404,6 +404,8 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
 
         bool startup_OK = myApp.Startup();
 
+        std::println("---------------------------------------------------------");
+
         // qqqq is an invalid symbol but we haven't tried to use it yet
         // so startup should be good.
         EXPECT_TRUE(startup_OK);
