@@ -2573,7 +2573,7 @@ TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB) // NOLINT
 
     // std::cout << query << std::endl;
 
-    auto Row2Range = [](const auto &r) { return Decimal{r[0].template as<const char *>()}; };
+    auto Row2Range = [](const auto &r) { return Decimal{r[0].c_str()}; };
     try
     {
         close_range = the_db.RunSQLQueryUsingRows<Decimal>(query, Row2Range)[0];
