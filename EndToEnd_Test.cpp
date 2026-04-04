@@ -1920,6 +1920,706 @@ void InitLogging()
     //    );
 } /* -----  end of function InitLogging  ----- */
 
+class ResumeModeTests : public Test
+{
+protected:
+    static constexpr std::chrono::minutes STREAM_DURATION{2};
+    static constexpr std::chrono::minutes RESUME_CHECK_DURATION{1};
+    static constexpr std::chrono::seconds TEST_DELAY{3};
+
+    static void CleanupDirectory(const std::string& dir)
+    {
+        if (fs::exists(dir))
+        {
+            fs::remove_all(dir);
+        }
+    }
+
+    static void CreateTestDirectory(const std::string& dir)
+    {
+        if (!fs::exists(dir))
+        {
+            fs::create_directories(dir);
+        }
+    }
+
+    static void CorruptFile(const fs::path& filepath)
+    {
+        std::ofstream out(filepath, std::ios::out | std::ios::binary);
+        out << "{invalid json content";
+        out.close();
+    }
+
+    static void CopyFilesFromTest1(const std::string& src_dir, const std::string& dst_dir)
+    {
+        // Copy only chart JSON files (no streamed prices or summary)
+        for (const auto& entry : fs::directory_iterator(src_dir))
+        {
+            if (entry.is_regular_file() && entry.path().extension() == ".json")
+            {
+                // Skip streamed prices and summary files
+                std::string filename = entry.path().filename().string();
+                if (filename.find("_streamed_prices") == std::string::npos &&
+                    filename != "streamed_summary.json")
+                {
+                    fs::copy(entry.path(), fs::path(dst_dir) / entry.path().filename());
+                }
+            }
+        }
+    }
+
+    static std::vector<std::string> GetTestSymbols()
+    {
+        return {"AAPL", "MSFT", "GOOGL", "TSLA", "SPY", "QQQQ"};
+    }
+};
+
+TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
+{
+    std::cout << "\n=== Test: ResumeWithAllFilesPresent ===" << std::endl;
+    std::cout << "Phase 1: Run streaming mode without resume (creates files)" << std::endl;
+
+    // Setup test directory
+    CleanupDirectory("/tmp/test_resume_test01/");
+    CreateTestDirectory("/tmp/test_resume_test01/");
+
+    std::string test_dir = "/tmp/test_resume_test01/";
+    std::string symbols = "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ";
+
+    // First run: Without resume - creates fresh files
+    std::vector<std::string> tokens1{"the_program",
+        "--symbol-list", symbols,
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", test_dir,
+        "--output-graph-dir", test_dir,
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test01_phase1.log"
+    };
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens1);
+
+        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
+
+        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+
+        auto timer = [](const auto& stop_at) {
+            while (true)
+            {
+                auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                          floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                if (current.get_sys_time() >= stop_at.get_sys_time())
+                {
+                    PF_CollectDataApp::SetSignal();
+                    break;
+                }
+                std::this_thread::sleep_for(1s);
+            }
+        };
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            auto timer_task = std::async(std::launch::async, timer, then);
+            myApp.Run();
+            myApp.Shutdown();
+            timer_task.get();
+        }
+        else
+        {
+            std::cout << "Problems starting program. No processing done.\n";
+        }
+    }
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {
+        spdlog::error("Something totally unexpected happened.");
+    }
+
+    // Verify files were created
+    std::cout << "Phase 1 complete. Verifying files created..." << std::endl;
+    bool files_created = true;
+    for (const auto& symbol : GetTestSymbols())
+    {
+        fs::path chart_file = fs::path(test_dir) / (symbol + "_0.01X1_linear.json");
+        fs::path prices_file = fs::path(test_dir) / (symbol + "_streamed_prices.json");
+        if (!fs::exists(chart_file) || !fs::exists(prices_file))
+        {
+            files_created = false;
+            break;
+        }
+    }
+    fs::path summary_file = fs::path(test_dir) / "streamed_summary.json";
+    files_created = files_created && fs::exists(summary_file);
+
+    ASSERT_TRUE(files_created) << "Files were not created in phase 1";
+
+    // Small delay between runs
+    std::this_thread::sleep_for(TEST_DELAY);
+
+    std::cout << "Phase 2: Run streaming mode with resume" << std::endl;
+
+    // Second run: With resume - should load existing files
+    std::vector<std::string> tokens2{"the_program",
+        "--symbol-list", symbols,
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", test_dir,
+        "--output-graph-dir", test_dir,
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "--resume",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test01_phase2.log"
+    };
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens2);
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            auto now2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            auto then2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) + RESUME_CHECK_DURATION);
+
+            auto timer = [](const auto& stop_at) {
+                while (true)
+                {
+                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (current.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
+            auto timer_task = std::async(std::launch::async, timer, then2);
+            myApp.Run();
+            myApp.Shutdown();
+            timer_task.get();
+        }
+        else
+        {
+            std::cout << "Problems starting program. No processing done.\n";
+        }
+    }
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {
+        spdlog::error("Something totally unexpected happened.");
+    }
+
+    // Verify resume loaded data (files should still exist and be valid)
+    std::cout << "Phase 2 complete. Verifying resume functionality..." << std::endl;
+    EXPECT_TRUE(fs::exists(summary_file)) << "Summary file should still exist after resume";
+    for (const auto& symbol : GetTestSymbols())
+    {
+        fs::path prices_file = fs::path(test_dir) / (symbol + "_streamed_prices.json");
+        EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should exist";
+    }
+}
+
+TEST_F(ResumeModeTests, ResumeWithPartialFiles)
+{
+    std::cout << "\n=== Test: ResumeWithPartialFiles ===" << std::endl;
+    std::cout << "Setup: Copy chart files from test01 (no streamed prices/summary)" << std::endl;
+
+    // Cleanup from previous runs
+    CleanupDirectory("/tmp/test_resume_test02/");
+    CreateTestDirectory("/tmp/test_resume_test02/");
+
+    // Copy only chart files from test01
+    CopyFilesFromTest1("/tmp/test_resume_test01/", "/tmp/test_resume_test02/");
+
+    std::cout << "Running streaming mode with resume (partial files)" << std::endl;
+
+    std::vector<std::string> tokens{"the_program",
+        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_resume_test02/",
+        "--output-graph-dir", "/tmp/test_resume_test02/",
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "--resume",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test02.log"
+    };
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens);
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+
+            auto timer = [](const auto& stop_at) {
+                while (true)
+                {
+                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (current.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
+            auto timer_task = std::async(std::launch::async, timer, then);
+            myApp.Run();
+            myApp.Shutdown();
+            timer_task.get();
+        }
+        else
+        {
+            std::cout << "Problems starting program. No processing done.\n";
+        }
+    }
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {
+        spdlog::error("Something totally unexpected happened.");
+    }
+
+    // Verify charts loaded and new streamed data created
+    std::cout << "Verifying partial resume functionality..." << std::endl;
+    for (const auto& symbol : GetTestSymbols())
+    {
+        fs::path chart_file = fs::path("/tmp/test_resume_test02/") / (symbol + "_0.01X1_linear.json");
+        fs::path prices_file = fs::path("/tmp/test_resume_test02/") / (symbol + "_streamed_prices.json");
+        EXPECT_TRUE(fs::exists(chart_file)) << "Chart file for " << symbol << " should exist";
+        EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should be created";
+    }
+    EXPECT_TRUE(fs::exists("/tmp/test_resume_test02/streamed_summary.json")) << "Summary file should be created";
+}
+
+TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
+{
+    std::cout << "\n=== Test: ResumeWithCorruptFiles ===" << std::endl;
+    std::cout << "Setup: Create valid files, then corrupt one" << std::endl;
+
+    // Cleanup from previous runs
+    CleanupDirectory("/tmp/test_resume_test03/");
+    CreateTestDirectory("/tmp/test_resume_test03/");
+
+    // First create valid files (short run)
+    std::vector<std::string> tokens_setup{"the_program",
+        "--symbol-list", "AAPL",
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_resume_test03/",
+        "--output-graph-dir", "/tmp/test_resume_test03/",
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test03_setup.log"
+    };
+
+    try
+    {
+        PF_CollectDataApp myApp_setup(tokens_setup);
+
+        bool startup_OK = myApp_setup.Startup();
+        if (startup_OK)
+        {
+            auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 60s);
+
+            auto timer = [](const auto& stop_at) {
+                while (true)
+                {
+                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (current.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
+            auto timer_task = std::async(std::launch::async, timer, then);
+            myApp_setup.Run();
+            myApp_setup.Shutdown();
+            timer_task.get();
+        }
+    }
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Setup failed: {}", theProblem.what()));
+    }
+
+    // Corrupt the chart file
+    fs::path corrupt_file = fs::path("/tmp/test_resume_test03/AAPL_0.01X1_linear.json");
+    if (fs::exists(corrupt_file))
+    {
+        CorruptFile(corrupt_file);
+        std::cout << "Corrupted file: " << corrupt_file << std::endl;
+    }
+
+    // Small delay
+    std::this_thread::sleep_for(TEST_DELAY);
+
+    std::cout << "Running with corrupt files (should throw)" << std::endl;
+
+    std::vector<std::string> tokens{"the_program",
+        "--symbol-list", "AAPL",
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_resume_test03/",
+        "--output-graph-dir", "/tmp/test_resume_test03/",
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "--resume",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test03.log"
+    };
+
+    // This should throw when trying to load corrupt file
+    ASSERT_THROW(
+    {
+        PF_CollectDataApp myApp(tokens);
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            myApp.Run();
+            myApp.Shutdown();
+        }
+    }, std::exception);
+}
+
+TEST_F(ResumeModeTests, NormalModeNoResume)
+{
+    std::cout << "\n=== Test: NormalModeNoResume ===" << std::endl;
+    std::cout << "Running streaming mode WITHOUT resume flag" << std::endl;
+
+    // Cleanup from previous runs
+    CleanupDirectory("/tmp/test_resume_test04/");
+    CreateTestDirectory("/tmp/test_resume_test04/");
+
+    std::vector<std::string> tokens{"the_program",
+        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_resume_test04/",
+        "--output-graph-dir", "/tmp/test_resume_test04/",
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test04.log"
+    };
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens);
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+
+            auto timer = [](const auto& stop_at) {
+                while (true)
+                {
+                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (current.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
+            auto timer_task = std::async(std::launch::async, timer, then);
+            myApp.Run();
+            myApp.Shutdown();
+            timer_task.get();
+        }
+        else
+        {
+            std::cout << "Problems starting program. No processing done.\n";
+        }
+    }
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
+    }
+    catch (...)
+    {
+        spdlog::error("Something totally unexpected happened.");
+    }
+
+    // Verify all files created (no loading occurred)
+    std::cout << "Verifying normal mode created all files..." << std::endl;
+    for (const auto& symbol : GetTestSymbols())
+    {
+        fs::path chart_file = fs::path("/tmp/test_resume_test04/") / (symbol + "_0.01X1_linear.json");
+        fs::path prices_file = fs::path("/tmp/test_resume_test04/") / (symbol + "_streamed_prices.json");
+        EXPECT_TRUE(fs::exists(chart_file)) << "Chart file for " << symbol << " should exist";
+        EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should exist";
+    }
+    EXPECT_TRUE(fs::exists("/tmp/test_resume_test04/streamed_summary.json")) << "Summary file should exist";
+}
+
+TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
+{
+    std::cout << "\n=== Test: ShutdownAndResumeCycle ===" << std::endl;
+    std::cout << "Phase 1: Run streaming, shutdown, then resume" << std::endl;
+
+    // Cleanup from previous runs
+    CleanupDirectory("/tmp/test_resume_test05/");
+    CreateTestDirectory("/tmp/test_resume_test05/");
+
+    // First run: No resume
+    std::vector<std::string> tokens1{"the_program",
+        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_resume_test05/",
+        "--output-graph-dir", "/tmp/test_resume_test05/",
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test05_phase1.log"
+    };
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens1);
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+
+            auto timer = [](const auto& stop_at) {
+                while (true)
+                {
+                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (current.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
+            auto timer_task = std::async(std::launch::async, timer, then);
+            myApp.Run();
+            myApp.Shutdown();
+            timer_task.get();
+        }
+    }
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Phase 1 failed: {}", theProblem.what()));
+    }
+
+    // Verify files created
+    std::cout << "Phase 1 complete. Files created." << std::endl;
+    for (const auto& symbol : GetTestSymbols())
+    {
+        fs::path prices_file = fs::path("/tmp/test_resume_test05/") / (symbol + "_streamed_prices.json");
+        EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should exist after phase 1";
+    }
+
+    // Small delay
+    std::this_thread::sleep_for(TEST_DELAY);
+
+    std::cout << "Phase 2: Resume from saved data" << std::endl;
+
+    // Second run: With resume
+    std::vector<std::string> tokens2{"the_program",
+        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
+        "--new-data-source", "streaming",
+        "--quote-host", "api.tiingo.com",
+        "--quote-data-source", "Tiingo",
+        "--quote-api-key", "Tiingo_key.dat",
+        "--streaming-host", "api.tiingo.com",
+        "--streaming-data-source", "Tiingo",
+        "--streaming-api-key", "Tiingo_key.dat",
+        "--mode", "load",
+        "--interval", "live",
+        "--scale", "linear",
+        "--price-fld-name", "close",
+        "--destination", "file",
+        "--output-chart-dir", "/tmp/test_resume_test05/",
+        "--output-graph-dir", "/tmp/test_resume_test05/",
+        "--use-ATR",
+        "--boxsize", "0.01",
+        "--reversal", "1",
+        "--resume",
+        "-l", "debug",
+        "--log-path", "/tmp/PF_Collect/resume_test05_phase2.log"
+    };
+
+    try
+    {
+        PF_CollectDataApp myApp(tokens2);
+
+        bool startup_OK = myApp.Startup();
+        if (startup_OK)
+        {
+            auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + RESUME_CHECK_DURATION);
+
+            auto timer = [](const auto& stop_at) {
+                while (true)
+                {
+                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (current.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        PF_CollectDataApp::SetSignal();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
+            auto timer_task = std::async(std::launch::async, timer, then);
+            myApp.Run();
+            myApp.Shutdown();
+            timer_task.get();
+        }
+    }
+    catch (const std::exception& theProblem)
+    {
+        spdlog::error(std::format("Phase 2 failed: {}", theProblem.what()));
+    }
+
+    // Verify data persisted across runs
+    std::cout << "Phase 2 complete. Verifying data persisted..." << std::endl;
+    for (const auto& symbol : GetTestSymbols())
+    {
+        fs::path prices_file = fs::path("/tmp/test_resume_test05/") / (symbol + "_streamed_prices.json");
+        EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should exist after resume";
+    }
+    EXPECT_TRUE(fs::exists("/tmp/test_resume_test05/streamed_summary.json")) << "Summary file should exist after resume";
+}
+
 int main(int argc, char **argv)
 {
     // simpler logging setup than unit test because here
