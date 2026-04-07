@@ -1927,7 +1927,7 @@ protected:
     static constexpr std::chrono::minutes RESUME_CHECK_DURATION{1};
     static constexpr std::chrono::seconds TEST_DELAY{3};
 
-    static void CleanupDirectory(const std::string& dir)
+    static void CleanupDirectory(const std::string &dir)
     {
         if (fs::exists(dir))
         {
@@ -1935,7 +1935,7 @@ protected:
         }
     }
 
-    static void CreateTestDirectory(const std::string& dir)
+    static void CreateTestDirectory(const std::string &dir)
     {
         if (!fs::exists(dir))
         {
@@ -1943,24 +1943,23 @@ protected:
         }
     }
 
-    static void CorruptFile(const fs::path& filepath)
+    static void CorruptFile(const fs::path &filepath)
     {
         std::ofstream out(filepath, std::ios::out | std::ios::binary);
         out << "{invalid json content";
         out.close();
     }
 
-    static void CopyFilesFromTest1(const std::string& src_dir, const std::string& dst_dir)
+    static void CopyFilesFromTest1(const std::string &src_dir, const std::string &dst_dir)
     {
         // Copy only chart JSON files (no streamed prices or summary)
-        for (const auto& entry : fs::directory_iterator(src_dir))
+        for (const auto &entry : fs::directory_iterator(src_dir))
         {
             if (entry.is_regular_file() && entry.path().extension() == ".json")
             {
                 // Skip streamed prices and summary files
                 std::string filename = entry.path().filename().string();
-                if (filename.find("_streamed_prices") == std::string::npos &&
-                    filename != "streamed_summary.json")
+                if (filename.find("_streamed_prices") == std::string::npos && filename != "streamed_summary.json")
                 {
                     fs::copy(entry.path(), fs::path(dst_dir) / entry.path().filename());
                 }
@@ -1970,7 +1969,21 @@ protected:
 
     static std::vector<std::string> GetTestSymbols()
     {
-        return {"AAPL", "MSFT", "GOOGL", "TSLA", "SPY", "QQQQ"};
+        return {"AAPL", "MSFT", "GOOGL", "TSLA", "SPY", "QQQ"};
+    }
+
+    static std::string GetSymbolListString()
+    {
+        std::string result;
+        for (const auto& symbol : GetTestSymbols())
+        {
+            if (!result.empty())
+            {
+                result += ",";
+            }
+            result += symbol;
+        }
+        return result;
     }
 };
 
@@ -1984,49 +1997,68 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
     CreateTestDirectory("/tmp/test_resume_test01/");
 
     std::string test_dir = "/tmp/test_resume_test01/";
-    std::string symbols = "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ";
+    std::string symbols = GetSymbolListString();
 
     // First run: Without resume - creates fresh files
     std::vector<std::string> tokens1{"the_program",
-        "--symbol-list", symbols,
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", test_dir,
-        "--output-graph-dir", test_dir,
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test01_phase1.log"
-    };
+                                     "--symbol-list",
+                                     symbols,
+                                     "--new-data-source",
+                                     "streaming",
+                                     "--quote-host",
+                                     "eodhd.com",
+                                     "--quote-data-source",
+                                     "Eodhd",
+                                     "--quote-api-key",
+                                     "Eodhd_key.dat",
+                                     "--streaming-host",
+                                     "ws.eodhistoricaldata.com",
+                                     "--streaming-data-source",
+                                     "Eodhd",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--mode",
+                                     "load",
+                                     "--interval",
+                                     "live",
+                                     "--scale",
+                                     "linear",
+                                     "--price-fld-name",
+                                     "close",
+                                     "--destination",
+                                     "file",
+                                     "--output-chart-dir",
+                                     test_dir,
+                                     "--output-graph-dir",
+                                     test_dir,
+                                     "--use-ATR",
+                                     "--boxsize",
+                                     "0.01",
+                                     "--reversal",
+                                     "1",
+                                     "-l",
+                                     "debug",
+                                     "--log-path",
+                                     "/tmp/PF_Collect/resume_test01_phase1.log"};
 
     try
     {
         PF_CollectDataApp myApp(tokens1);
 
-        const auto* test_info = UnitTest::GetInstance()->current_test_info();
+        const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
         auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+        auto then =
+            std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                       floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
 
-        auto timer = [](const auto& stop_at) {
+        auto timer = [](const auto &stop_at) {
             while (true)
             {
-                auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                          floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                auto current = std::chrono::zoned_seconds(
+                    std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (current.get_sys_time() >= stop_at.get_sys_time())
                 {
                     PF_CollectDataApp::SetSignal();
@@ -2049,7 +2081,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
             std::cout << "Problems starting program. No processing done.\n";
         }
     }
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
@@ -2061,7 +2093,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
     // Verify files were created
     std::cout << "Phase 1 complete. Verifying files created..." << std::endl;
     bool files_created = true;
-    for (const auto& symbol : GetTestSymbols())
+    for (const auto &symbol : GetTestSymbols())
     {
         fs::path chart_file = fs::path(test_dir) / (symbol + "_0.01X1_linear.json");
         fs::path prices_file = fs::path(test_dir) / (symbol + "_streamed_prices.json");
@@ -2083,28 +2115,46 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
 
     // Second run: With resume - should load existing files
     std::vector<std::string> tokens2{"the_program",
-        "--symbol-list", symbols,
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", test_dir,
-        "--output-graph-dir", test_dir,
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "--resume",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test01_phase2.log"
-    };
+                                     "--symbol-list",
+                                     symbols,
+                                     "--new-data-source",
+                                     "streaming",
+                                     "--quote-host",
+                                     "eodhd.com",
+                                     "--quote-data-source",
+                                     "Eodhd",
+                                     "--quote-api-key",
+                                     "Eodhd_key.dat",
+                                     "--streaming-host",
+                                     "ws.eodhistoricaldata.com",
+                                     "--streaming-data-source",
+                                     "Eodhd",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--mode",
+                                     "load",
+                                     "--interval",
+                                     "live",
+                                     "--scale",
+                                     "linear",
+                                     "--price-fld-name",
+                                     "close",
+                                     "--destination",
+                                     "file",
+                                     "--output-chart-dir",
+                                     test_dir,
+                                     "--output-graph-dir",
+                                     test_dir,
+                                     "--use-ATR",
+                                     "--boxsize",
+                                     "0.01",
+                                     "--reversal",
+                                     "1",
+                                     "--resume",
+                                     "-l",
+                                     "debug",
+                                     "--log-path",
+                                     "/tmp/PF_Collect/resume_test01_phase2.log"};
 
     try
     {
@@ -2116,13 +2166,14 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
             auto now2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) + RESUME_CHECK_DURATION);
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                        RESUME_CHECK_DURATION);
 
-            auto timer = [](const auto& stop_at) {
+            auto timer = [](const auto &stop_at) {
                 while (true)
                 {
-                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto current = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
@@ -2142,7 +2193,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
             std::cout << "Problems starting program. No processing done.\n";
         }
     }
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
@@ -2154,7 +2205,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
     // Verify resume loaded data (files should still exist and be valid)
     std::cout << "Phase 2 complete. Verifying resume functionality..." << std::endl;
     EXPECT_TRUE(fs::exists(summary_file)) << "Summary file should still exist after resume";
-    for (const auto& symbol : GetTestSymbols())
+    for (const auto &symbol : GetTestSymbols())
     {
         fs::path prices_file = fs::path(test_dir) / (symbol + "_streamed_prices.json");
         EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should exist";
@@ -2175,29 +2226,49 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
 
     std::cout << "Running streaming mode with resume (partial files)" << std::endl;
 
+    std::string symbols = GetSymbolListString();
+
     std::vector<std::string> tokens{"the_program",
-        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", "/tmp/test_resume_test02/",
-        "--output-graph-dir", "/tmp/test_resume_test02/",
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "--resume",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test02.log"
-    };
+                                    "--symbol-list",
+                                    symbols,
+                                    "--new-data-source",
+                                    "streaming",
+                                    "--quote-host",
+                                    "eodhd.com",
+                                    "--quote-data-source",
+                                    "Eodhd",
+                                    "--quote-api-key",
+                                    "Eodhd_key.dat",
+                                    "--streaming-host",
+                                    "ws.eodhistoricaldata.com",
+                                    "--streaming-data-source",
+                                    "Eodhd",
+                                    "--streaming-api-key",
+                                    "Eodhd_key.dat",
+                                    "--mode",
+                                    "load",
+                                    "--interval",
+                                    "live",
+                                    "--scale",
+                                    "linear",
+                                    "--price-fld-name",
+                                    "close",
+                                    "--destination",
+                                    "file",
+                                    "--output-chart-dir",
+                                    "/tmp/test_resume_test02/",
+                                    "--output-graph-dir",
+                                    "/tmp/test_resume_test02/",
+                                    "--use-ATR",
+                                    "--boxsize",
+                                    "0.01",
+                                    "--reversal",
+                                    "1",
+                                    "--resume",
+                                    "-l",
+                                    "debug",
+                                    "--log-path",
+                                    "/tmp/PF_Collect/resume_test02.log"};
 
     try
     {
@@ -2209,13 +2280,14 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       STREAM_DURATION);
 
-            auto timer = [](const auto& stop_at) {
+            auto timer = [](const auto &stop_at) {
                 while (true)
                 {
-                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto current = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
@@ -2235,7 +2307,7 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
             std::cout << "Problems starting program. No processing done.\n";
         }
     }
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
@@ -2246,7 +2318,7 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
 
     // Verify charts loaded and new streamed data created
     std::cout << "Verifying partial resume functionality..." << std::endl;
-    for (const auto& symbol : GetTestSymbols())
+    for (const auto &symbol : GetTestSymbols())
     {
         fs::path chart_file = fs::path("/tmp/test_resume_test02/") / (symbol + "_0.01X1_linear.json");
         fs::path prices_file = fs::path("/tmp/test_resume_test02/") / (symbol + "_streamed_prices.json");
@@ -2267,27 +2339,45 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
 
     // First create valid files (short run)
     std::vector<std::string> tokens_setup{"the_program",
-        "--symbol-list", "AAPL",
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", "/tmp/test_resume_test03/",
-        "--output-graph-dir", "/tmp/test_resume_test03/",
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test03_setup.log"
-    };
+                                          "--symbol-list",
+                                          "AAPL",
+                                          "--new-data-source",
+                                          "streaming",
+                                          "--quote-host",
+                                          "eodhd.com",
+                                          "--quote-data-source",
+                                          "Eodhd",
+                                          "--quote-api-key",
+                                          "Eodhd_key.dat",
+                                          "--streaming-host",
+                                          "ws.eodhistoricaldata.com",
+                                          "--streaming-data-source",
+                                          "Eodhd",
+                                          "--streaming-api-key",
+                                          "Eodhd_key.dat",
+                                          "--mode",
+                                          "load",
+                                          "--interval",
+                                          "live",
+                                          "--scale",
+                                          "linear",
+                                          "--price-fld-name",
+                                          "close",
+                                          "--destination",
+                                          "file",
+                                          "--output-chart-dir",
+                                          "/tmp/test_resume_test03/",
+                                          "--output-graph-dir",
+                                          "/tmp/test_resume_test03/",
+                                          "--use-ATR",
+                                          "--boxsize",
+                                          "0.01",
+                                          "--reversal",
+                                          "1",
+                                          "-l",
+                                          "debug",
+                                          "--log-path",
+                                          "/tmp/PF_Collect/resume_test03_setup.log"};
 
     try
     {
@@ -2301,11 +2391,11 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 60s);
 
-            auto timer = [](const auto& stop_at) {
+            auto timer = [](const auto &stop_at) {
                 while (true)
                 {
-                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto current = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
@@ -2321,7 +2411,7 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
             timer_task.get();
         }
     }
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Setup failed: {}", theProblem.what()));
     }
@@ -2340,40 +2430,59 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
     std::cout << "Running with corrupt files (should throw)" << std::endl;
 
     std::vector<std::string> tokens{"the_program",
-        "--symbol-list", "AAPL",
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", "/tmp/test_resume_test03/",
-        "--output-graph-dir", "/tmp/test_resume_test03/",
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "--resume",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test03.log"
-    };
+                                    "--symbol-list",
+                                    "AAPL",
+                                    "--new-data-source",
+                                    "streaming",
+                                    "--quote-host",
+                                    "eodhd.com",
+                                    "--quote-data-source",
+                                    "Eodhd",
+                                    "--quote-api-key",
+                                    "Eodhd_key.dat",
+                                    "--streaming-host",
+                                    "ws.eodhistoricaldata.com",
+                                    "--streaming-data-source",
+                                    "Eodhd",
+                                    "--streaming-api-key",
+                                    "Eodhd_key.dat",
+                                    "--mode",
+                                    "load",
+                                    "--interval",
+                                    "live",
+                                    "--scale",
+                                    "linear",
+                                    "--price-fld-name",
+                                    "close",
+                                    "--destination",
+                                    "file",
+                                    "--output-chart-dir",
+                                    "/tmp/test_resume_test03/",
+                                    "--output-graph-dir",
+                                    "/tmp/test_resume_test03/",
+                                    "--use-ATR",
+                                    "--boxsize",
+                                    "0.01",
+                                    "--reversal",
+                                    "1",
+                                    "--resume",
+                                    "-l",
+                                    "debug",
+                                    "--log-path",
+                                    "/tmp/PF_Collect/resume_test03.log"};
 
     // This should throw when trying to load corrupt file
     ASSERT_THROW(
-    {
-        PF_CollectDataApp myApp(tokens);
-        bool startup_OK = myApp.Startup();
-        if (startup_OK)
         {
-            myApp.Run();
-            myApp.Shutdown();
-        }
-    }, std::exception);
+            PF_CollectDataApp myApp(tokens);
+            bool startup_OK = myApp.Startup();
+            if (startup_OK)
+            {
+                myApp.Run();
+                myApp.Shutdown();
+            }
+        },
+        std::exception);
 }
 
 TEST_F(ResumeModeTests, NormalModeNoResume)
@@ -2385,28 +2494,48 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
     CleanupDirectory("/tmp/test_resume_test04/");
     CreateTestDirectory("/tmp/test_resume_test04/");
 
+    std::string symbols = GetSymbolListString();
+
     std::vector<std::string> tokens{"the_program",
-        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", "/tmp/test_resume_test04/",
-        "--output-graph-dir", "/tmp/test_resume_test04/",
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test04.log"
-    };
+                                    "--symbol-list",
+                                    symbols,
+                                    "--new-data-source",
+                                    "streaming",
+                                    "--quote-host",
+                                    "eodhd.com",
+                                    "--quote-data-source",
+                                    "Eodhd",
+                                    "--quote-api-key",
+                                    "Eodhd_key.dat",
+                                    "--streaming-host",
+                                    "ws.eodhistoricaldata.com",
+                                    "--streaming-data-source",
+                                    "Eodhd",
+                                    "--streaming-api-key",
+                                    "Eodhd_key.dat",
+                                    "--mode",
+                                    "load",
+                                    "--interval",
+                                    "live",
+                                    "--scale",
+                                    "linear",
+                                    "--price-fld-name",
+                                    "close",
+                                    "--destination",
+                                    "file",
+                                    "--output-chart-dir",
+                                    "/tmp/test_resume_test04/",
+                                    "--output-graph-dir",
+                                    "/tmp/test_resume_test04/",
+                                    "--use-ATR",
+                                    "--boxsize",
+                                    "0.01",
+                                    "--reversal",
+                                    "1",
+                                    "-l",
+                                    "debug",
+                                    "--log-path",
+                                    "/tmp/PF_Collect/resume_test04.log"};
 
     try
     {
@@ -2418,13 +2547,14 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       STREAM_DURATION);
 
-            auto timer = [](const auto& stop_at) {
+            auto timer = [](const auto &stop_at) {
                 while (true)
                 {
-                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto current = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
@@ -2444,7 +2574,7 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
             std::cout << "Problems starting program. No processing done.\n";
         }
     }
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Something fundamental went wrong: {}", theProblem.what()));
     }
@@ -2455,7 +2585,7 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
 
     // Verify all files created (no loading occurred)
     std::cout << "Verifying normal mode created all files..." << std::endl;
-    for (const auto& symbol : GetTestSymbols())
+    for (const auto &symbol : GetTestSymbols())
     {
         fs::path chart_file = fs::path("/tmp/test_resume_test04/") / (symbol + "_0.01X1_linear.json");
         fs::path prices_file = fs::path("/tmp/test_resume_test04/") / (symbol + "_streamed_prices.json");
@@ -2475,28 +2605,48 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
     CreateTestDirectory("/tmp/test_resume_test05/");
 
     // First run: No resume
+    std::string symbols = GetSymbolListString();
+
     std::vector<std::string> tokens1{"the_program",
-        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", "/tmp/test_resume_test05/",
-        "--output-graph-dir", "/tmp/test_resume_test05/",
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test05_phase1.log"
-    };
+                                     "--symbol-list",
+                                     symbols,
+                                     "--new-data-source",
+                                     "streaming",
+                                     "--quote-host",
+                                     "eodhd.com",
+                                     "--quote-data-source",
+                                     "Eodhd",
+                                     "--quote-api-key",
+                                     "Eodhd_key.dat",
+                                     "--streaming-host",
+                                     "ws.eodhistoricaldata.com",
+                                     "--streaming-data-source",
+                                     "Eodhd",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--mode",
+                                     "load",
+                                     "--interval",
+                                     "live",
+                                     "--scale",
+                                     "linear",
+                                     "--price-fld-name",
+                                     "close",
+                                     "--destination",
+                                     "file",
+                                     "--output-chart-dir",
+                                     "/tmp/test_resume_test05/",
+                                     "--output-graph-dir",
+                                     "/tmp/test_resume_test05/",
+                                     "--use-ATR",
+                                     "--boxsize",
+                                     "0.01",
+                                     "--reversal",
+                                     "1",
+                                     "-l",
+                                     "debug",
+                                     "--log-path",
+                                     "/tmp/PF_Collect/resume_test05_phase1.log"};
 
     try
     {
@@ -2508,13 +2658,14 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       STREAM_DURATION);
 
-            auto timer = [](const auto& stop_at) {
+            auto timer = [](const auto &stop_at) {
                 while (true)
                 {
-                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto current = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
@@ -2530,14 +2681,14 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
             timer_task.get();
         }
     }
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Phase 1 failed: {}", theProblem.what()));
     }
 
     // Verify files created
     std::cout << "Phase 1 complete. Files created." << std::endl;
-    for (const auto& symbol : GetTestSymbols())
+    for (const auto &symbol : GetTestSymbols())
     {
         fs::path prices_file = fs::path("/tmp/test_resume_test05/") / (symbol + "_streamed_prices.json");
         EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should exist after phase 1";
@@ -2550,28 +2701,46 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
 
     // Second run: With resume
     std::vector<std::string> tokens2{"the_program",
-        "--symbol-list", "AAPL,MSFT,GOOGL,TSLA,SPY,QQQQ",
-        "--new-data-source", "streaming",
-        "--quote-host", "api.tiingo.com",
-        "--quote-data-source", "Tiingo",
-        "--quote-api-key", "Tiingo_key.dat",
-        "--streaming-host", "api.tiingo.com",
-        "--streaming-data-source", "Tiingo",
-        "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
-        "--output-chart-dir", "/tmp/test_resume_test05/",
-        "--output-graph-dir", "/tmp/test_resume_test05/",
-        "--use-ATR",
-        "--boxsize", "0.01",
-        "--reversal", "1",
-        "--resume",
-        "-l", "debug",
-        "--log-path", "/tmp/PF_Collect/resume_test05_phase2.log"
-    };
+                                     "--symbol-list",
+                                     symbols,
+                                     "--new-data-source",
+                                     "streaming",
+                                     "--quote-host",
+                                     "eodhd.com",
+                                     "--quote-data-source",
+                                     "Eodhd",
+                                     "--quote-api-key",
+                                     "Eodhd_key.dat",
+                                     "--streaming-host",
+                                     "ws.eodhistoricaldata.com",
+                                     "--streaming-data-source",
+                                     "Eodhd",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--mode",
+                                     "load",
+                                     "--interval",
+                                     "live",
+                                     "--scale",
+                                     "linear",
+                                     "--price-fld-name",
+                                     "close",
+                                     "--destination",
+                                     "file",
+                                     "--output-chart-dir",
+                                     "/tmp/test_resume_test05/",
+                                     "--output-graph-dir",
+                                     "/tmp/test_resume_test05/",
+                                     "--use-ATR",
+                                     "--boxsize",
+                                     "0.01",
+                                     "--reversal",
+                                     "1",
+                                     "--resume",
+                                     "-l",
+                                     "debug",
+                                     "--log-path",
+                                     "/tmp/PF_Collect/resume_test05_phase2.log"};
 
     try
     {
@@ -2583,13 +2752,14 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + RESUME_CHECK_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       RESUME_CHECK_DURATION);
 
-            auto timer = [](const auto& stop_at) {
+            auto timer = [](const auto &stop_at) {
                 while (true)
                 {
-                    auto current = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    auto current = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
                         PF_CollectDataApp::SetSignal();
@@ -2605,19 +2775,20 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
             timer_task.get();
         }
     }
-    catch (const std::exception& theProblem)
+    catch (const std::exception &theProblem)
     {
         spdlog::error(std::format("Phase 2 failed: {}", theProblem.what()));
     }
 
     // Verify data persisted across runs
     std::cout << "Phase 2 complete. Verifying data persisted..." << std::endl;
-    for (const auto& symbol : GetTestSymbols())
+    for (const auto &symbol : GetTestSymbols())
     {
         fs::path prices_file = fs::path("/tmp/test_resume_test05/") / (symbol + "_streamed_prices.json");
         EXPECT_TRUE(fs::exists(prices_file)) << "Streamed prices file for " << symbol << " should exist after resume";
     }
-    EXPECT_TRUE(fs::exists("/tmp/test_resume_test05/streamed_summary.json")) << "Summary file should exist after resume";
+    EXPECT_TRUE(fs::exists("/tmp/test_resume_test05/streamed_summary.json"))
+        << "Summary file should exist after resume";
 }
 
 int main(int argc, char **argv)
