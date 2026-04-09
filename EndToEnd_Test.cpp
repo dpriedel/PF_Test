@@ -1911,15 +1911,6 @@ TEST_F(StreamTiingoData, TryLogarithmicCharts) // NOLINT
     EXPECT_TRUE(fs::exists("/tmp/test_charts_log/AAPL_0.01%X1_percent.svg"));
 }
 
-void InitLogging()
-{
-    //    nothing to do for now.
-    //    logging::core::get()->set_filter
-    //    (
-    //        logging::trivial::severity >= logging::trivial::trace
-    //    );
-} /* -----  end of function InitLogging  ----- */
-
 class ResumeModeTests : public Test
 {
 protected:
@@ -1975,7 +1966,7 @@ protected:
     static std::string GetSymbolListString()
     {
         std::string result;
-        for (const auto& symbol : GetTestSymbols())
+        for (const auto &symbol : GetTestSymbols())
         {
             if (!result.empty())
             {
@@ -2790,6 +2781,15 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
     EXPECT_TRUE(fs::exists("/tmp/test_resume_test05/streamed_summary.json"))
         << "Summary file should exist after resume";
 }
+
+void InitLogging()
+{
+    //    nothing to do for now.
+    //    logging::core::get()->set_filter
+    //    (
+    //        logging::trivial::severity >= logging::trivial::trace
+    //    );
+} /* -----  end of function InitLogging  ----- */
 
 int main(int argc, char **argv)
 {
