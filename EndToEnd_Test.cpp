@@ -1944,17 +1944,17 @@ protected:
     static void CopyFilesFromTest1(const std::string &src_dir, const std::string &dst_dir)
     {
         // Copy only chart JSON files (no streamed prices or summary)
-        for (const auto &entry : fs::directory_iterator(src_dir))
+        auto is_chart_json = [](const fs::directory_entry &entry) {
+            if (!entry.is_regular_file() || entry.path().extension() != ".json")
+                return false;
+
+            const auto filename = entry.path().filename().string();
+            return !filename.contains("_streamed_prices") && filename != "streamed_summary.json";
+        };
+
+        for (const auto &entry : fs::directory_iterator(src_dir) | vws::filter(is_chart_json))
         {
-            if (entry.is_regular_file() && entry.path().extension() == ".json")
-            {
-                // Skip streamed prices and summary files
-                std::string filename = entry.path().filename().string();
-                if (filename.find("_streamed_prices") == std::string::npos && filename != "streamed_summary.json")
-                {
-                    fs::copy(entry.path(), fs::path(dst_dir) / entry.path().filename());
-                }
-            }
+            fs::copy(entry.path(), fs::path(dst_dir) / entry.path().filename());
         }
     }
 
