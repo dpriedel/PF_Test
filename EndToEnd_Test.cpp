@@ -1499,6 +1499,12 @@ TEST_F(Database, DailyScan) // NOLINT
 
     PF_Chart saved_chart{new_chart};
 
+    // Calculate begin-date as 5 days prior to today
+    auto now = std::chrono::system_clock::now();
+    auto today = std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(now)};
+    auto begin_date = std::chrono::year_month_day{std::chrono::sys_days{today} - std::chrono::days{5}};
+    std::string begin_date_str = std::format("{:%Y-%m-%d}", begin_date);
+
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
 
@@ -1510,7 +1516,7 @@ TEST_F(Database, DailyScan) // NOLINT
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
-        "--begin-date", "2025-12-18",
+        "--begin-date", begin_date_str,
         "--log-path", "/tmp/PF_Collect/test21.log"
 	};
     // clang-format on
