@@ -1499,11 +1499,18 @@ TEST_F(Database, DailyScan) // NOLINT
 
     PF_Chart saved_chart{new_chart};
 
-    // Calculate begin-date as 5 days prior to today
+    // Calculate begin-date as 5 business days prior to today
     auto now = std::chrono::system_clock::now();
     auto today = std::chrono::year_month_day{std::chrono::floor<std::chrono::days>(now)};
-    auto begin_date = std::chrono::year_month_day{std::chrono::sys_days{today} - std::chrono::days{5}};
-    std::string begin_date_str = std::format("{:%Y-%m-%d}", begin_date);
+    auto holidays = MakeHolidayList(today.year());
+    auto last_year_holidays = MakeHolidayList(today.year() - std::chrono::years{1});
+    holidays.reserve(holidays.size() + last_year_holidays.size());
+    for (const auto &h : last_year_holidays)
+    {
+        holidays.emplace_back(h);
+    }
+    auto [latest, start] = ConstructeBusinessDayRange(today, 5, UpOrDown::e_Down, &holidays);
+    std::string begin_date_str = std::format("{:%Y-%m-%d}", start);
 
     //	NOTE: the program name 'the_program' in the command line below is ignored in the
     //	the test program.
