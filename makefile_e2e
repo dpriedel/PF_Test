@@ -53,6 +53,7 @@ SRCS2 := $(SDIR2)/PF_CollectDataApp.cpp  \
 		$(SDIR2)/scanner/PF_ScannerApp.cpp \
 		$(SDIR2)/streamer/PF_StreamerApp.cpp \
 		$(SDIR2)/loader/PF_LoaderApp.cpp \
+		$(SDIR2)/updater/PF_UpdaterApp.cpp \
 		$(SDIR2)/ConstructChartGraphic.cpp  \
 		$(SDIR2)/Tiingo.cpp \
 		$(SDIR2)/Eodhd.cpp \
@@ -61,7 +62,7 @@ SRCS2 := $(SDIR2)/PF_CollectDataApp.cpp  \
 
 SRCS := $(SRCS1) $(SRCS2)
 
-VPATH := $(SDIR1):$(SDIR2):$(SDIR2)/common:$(SDIR2)/scanner:$(SDIR2)/streamer:$(SDIR2)/loader
+VPATH := $(SDIR1):$(SDIR2):$(SDIR2)/common:$(SDIR2)/scanner:$(SDIR2)/streamer:$(SDIR2)/loader:$(SDIR2)/updater
 
 
 #

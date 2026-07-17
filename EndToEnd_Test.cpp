@@ -35,6 +35,7 @@
 #include "PF_CollectDataApp.h"
 #include "loader/PF_LoaderApp.h"
 #include "scanner/PF_ScannerApp.h"
+#include "updater/PF_UpdaterApp.h"
 #include "utilities.h"
 
 namespace rng = std::ranges;
@@ -794,9 +795,9 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData) // NOLINT
         "--quote-host", "eodhd.com",
         "--quote-data-source", "Eodhd",
         "--quote-api-key", "Eodhd_key.dat",
+        "--config-dir", "/home/dpriedel/.config/PF_CollectData",
         "--new-data-dir", "./test_files_update_EOD",
         "--source-format", "csv",
-        "--mode", "update",
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "adjClose",
@@ -812,7 +813,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_UpdaterApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
