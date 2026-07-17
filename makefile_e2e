@@ -19,9 +19,9 @@
 #
 MAKE=gmake
 
-BOOSTDIR := /extra/boost/boost-1.90_gcc-15
+BOOSTDIR := /extra/boost/boost-1.91_gcc-16
 # GCCDIR := 
-GCCDIR := /extra/gcc/gcc-15
+GCCDIR := /extra/gcc/gcc-16
 GTESTDIR := /usr/local/include
 UTILITYDIR := ${HOME}/projects/PF_Project/common_utilities
 CPP := $(GCCDIR)/bin/g++
@@ -49,6 +49,10 @@ SRCS1 := $(SDIR1)/EndToEnd_Test.cpp
 
 SDIR2 := ../point_figure/src
 SRCS2 := $(SDIR2)/PF_CollectDataApp.cpp  \
+		$(SDIR2)/common/PF_AppBase.cpp \
+		$(SDIR2)/scanner/PF_ScannerApp.cpp \
+		$(SDIR2)/streamer/PF_StreamerApp.cpp \
+		$(SDIR2)/loader/PF_LoaderApp.cpp \
 		$(SDIR2)/ConstructChartGraphic.cpp  \
 		$(SDIR2)/Tiingo.cpp \
 		$(SDIR2)/Eodhd.cpp \
@@ -57,7 +61,7 @@ SRCS2 := $(SDIR2)/PF_CollectDataApp.cpp  \
 
 SRCS := $(SRCS1) $(SRCS2)
 
-VPATH := $(SDIR1):$(SDIR2)
+VPATH := $(SDIR1):$(SDIR2):$(SDIR2)/common:$(SDIR2)/scanner:$(SDIR2)/streamer:$(SDIR2)/loader
 
 
 #

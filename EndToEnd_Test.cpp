@@ -33,6 +33,8 @@
 #include <spdlog/spdlog.h>
 
 #include "PF_CollectDataApp.h"
+#include "loader/PF_LoaderApp.h"
+#include "scanner/PF_ScannerApp.h"
 #include "utilities.h"
 
 namespace rng = std::ranges;
@@ -543,7 +545,6 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile) // NOLINT
         "--new-data-source", "file",
         "--new-data-dir", "./test_files3",
         "--source-format", "csv",
-        "--mode", "load",
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "Close",
@@ -557,7 +558,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1517,7 +1518,6 @@ TEST_F(Database, DailyScan) // NOLINT
 
     // clang-format off
 	std::vector<std::string> tokens{"the_program",
-        "--mode", "daily-scan",
         "--exchange-list", "amex,nyse,nasdaq",
         "--price-fld-name", "split_adj_close",
         "--db-user", "data_updater_pg",
@@ -1530,7 +1530,7 @@ TEST_F(Database, DailyScan) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_ScannerApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
