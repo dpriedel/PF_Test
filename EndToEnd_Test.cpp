@@ -32,10 +32,10 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
 
-#include "PF_CollectDataApp.h"
 #include "loader/PF_LoaderApp.h"
 #include "scanner/PF_ScannerApp.h"
 #include "updater/PF_UpdaterApp.h"
+#include "streamer/PF_StreamerApp.h"
 #include "utilities.h"
 
 namespace rng = std::ranges;
@@ -79,7 +79,7 @@ std::optional<int> FindColumnIndex(std::string_view header, std::string_view col
     }
     return {};
 
-} // -----  end of method PF_CollectDataApp::FindColumnIndex  -----
+} // -----  end of function FindColumnIndex  -----
 
 class ProgramOptions : public Test
 {
@@ -108,7 +108,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions) // NOLINT
         "--new-data-source", "file",
         "--new-data-dir", "./test_files",
         "--source-format", "csv",
-        "--mode", "load",
+
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "Close",
@@ -124,7 +124,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -170,7 +170,7 @@ TEST_F(ProgramOptions, TestProblemOptions) // NOLINT
         "--streaming-api-key", "Eodhd_key.dat",
         "--new-data-dir", "./test_files",
         "--source-format", "csv",
-        "--mode", "load",
+
         "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -190,7 +190,7 @@ TEST_F(ProgramOptions, TestProblemOptions) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -233,7 +233,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "--new-data-source", "streaming",
         "--new-data-dir", "./test_files",
         "--source-format", "csv",
-        "--mode", "load",
+
         "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -251,7 +251,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -282,7 +282,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "--new-data-source", "streaming",
         "--new-data-dir", "./test_files",
         "--source-format", "csv",
-        "--mode", "load",
+
         "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -299,7 +299,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens2);
+        PF_StreamerApp myApp(tokens2);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -332,7 +332,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "--db-name", "finance",
         // "--new-data-dir", "./test_files",
         // "--source-format", "csv",
-        "--mode", "update",
+
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -349,7 +349,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens3);
+        PF_UpdaterApp myApp(tokens3);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -383,7 +383,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "--begin-date", "2017-01-01",
         // "--new-data-dir", "./test_files",
         // "--source-format", "csv",
-        "--mode", "load",
+
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -400,7 +400,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens4);
+        PF_LoaderApp myApp(tokens4);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -438,7 +438,7 @@ TEST_F(ProgramOptions, TestExchangesList) // NOLINT
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2017-01-01",
-        "--mode", "load",
+
         "--interval", "eod",
         "--scale", "percent",
         "--price-fld-name", "split_adj_close",
@@ -456,7 +456,7 @@ TEST_F(ProgramOptions, TestExchangesList) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -482,7 +482,7 @@ TEST_F(ProgramOptions, TestExchangesList) // NOLINT
 	std::vector<std::string> tokens2{"the_program",
         "--symbol-list", "ALL",
         "--new-data-source", "database",
-        "--mode", "load",
+
         "--interval", "eod",
         "--scale", "percent",
         "--price-fld-name", "split_adj_close",
@@ -504,7 +504,7 @@ TEST_F(ProgramOptions, TestExchangesList) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens2);
+        PF_LoaderApp myApp(tokens2);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -612,7 +612,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
         "--new-data-source", "file",
         "--new-data-dir", "./test_files",
         "--source-format", "csv",
-        "--mode", "load",
+
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "Close",
@@ -626,7 +626,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -667,7 +667,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
         "--new-data-source", "file",
         "--new-data-dir", "./test_files2",
         "--source-format", "csv",
-        "--mode", "load",
+
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "Close",
@@ -681,7 +681,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens2);
+        PF_LoaderApp myApp(tokens2);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -723,7 +723,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
         "--new-data-dir", "./test_files3",
         "--chart-data-dir", "/tmp/test_charts2",
         "--source-format", "csv",
-        "--mode", "update",
+
         "--interval", "eod",
         "--scale", "linear",
         "--price-fld-name", "Close",
@@ -737,7 +737,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens3);
+        PF_UpdaterApp myApp(tokens3);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -910,7 +910,7 @@ TEST_F(Database, LoadDataFromDB) // NOLINT
         // "--symbol", "AAPL",
         "--symbol-list", "SPY,AAPL,IWR,iwm,t",
         "--new-data-source", "database",
-        "--mode", "load",
+
         "--scale", "linear",
         "--price-fld-name", "split_adj_close",
         "--destination", "file",
@@ -931,7 +931,7 @@ TEST_F(Database, LoadDataFromDB) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -977,7 +977,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB) // NOLINT
         "--symbol-list", "ALL",
         // "-s", "ACY",
         "--new-data-source", "database",
-        "--mode", "load",
+
         "--scale", "percent",
         "--price-fld-name", "split_adj_close",
         "--destination", "file",
@@ -1001,7 +1001,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDB) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1081,7 +1081,7 @@ TEST_F(Database, UpdateUsingDataFromDB) // NOLINT
         "--symbol", "AAPL",      // want to use SP500 indicator but need to do more setup first
         "--symbol", "GOOG",      // want to use SP500 indicator but need to do more setup first
         "--new-data-source", "database",
-        "--mode", "update",
+
         "--scale", "linear",
         "--price-fld-name", "split_adj_close",
         "--destination", "file",
@@ -1103,7 +1103,7 @@ TEST_F(Database, UpdateUsingDataFromDB) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_UpdaterApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1180,7 +1180,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB) // NOLINT
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",      // want to use SP500 indicator but need to do more setup first
         "--new-data-source", "database",
-        "--mode", "update",
+
         "--scale", "linear",
         "--price-fld-name", "split_adj_close",
         "--destination", "database",
@@ -1206,7 +1206,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_UpdaterApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1256,7 +1256,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB) // NOLINT
         "--symbol-list", "ALL",
         // "-s", "ACY",
         "--new-data-source", "database",
-        "--mode", "load",
+
         "--scale", "percent",
         "--price-fld-name", "split_adj_close",
         "--destination", "database",
@@ -1280,7 +1280,7 @@ TEST_F(Database, DISABLED_BulkLoadDataFromDBAndStoreChartsInDB) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1327,7 +1327,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory) // NOLINT
         // "--symbol-list", "A",
         // "-s", "ACY",
         "--new-data-source", "database",
-        "--mode", "load",
+
         "--scale", "linear",
         "--price-fld-name", "split_adj_close",
         // "--destination", "database",
@@ -1355,7 +1355,7 @@ TEST_F(Database, LoadDataFromDBWithMinMaxAndStoreChartsInDirectory) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1402,7 +1402,7 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
         // "-s", "ACY",
         "--new-data-source", "database",
         "--chart-data-source", "database",
-        "--mode", "load",
+
         "--scale", "linear",
         "--price-fld-name", "split_adj_close",
         "--destination", "database",
@@ -1434,7 +1434,7 @@ TEST_F(Database, LoadDataFromDBAndStoreInDBVerifyLastChangeDatesMatch) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_LoaderApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1595,7 +1595,7 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
         "--streaming-host", "ws.eodhistoricaldata.com",
         "--streaming-data-source", "Eodhd",
         "--streaming-api-key", "Eodhd_key.dat",
-        "--mode", "load",
+
         "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -1611,7 +1611,7 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1631,7 +1631,7 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
                                                       floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
-                    PF_CollectDataApp::SetSignal();
+                    PF_StreamerApp::SetSignal();
                     break;
                 }
                 std::this_thread::sleep_for(1s);
@@ -1695,7 +1695,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifyConnectAndDisconnect) // NOLINT
         "--streaming-data-source", "Tiingo",
         "--streaming-api-key", "Tiingo_key.dat",
 
-        "--mode", "load",
+
         "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -1712,7 +1712,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifyConnectAndDisconnect) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1732,7 +1732,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifyConnectAndDisconnect) // NOLINT
                                                       floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
-                    PF_CollectDataApp::SetSignal();
+                    PF_StreamerApp::SetSignal();
                     break;
                 }
                 std::this_thread::sleep_for(1s);
@@ -1782,7 +1782,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling) // NOLINT
 	std::vector<std::string> tokens{"the_program",
         "--symbol-list", "SPY,aapl",
         "--new-data-source", "streaming",
-        "--mode", "load",
+
         "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
@@ -1797,7 +1797,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1851,7 +1851,7 @@ TEST_F(StreamTiingoData, DISABLED_TryLogarithmicCharts) // NOLINT
         "--streaming-host", "api.tiingo.com",
         "--streaming-data-source", "Tiingo",
         "--streaming-api-key", "Tiingo_key.dat",
-        "--mode", "load",
+
         "--interval", "live",
         "--scale", "percent",
         "--price-fld-name", "close",
@@ -1867,7 +1867,7 @@ TEST_F(StreamTiingoData, DISABLED_TryLogarithmicCharts) // NOLINT
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -1889,7 +1889,7 @@ TEST_F(StreamTiingoData, DISABLED_TryLogarithmicCharts) // NOLINT
                                                       floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (now.get_sys_time() >= stop_at.get_sys_time())
                 {
-                    PF_CollectDataApp::SetSignal();
+                    PF_StreamerApp::SetSignal();
                     break;
                 }
                 std::this_thread::sleep_for(1s);
@@ -2023,8 +2023,8 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
                                      "Eodhd",
                                      "--streaming-api-key",
                                      "Eodhd_key.dat",
-                                     "--mode",
-                                     "load",
+
+
                                      "--interval",
                                      "live",
                                      "--scale",
@@ -2049,7 +2049,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
 
     try
     {
-        PF_CollectDataApp myApp(tokens1);
+        PF_StreamerApp myApp(tokens1);
 
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
@@ -2067,7 +2067,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
                     std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                 if (current.get_sys_time() >= stop_at.get_sys_time())
                 {
-                    PF_CollectDataApp::SetSignal();
+                    PF_StreamerApp::SetSignal();
                     break;
                 }
                 std::this_thread::sleep_for(1s);
@@ -2137,8 +2137,8 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
                                      "Eodhd",
                                      "--streaming-api-key",
                                      "Eodhd_key.dat",
-                                     "--mode",
-                                     "load",
+
+
                                      "--interval",
                                      "live",
                                      "--scale",
@@ -2164,7 +2164,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
 
     try
     {
-        PF_CollectDataApp myApp(tokens2);
+        PF_StreamerApp myApp(tokens2);
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
@@ -2172,8 +2172,8 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
             auto now2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                        RESUME_CHECK_DURATION);
+                                                     floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                         RESUME_CHECK_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2182,7 +2182,7 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_CollectDataApp::SetSignal();
+                        PF_StreamerApp::SetSignal();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2251,8 +2251,8 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
                                     "Eodhd",
                                     "--streaming-api-key",
                                     "Eodhd_key.dat",
-                                    "--mode",
-                                    "load",
+
+
                                     "--interval",
                                     "live",
                                     "--scale",
@@ -2278,16 +2278,16 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                       STREAM_DURATION);
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                        STREAM_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2296,7 +2296,7 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_CollectDataApp::SetSignal();
+                        PF_StreamerApp::SetSignal();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2361,8 +2361,8 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
                                           "Eodhd",
                                           "--streaming-api-key",
                                           "Eodhd_key.dat",
-                                          "--mode",
-                                          "load",
+
+
                                           "--interval",
                                           "live",
                                           "--scale",
@@ -2387,15 +2387,15 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
 
     try
     {
-        PF_CollectDataApp myApp_setup(tokens_setup);
+        PF_StreamerApp myApp_setup(tokens_setup);
 
         bool startup_OK = myApp_setup.Startup();
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 60s);
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 60s);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2404,7 +2404,7 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_CollectDataApp::SetSignal();
+                        PF_StreamerApp::SetSignal();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2452,8 +2452,8 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
                                     "Eodhd",
                                     "--streaming-api-key",
                                     "Eodhd_key.dat",
-                                    "--mode",
-                                    "load",
+
+
                                     "--interval",
                                     "live",
                                     "--scale",
@@ -2480,7 +2480,7 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
     // This should throw when trying to load corrupt file
     ASSERT_THROW(
         {
-            PF_CollectDataApp myApp(tokens);
+            PF_StreamerApp myApp(tokens);
             bool startup_OK = myApp.Startup();
             if (startup_OK)
             {
@@ -2519,8 +2519,8 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
                                     "Eodhd",
                                     "--streaming-api-key",
                                     "Eodhd_key.dat",
-                                    "--mode",
-                                    "load",
+
+
                                     "--interval",
                                     "live",
                                     "--scale",
@@ -2545,16 +2545,16 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
 
     try
     {
-        PF_CollectDataApp myApp(tokens);
+        PF_StreamerApp myApp(tokens);
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                       STREAM_DURATION);
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                        STREAM_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2563,7 +2563,7 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_CollectDataApp::SetSignal();
+                        PF_StreamerApp::SetSignal();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2630,8 +2630,8 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
                                      "Eodhd",
                                      "--streaming-api-key",
                                      "Eodhd_key.dat",
-                                     "--mode",
-                                     "load",
+
+
                                      "--interval",
                                      "live",
                                      "--scale",
@@ -2656,16 +2656,16 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
 
     try
     {
-        PF_CollectDataApp myApp(tokens1);
+        PF_StreamerApp myApp(tokens1);
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                       STREAM_DURATION);
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                        STREAM_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2674,7 +2674,7 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_CollectDataApp::SetSignal();
+                        PF_StreamerApp::SetSignal();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2723,8 +2723,8 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
                                      "Eodhd",
                                      "--streaming-api-key",
                                      "Eodhd_key.dat",
-                                     "--mode",
-                                     "load",
+
+
                                      "--interval",
                                      "live",
                                      "--scale",
@@ -2750,16 +2750,16 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
 
     try
     {
-        PF_CollectDataApp myApp(tokens2);
+        PF_StreamerApp myApp(tokens2);
 
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                       RESUME_CHECK_DURATION);
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                        RESUME_CHECK_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2768,7 +2768,7 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_CollectDataApp::SetSignal();
+                        PF_StreamerApp::SetSignal();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
