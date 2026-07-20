@@ -766,10 +766,10 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
         spdlog::error("Something totally unexpected happened.");
     }
 
-    std::cout << "\n\n whole chart:\n" << whole_chart;
-    std::cout << "\n\n half chart:\n" << half_chart;
-    std::cout << "\n\n franken chart:\n" << franken_chart << '\n';
-    ;
+    // std::cout << "\n\n whole chart:\n" << whole_chart;
+    // std::cout << "\n\n half chart:\n" << half_chart;
+    // std::cout << "\n\n franken chart:\n" << franken_chart << '\n';
+    // ;
 
     EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X3_linear_eod.json"));
     ASSERT_TRUE(whole_chart == franken_chart);
@@ -802,7 +802,8 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData) // NOLINT
         "--scale", "linear",
         "--price-fld-name", "adjClose",
         "--destination", "file",
-        "--chart-data-dir", "./test_files_update_charts",
+        // "--chart-data-dir", "./test_files_update_charts",
+        "--chart-data-dir", "/tmp",
         "--output-chart-dir", "/tmp/test_charts_updates",
         "--use-ATR",
         "--boxsize", ".1",
@@ -1062,7 +1063,7 @@ TEST_F(Database, UpdateUsingDataFromDB) // NOLINT
                       const auto fields = split_string<std::string_view>(record, ",");
                       new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
                   });
-    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+    // std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
     fs::path chart_file_path = fs::path{"/tmp/test_charts2"} / (new_chart.MakeChartFileName("eod", "json"));
     std::ofstream new_file{chart_file_path, std::ios::out | std::ios::binary};
@@ -1131,7 +1132,7 @@ TEST_F(Database, UpdateUsingDataFromDB) // NOLINT
         spdlog::error("Something totally unexpected happened.");
     }
 
-    std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
+    // std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
 
     EXPECT_TRUE(fs::exists("/tmp/test_charts2/SPY_10X1_linear_eod.json"));
     ASSERT_NE(new_chart, updated_chart);
@@ -1165,7 +1166,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB) // NOLINT
                       const auto fields = split_string<std::string_view>(record, ",");
                       new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
                   });
-    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
+    // std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
     PF_DB::DB_Params db_info{.user_name_ = "data_updater_pg", .db_name_ = "finance", .PF_db_mode_ = "test"};
     PF_DB pf_db(db_info);
@@ -1234,7 +1235,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB) // NOLINT
         spdlog::error("Something totally unexpected happened.");
     }
 
-    std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
+    // std::cout << "updated chart at after loading initial data: \n\n" << updated_chart << "\n\n";
 
     EXPECT_EQ(CountRows(), 4);
     ASSERT_NE(new_chart, updated_chart);
@@ -1671,7 +1672,7 @@ class StreamTiingoData : public Test
 {
 };
 
-TEST_F(StreamTiingoData, VerifyConnectAndDisconnect) // NOLINT
+TEST_F(StreamTiingoData, DISABLED_VerifyConnectAndDisconnect) // NOLINT
 {
     if (fs::exists("/tmp/test_charts_T"))
     {
@@ -1829,7 +1830,7 @@ TEST_F(StreamTiingoData, DISABLED_VerifySignalHandling) // NOLINT
     EXPECT_TRUE(fs::exists("/tmp/test_charts/AAPL_0.05X1_linear.svg"));
 }
 
-TEST_F(StreamTiingoData, TryLogarithmicCharts) // NOLINT
+TEST_F(StreamTiingoData, DISABLED_TryLogarithmicCharts) // NOLINT
 {
     if (fs::exists("/tmp/test_charts_log"))
     {

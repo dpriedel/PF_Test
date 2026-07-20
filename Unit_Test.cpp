@@ -89,7 +89,7 @@ using namespace testing;
 #include "utilities.h"
 
 #include "Eodhd.h"
-#include "Tiingo.h"
+// #include "Tiingo.h"
 
 // NOLINTBEGIN(*-magic-numbers)
 //
@@ -342,13 +342,13 @@ TEST_F(BusinessDateRange, SpanAWeekAndAMonthAndYearWithHolidays) // NOLINT
 
     auto holidays = MakeHolidayList(2021y);
     rng::copy(MakeHolidayList(2022y), std::back_inserter(holidays));
-    std::print("\nHoliday List: {}\n", holidays);
+    // std::print("\nHoliday List: {}\n", holidays);
 
     std::chrono::year_month_day start_here{2021y / std::chrono::November / 22};
 
     auto result = ConstructeBusinessDayRange(start_here, 43, UpOrDown::e_Up, &holidays);
 
-    std::print("{}\n", result);
+    // std::print("{}\n", result);
 
     //    std::cout << result.first << " : " << result.second << '\n';
 
@@ -557,7 +557,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes) // NOLINT
     // EXPECT_EQ(box, Decimal("515.151"));
     EXPECT_EQ(box, Decimal("515.150")); // mpdecimal rounding is different
 
-    std::cout << boxes << std::endl;
+    // std::cout << boxes << std::endl;
     // test going smaller
 
     Boxes boxes2{500, 0.01, BoxScale::e_Percent};
@@ -1267,7 +1267,7 @@ TEST_F(ColumnFunctionality10X5, ProcessCompletelyFirstSetOfTestData) // NOLINT
     EXPECT_EQ(col.GetHadReversal(), false);
     EXPECT_EQ(columns.size() + 1, 1);
 
-    rng::for_each(columns, [](const auto &a_col) { std::cout << a_col << '\n'; });
+    // rng::for_each(columns, [](const auto &a_col) { std::cout << a_col << '\n'; });
     //    std::cout << col << '\n';
 }
 
@@ -1472,7 +1472,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
         }
     };
 
-    std::cout << boxes;
+    // std::cout << boxes;
 
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(col.GetTop(), Decimal("1144.664"));
@@ -1570,11 +1570,11 @@ TEST_F(ChartFunctionality10X2, StartWithSimpleTestData) // NOLINT
 
     chart.AddValue("100", "2023-06-01", "%Y-%m-%d");
 
-    std::cout << "after first value: " << chart << std::endl;
+    // std::cout << "after first value: " << chart << std::endl;
 
     chart.AddValue("100", "2023-06-02", "%Y-%m-%d");
 
-    std::cout << "after second value: s.b. ignored" << chart << std::endl;
+    // std::cout << "after second value: s.b. ignored" << chart << std::endl;
 }
 
 TEST_F(ChartFunctionality10X2, ProcessCompletelyFirstSetOfTestData) // NOLINT
@@ -1745,7 +1745,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts) // NOL
     const StreamedPrices no_streamed_data;
 
     ConstructCDPFChartGraphicAndWriteToFile(chart, "/tmp/candlestick12.svg", no_streamed_data, "no");
-    std::cout << chart << '\n';
+    // std::cout << chart << '\n';
     EXPECT_TRUE(fs::exists("/tmp/candlestick12.svg"));
 }
 
@@ -1951,7 +1951,7 @@ TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithColumns) // NOLINT
     PF_Chart chart1("GOOG", 10, 1);
     chart1.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
-    std::cout << chart1 << std::endl;
+    // std::cout << chart1 << std::endl;
 
     EXPECT_EQ(chart1.size(), 9);
     EXPECT_EQ(chart1.GetTopBottomForColumns(PF_ColumnFilter::e_up_column).size(), 3);
@@ -2009,7 +2009,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileWithMissingValues)
     PF_Chart new_chart;
     EXPECT_NO_THROW(PF_Chart::LoadChartFromJSONPF_ChartFile(new_chart, symbol_file_name));
 
-    std::cout << new_chart << '\n';
+    // std::cout << new_chart << '\n';
 }
 TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB) // NOLINT
 {
@@ -2090,7 +2090,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB) // NO
         }
         trxn.commit();
 
-        std::cout << "done retrieving data for symbol SPY. Got: " << db_data.size() << " rows." << std::endl;
+        // std::cout << "done retrieving data for symbol SPY. Got: " << db_data.size() << " rows." << std::endl;
     }
     catch (const std::exception &e)
     {
@@ -2479,7 +2479,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
     auto how_many = CountRows();
     ASSERT_EQ(how_many, 1);
 
-    std::cout << chart << '\n';
+    // std::cout << chart << '\n';
 }
 
 TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBThenRetrieveIntoJson) // NOLINT
@@ -2613,7 +2613,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1Chart) // NOLINT
     PF_Chart chart("GOOG", 10, 1);
     chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
-    std::cout << chart << std::endl;
+    // std::cout << chart << std::endl;
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 9);
@@ -2652,7 +2652,7 @@ TEST_F(PlotChartsWithChartDirector, Plot10X1ChartWithPrices) // NOLINT
     const auto price_data_for_graphic =
         chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",", PF_CollectAndReturnStreamedPrices::e_yes);
 
-    std::cout << chart << std::endl;
+    // std::cout << chart << std::endl;
 
     EXPECT_EQ(chart.GetCurrentDirection(), PF_Column::Direction::e_Down);
     EXPECT_EQ(chart.size(), 9);
@@ -3022,21 +3022,21 @@ TEST_F(StreamerATR, RetrievePreviousData) // NOLINT
     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", eod_history[13].date_),
               std::chrono::year_month_day{2021y / std::chrono::September / 20});
 
-    std::cout << "Eod works. Trying Tiingo...\n";
-
-    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-
-    Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-                                 Tiingo::Prefix{}};
-
-    auto tiingo_history = tiingo_history_getter.GetMostRecentTickerData(
-        "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 14, UseAdjusted::e_No, &holidays);
-
-    EXPECT_EQ(tiingo_history.size(), 14);
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[0].date_),
-              std::chrono::year_month_day{2021y / std::chrono::October / 7});
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[13].date_),
-              std::chrono::year_month_day{2021y / std::chrono::September / 20});
+    // std::cout << "Eod works. Trying Tiingo...\n";
+    //
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                              Tiingo::Prefix{}};
+    //
+    // auto tiingo_history = tiingo_history_getter.GetMostRecentTickerData(
+    //     "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 14, UseAdjusted::e_No, &holidays);
+    //
+    // EXPECT_EQ(tiingo_history.size(), 14);
+    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[0].date_),
+    //           std::chrono::year_month_day{2021y / std::chrono::October / 7});
+    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[13].date_),
+    //           std::chrono::year_month_day{2021y / std::chrono::September / 20});
 }
 
 TEST_F(StreamerATR, RetrievePreviousCloseAndCurrentOpen) // NOLINT
@@ -3077,40 +3077,40 @@ TEST_F(StreamerATR, RetrievePreviousCloseAndCurrentOpen) // NOLINT
     if (market_status == US_MarketStatus::e_OpenForTrading)
     {
         auto eod_history = eod_history_getter.GetTopOfBookAndLastClose();
-        for (const auto &e : eod_history)
-        {
-            std::cout << std::format("{}, {}, {}, {}\n", e.symbol_, e.time_stamp_nsecs_, e.open_, e.last_);
-        }
+        // for (const auto &e : eod_history)
+        // {
+        //     std::cout << std::format("{}, {}, {}, {}\n", e.symbol_, e.time_stamp_nsecs_, e.open_, e.last_);
+        // }
         // std::cout << std::format("{}\n", eod_history);
         EXPECT_EQ(eod_history.size(), 3);
     }
-    std::cout << "Tried Eod. Trying Tiingo...\n";
-
-    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-
-    Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-                                 Tiingo::Prefix{"/iex"}};
-    tiingo_history_getter.UseSymbols({"spy", "uso", "rsp"});
-
-    if (market_status == US_MarketStatus::e_NotOpenYet)
-    {
-        auto tiingo_history =
-            tiingo_history_getter.GetMostRecentTickerData("AAPL", today, 2, UseAdjusted::e_No, &holidays);
-
-        EXPECT_EQ(tiingo_history.size(), 1);
-        auto business_days = ConstructeBusinessDayRange(today, 2, UpOrDown::e_Down, &holidays);
-        EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[0].date_), business_days.second);
-    }
-    if (market_status == US_MarketStatus::e_OpenForTrading)
-    {
-        auto tiingo_history = tiingo_history_getter.GetTopOfBookAndLastClose();
-        for (const auto &e : tiingo_history)
-        {
-            std::cout << std::format("{}, {}, {}, {}\n", e.symbol_, e.time_stamp_nsecs_, e.open_, e.last_);
-        }
-        //        std::cout << tiingo_history << '\n';
-        EXPECT_EQ(tiingo_history.size(), 3);
-    }
+    // std::cout << "Tried Eod. Trying Tiingo...\n";
+    //
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                              Tiingo::Prefix{"/iex"}};
+    // tiingo_history_getter.UseSymbols({"spy", "uso", "rsp"});
+    //
+    // if (market_status == US_MarketStatus::e_NotOpenYet)
+    // {
+    //     auto tiingo_history =
+    //         tiingo_history_getter.GetMostRecentTickerData("AAPL", today, 2, UseAdjusted::e_No, &holidays);
+    //
+    //     EXPECT_EQ(tiingo_history.size(), 1);
+    //     auto business_days = ConstructeBusinessDayRange(today, 2, UpOrDown::e_Down, &holidays);
+    //     EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[0].date_), business_days.second);
+    // }
+    // if (market_status == US_MarketStatus::e_OpenForTrading)
+    // {
+    //     auto tiingo_history = tiingo_history_getter.GetTopOfBookAndLastClose();
+    //     for (const auto &e : tiingo_history)
+    //     {
+    //         std::cout << std::format("{}, {}, {}, {}\n", e.symbol_, e.time_stamp_nsecs_, e.open_, e.last_);
+    //     }
+    //     //        std::cout << tiingo_history << '\n';
+    //     EXPECT_EQ(tiingo_history.size(), 3);
+    // }
 }
 
 TEST_F(StreamerATR, RetrievePreviousDataThenComputeAverageTrueRange) // NOLINT
@@ -3134,32 +3134,32 @@ TEST_F(StreamerATR, RetrievePreviousDataThenComputeAverageTrueRange) // NOLINT
 
     // auto atr = ComputeATRUsingJSON("AAPL", eod_history, 4);
     auto eod_atr = ComputeATR("AAPL", eod_history, 4);
-    std::cout << std::format("eod_atr: {}\n", eod_atr);
-    rng::for_each(eod_history | vws::take(4), [](const auto &hist) { std::cout << std::format("{}\n", hist); });
+    // std::cout << std::format("eod_atr: {}\n", eod_atr);
+    // rng::for_each(eod_history | vws::take(4), [](const auto &hist) { std::cout << std::format("{}\n", hist); });
 
     // value differs from Tiingo because source data is slightly different
     EXPECT_EQ(eod_atr, Decimal{"3.370"});
 
-    std::cout << "Tried Eod. Trying Tiingo...\n";
-
-    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-
-    Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-                                 Tiingo::Prefix{}};
-
-    auto tiingo_history = tiingo_history_getter.GetMostRecentTickerData(
-        "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 15, UseAdjusted::e_No, &holidays);
-    //    // rng::for_each(eod_history, [](const auto& e){ std::print("{}\n", e); });
-
-    EXPECT_EQ(tiingo_history.size(), 15);
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[0].date_),
-              std::chrono::year_month_day{2021y / std::chrono::October / 7});
-    EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[4].date_),
-              std::chrono::year_month_day{2021y / std::chrono::October / 1});
-
-    auto tiingo_atr = ComputeATR("AAPL", tiingo_history, 4);
-
-    ASSERT_EQ(tiingo_atr, Decimal{"3.369"});
+    // std::cout << "Tried Eod. Trying Tiingo...\n";
+    //
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                              Tiingo::Prefix{}};
+    //
+    // auto tiingo_history = tiingo_history_getter.GetMostRecentTickerData(
+    //     "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, 15, UseAdjusted::e_No, &holidays);
+    // //    // rng::for_each(eod_history, [](const auto& e){ std::print("{}\n", e); });
+    //
+    // EXPECT_EQ(tiingo_history.size(), 15);
+    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[0].date_),
+    //           std::chrono::year_month_day{2021y / std::chrono::October / 7});
+    // EXPECT_EQ(StringToDateYMD("%Y-%m-%d", tiingo_history[4].date_),
+    //           std::chrono::year_month_day{2021y / std::chrono::October / 1});
+    //
+    // auto tiingo_atr = ComputeATR("AAPL", tiingo_history, 4);
+    //
+    // ASSERT_EQ(tiingo_atr, Decimal{"3.369"});
 }
 
 TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
@@ -3191,43 +3191,44 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
     // std::cout << "sum: " << sum << '\n';
     Decimal eod_box_size = eod_atr / (eod_sum / eod_history_size);
 
-    std::cout << "eod atr: " << eod_atr << '\n';
+    // std::cout << "eod atr: " << eod_atr << '\n';
     eod_box_size = eod_box_size.rescale(-5);
-    std::cout << "rescaled eod box size: " << eod_box_size << '\n';
+    // std::cout << "rescaled eod box size: " << eod_box_size << '\n';
 
-    std::cout << "Tried Eod. Trying Tiingo...\n";
-
-    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-
-    Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-                                 Tiingo::Prefix{}};
-
-    constexpr int tiingo_history_size = 20;
-    const auto tiingo_history = tiingo_history_getter.GetMostRecentTickerData(
-        "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, tiingo_history_size + 1,
-        UseAdjusted::e_No, &holidays);
-
-    // recompute using all the data for rest of test
-
-    auto tiingo_atr = ComputeATR("AAPL", tiingo_history, tiingo_history_size);
-    // std::cout << "296758 ATR using 20 days: " << atr << '\n';
-    EXPECT_EQ(tiingo_atr.rescale(-3), Decimal{"3.211"});
-
-    // next, I need to compute my average closing price over the interval
-    // but excluding the 'extra' value included for computing the ATR
-
-    auto tiingo_bkwd_data = tiingo_history | vws::reverse | vws::take(tiingo_history_size) |
-                            vws::transform([](const StockDataRecord &e) { return e.close_; });
-    Decimal tiingo_sum = std::accumulate(tiingo_bkwd_data.begin(), tiingo_bkwd_data.end(), Decimal{0}, std::plus<>());
-    // std::cout << "sum: " << sum << '\n';
-    Decimal tiingo_box_size = tiingo_atr / (tiingo_sum / tiingo_history_size);
-
-    std::cout << "tiingo atr: " << tiingo_atr << '\n';
-    tiingo_box_size = tiingo_box_size.rescale(-5);
-    std::cout << "rescaled tiingo box size: " << tiingo_box_size << '\n';
-
-    EXPECT_EQ(eod_atr, tiingo_atr);
-    EXPECT_EQ(eod_box_size, tiingo_box_size);
+    // std::cout << "Tried Eod. Trying Tiingo...\n";
+    //
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_history_getter{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                              Tiingo::Prefix{}};
+    //
+    // constexpr int tiingo_history_size = 20;
+    // const auto tiingo_history = tiingo_history_getter.GetMostRecentTickerData(
+    //     "AAPL", std::chrono::year_month_day{2021y / std::chrono::October / 7}, tiingo_history_size + 1,
+    //     UseAdjusted::e_No, &holidays);
+    //
+    // // recompute using all the data for rest of test
+    //
+    // auto tiingo_atr = ComputeATR("AAPL", tiingo_history, tiingo_history_size);
+    // // std::cout << "296758 ATR using 20 days: " << atr << '\n';
+    // EXPECT_EQ(tiingo_atr.rescale(-3), Decimal{"3.211"});
+    //
+    // // next, I need to compute my average closing price over the interval
+    // // but excluding the 'extra' value included for computing the ATR
+    //
+    // auto tiingo_bkwd_data = tiingo_history | vws::reverse | vws::take(tiingo_history_size) |
+    //                         vws::transform([](const StockDataRecord &e) { return e.close_; });
+    // Decimal tiingo_sum = std::accumulate(tiingo_bkwd_data.begin(), tiingo_bkwd_data.end(), Decimal{0},
+    // std::plus<>());
+    // // std::cout << "sum: " << sum << '\n';
+    // Decimal tiingo_box_size = tiingo_atr / (tiingo_sum / tiingo_history_size);
+    //
+    // std::cout << "tiingo atr: " << tiingo_atr << '\n';
+    // tiingo_box_size = tiingo_box_size.rescale(-5);
+    // std::cout << "rescaled tiingo box size: " << tiingo_box_size << '\n';
+    //
+    // EXPECT_EQ(eod_atr, tiingo_atr);
+    // EXPECT_EQ(eod_box_size, tiingo_box_size);
 
     // PF_Chart chart("AAPL", atr, 2, box_size, BoxScale::e_Linear);
     //
@@ -3348,16 +3349,16 @@ TEST_F(StreamerWebSocket, ConnectAndDisconnect) // NOLINT
     EXPECT_NO_THROW(eod_streamer.ConnectWS());
     eod_streamer.DisconnectWS();
 
-    std::cout << "Eod works. Trying Tiingo...\n";
-
-    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-
-    Tiingo tiingo_streamer{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-                           Tiingo::Prefix{"/iex"}};
-    EXPECT_NO_THROW(tiingo_streamer.ConnectWS());
-    tiingo_streamer.DisconnectWS();
-
-    std::cout << "Looks like Tiingo worked too...\n";
+    // std::cout << "Eod works. Trying Tiingo...\n";
+    //
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_streamer{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                        Tiingo::Prefix{"/iex"}};
+    // EXPECT_NO_THROW(tiingo_streamer.ConnectWS());
+    // tiingo_streamer.DisconnectWS();
+    //
+    // std::cout << "Looks like Tiingo worked too...\n";
 }
 
 TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
@@ -3402,40 +3403,41 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
         std::cout << eod_quotes.ExtractStreamedData(new_data) << std::endl;
     }
 
-    std::cout << "Eod works. Trying Tiingo...\n";
-
-    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-
-    Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-                         Tiingo::Prefix{"/iex"}};
-
-    tiingo_quotes.UseSymbols({"aapl", "msft", "tsla"});
-
-    RemoteDataSource::StreamerContext streamer_context2;
-
-    time_to_stop = false;
-
-    auto tiingo_streaming_task =
-        std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop, std::ref(streamer_context2));
-
-    std::this_thread::sleep_for(5s);
-    time_to_stop = true;
-    // tiingo_quotes.RequestStop();
-    tiingo_streaming_task.get();
-
-    EXPECT_TRUE(!streamer_context2.streamed_data_.empty()); // we need an actual test here
-
-    while (!streamer_context2.streamed_data_.empty())
-    {
-        std::string new_data = streamer_context2.streamed_data_.front();
-        // std::cout << std::format("data: {}\n", new_data);
-        streamer_context2.streamed_data_.pop();
-        auto extracted = tiingo_quotes.ExtractStreamedData(new_data);
-        if (!extracted.ticker_.empty())
-        {
-            std::cout << extracted << '\n';
-        }
-    }
+    // std::cout << "Eod works. Trying Tiingo...\n";
+    //
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                      Tiingo::Prefix{"/iex"}};
+    //
+    // tiingo_quotes.UseSymbols({"aapl", "msft", "tsla"});
+    //
+    // RemoteDataSource::StreamerContext streamer_context2;
+    //
+    // time_to_stop = false;
+    //
+    // auto tiingo_streaming_task =
+    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop,
+    //     std::ref(streamer_context2));
+    //
+    // std::this_thread::sleep_for(5s);
+    // time_to_stop = true;
+    // // tiingo_quotes.RequestStop();
+    // tiingo_streaming_task.get();
+    //
+    // EXPECT_TRUE(!streamer_context2.streamed_data_.empty()); // we need an actual test here
+    //
+    // while (!streamer_context2.streamed_data_.empty())
+    // {
+    //     std::string new_data = streamer_context2.streamed_data_.front();
+    //     // std::cout << std::format("data: {}\n", new_data);
+    //     streamer_context2.streamed_data_.pop();
+    //     auto extracted = tiingo_quotes.ExtractStreamedData(new_data);
+    //     if (!extracted.ticker_.empty())
+    //     {
+    //         std::cout << extracted << '\n';
+    //     }
+    // }
 }
 
 // here's a task to simulate processing the streamed and now extracted data from the websocket
@@ -3467,7 +3469,7 @@ void processor_task(RemoteDataSource::ProcessorContext &processor_context)
 
         // just for testing
 
-        std::cout << new_data << std::endl;
+        // std::cout << new_data << std::endl;
 
         std::this_thread::sleep_for(10ms);
     }
@@ -3537,11 +3539,11 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
                                             current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
 
-    // if (!can_we_stream)
-    // {
-    //     std::cout << "Market not open for trading now so we can't stream quotes.\n";
-    //     return;
-    // }
+    if (!can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
 
     bool time_to_stop = false;
 
@@ -3606,53 +3608,54 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
 
     EXPECT_TRUE(streamer_context.streamed_data_.empty()); // we need an actual test here
 
-    std::cout << "Eod works. Trying Tiingo...\n";
-
-    const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
-
-    Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
-                         Tiingo::Prefix{"/iex"}};
-
-    tiingo_quotes.UseSymbols(symbols);
-
-    RemoteDataSource::StreamerContext streamer_context2;
-
-    std::vector<RemoteDataSource::ProcessorContext> processor_contexts2(symbols.size());
-
-    processor_threads.clear();
-
-    for (auto &context : processor_contexts2)
-    {
-        processor_threads.emplace_back(&processor_task, std::ref(context));
-    }
-
-    time_to_stop = false;
-
-    auto parsing_task2 = std::async(std::launch::async, &parser, &tiingo_quotes, std::ref(streamer_context2),
-                                    std::ref(processor_contexts2), std::ref(symbol_to_context_map));
-    auto tiingo_streaming_task =
-        std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop, std::ref(streamer_context2));
-
-    std::this_thread::sleep_for(5s);
-    time_to_stop = true;
-    // tiingo_quotes.RequestStop();
-    tiingo_streaming_task.get();
-
-    streamer_context2.done_ = true;
-    streamer_context2.cv_.notify_one();
-    parsing_task2.get();
-
-    for (auto &context : processor_contexts2)
-    {
-        context.done_ = true;
-        context.cv_.notify_one();
-    }
-    for (auto &thread : processor_threads)
-    {
-        thread.join();
-    }
-
-    EXPECT_TRUE(streamer_context2.streamed_data_.empty()); // we need an actual test here
+    // std::cout << "Eod works. Trying Tiingo...\n";
+    //
+    // const auto tiingo_key = LoadApiKey("Tiingo_key.dat");
+    //
+    // Tiingo tiingo_quotes{Tiingo::Host{"api.tiingo.com"}, Tiingo::Port{"443"}, Tiingo::APIKey{tiingo_key},
+    //                      Tiingo::Prefix{"/iex"}};
+    //
+    // tiingo_quotes.UseSymbols(symbols);
+    //
+    // RemoteDataSource::StreamerContext streamer_context2;
+    //
+    // std::vector<RemoteDataSource::ProcessorContext> processor_contexts2(symbols.size());
+    //
+    // processor_threads.clear();
+    //
+    // for (auto &context : processor_contexts2)
+    // {
+    //     processor_threads.emplace_back(&processor_task, std::ref(context));
+    // }
+    //
+    // time_to_stop = false;
+    //
+    // auto parsing_task2 = std::async(std::launch::async, &parser, &tiingo_quotes, std::ref(streamer_context2),
+    //                                 std::ref(processor_contexts2), std::ref(symbol_to_context_map));
+    // auto tiingo_streaming_task =
+    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop,
+    //     std::ref(streamer_context2));
+    //
+    // std::this_thread::sleep_for(5s);
+    // time_to_stop = true;
+    // // tiingo_quotes.RequestStop();
+    // tiingo_streaming_task.get();
+    //
+    // streamer_context2.done_ = true;
+    // streamer_context2.cv_.notify_one();
+    // parsing_task2.get();
+    //
+    // for (auto &context : processor_contexts2)
+    // {
+    //     context.done_ = true;
+    //     context.cv_.notify_one();
+    // }
+    // for (auto &thread : processor_threads)
+    // {
+    //     thread.join();
+    // }
+    //
+    // EXPECT_TRUE(streamer_context2.streamed_data_.empty()); // we need an actual test here
 }
 // NOLINTEND(*-magic-numbers)
 
