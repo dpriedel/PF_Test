@@ -44,7 +44,7 @@ CFG_INC := -I${HOME}/projects/PF_Project/point_figure/src \
 
 RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib -Wl,-rpath,/usr/local/lib/ChartDirector
 
-SDIR1 := .
+SDIR1 := ./src
 SRCS1 := $(SDIR1)/Unit_Test.cpp
 
 SDIR2 := ../point_figure/src
@@ -93,8 +93,6 @@ CFG_LIB := -L/usr/local/lib \
 		-lstdc++exp \
 		-L/usr/lib \
 		-lcurl \
-		-lmpdec++ \
-		-lmpdec \
 		-lssl -lcrypto \
 		-ljsoncpp 
 
