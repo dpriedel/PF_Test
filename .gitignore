@@ -9,6 +9,8 @@ EndToEnd_Test
 Debug_unit/*
 Debug_e2e/*
 Debug_holidays/*
+Debug_lib
+
 .cache/*
 test_files*/*
 collected_charts*/*
