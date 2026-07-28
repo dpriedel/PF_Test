@@ -69,8 +69,9 @@ namespace vws = std::ranges::views;
 // #include <range/v3/range/conversion.hpp>
 
 #include <boost/decimal.hpp>
-#include <boost/decimal/cmath.hpp>
-#include <boost/decimal/format.hpp>
+// #include <boost/decimal/numbers.hpp>
+// #include <boost/decimal/cmath.hpp>
+// #include <boost/decimal/format.hpp>
 
 namespace bd = boost::decimal;
 using Decimal = bd::decimal64_t;
@@ -83,9 +84,9 @@ namespace fs = std::filesystem;
 
 using namespace testing;
 
+#include "Boxes.h"
 #if 0
 
-#include "Boxes.h"
 #include "ConstructChartGraphic.h"
 #include "PF_Chart.h"
 #include "PF_Column.h"
@@ -413,13 +414,13 @@ TEST_F(DecimalBasicFunctionality, Constructors) // NOLINT
 {
     Decimal x1;
     Decimal x2{"5"};
-    Decimal x3{"1234.3"s};
+    Decimal x3{"1234.3"_DD};
 
-    Decimal x4("1.25678");
+    Decimal x4("1.25678"_DD);
 
-    Decimal x5("1.257");
+    Decimal x5("1.257"_DD);
 
-    Decimal x6("5.0");
+    Decimal x6("5.0"_DD);
     Decimal x7{std::string{"5.0"}};
 
     EXPECT_EQ(x2, 5);
@@ -440,8 +441,8 @@ TEST_F(DecimalBasicFunctionality, SimpleArithmetic) // NOLINT
 
     Decimal x2("1.23457");
     auto x2_result = x2 * 2;
-    EXPECT_EQ(x2_result, Decimal("2.46914"));
-    EXPECT_TRUE(x2_result == Decimal("2.46914"));
+    EXPECT_EQ(x2_result, Decimal("2.46914"_DD));
+    EXPECT_TRUE(x2_result == Decimal("2.46914"_DD));
 }
 
 TEST_F(DecimalBasicFunctionality, SimpleLog_nUsage) // NOLINT
@@ -451,13 +452,57 @@ TEST_F(DecimalBasicFunctionality, SimpleLog_nUsage) // NOLINT
     auto x1_dec = bd::exp(x1_ln);
     EXPECT_EQ(bd::rescale(x1, -3), bd::rescale(x1_dec, -3));
 
-    // Decimal x2("1.23457");
-    // auto x2_result = x2 * 2;
-    // EXPECT_EQ(x2_result, Decimal("2.46914"));
-    // EXPECT_TRUE(x2_result == Decimal("2.46914"));
+    Decimal x2("1.23457");
+    auto x2_result = x2 * 2;
+    EXPECT_EQ(x2_result, Decimal("2.46914"_DD));
 }
 
-#if 0
+int get_exponent(const Decimal &val)
+{
+    return -(static_cast<int>(bd::quantexp(val)) - bd::detail::bias_v<Decimal>);
+}
+
+TEST_F(DecimalBasicFunctionality, Exponents) // NOLINT
+{
+
+    Decimal x0{"0.010"_DD};
+    int exponent = get_exponent(x0);
+    std::println("val: {}, exp: {}", x0, exponent);
+
+    EXPECT_EQ(exponent, 3);
+
+    Decimal x1{"500.1"_DD};
+    exponent = get_exponent(x1);
+    std::println("val: {}, exp: {}", x1, exponent);
+
+    EXPECT_EQ(exponent, 1);
+
+    // Pi-based tests: rescale pi to various decimal places and verify exponent matches
+    // Note: rescale rounds then drops trailing zeros from storage
+
+    Decimal pi = bd::numbers::pi;
+
+    auto pi_r0 = bd::rescale(pi, 0);
+    exponent = get_exponent(pi_r0);
+    std::println("val: {}, exp: {}", pi_r0, exponent);
+    EXPECT_EQ(exponent, 0);
+
+    auto pi_r3 = bd::rescale(pi, 3);
+    exponent = get_exponent(pi_r3);
+    std::println("val: {}, exp: {}", pi_r3, exponent);
+    EXPECT_EQ(exponent, 2);
+
+    auto pi_r5 = bd::rescale(pi, 5);
+    exponent = get_exponent(pi_r5);
+    std::println("val: {}, exp: {}", pi_r5, exponent);
+    EXPECT_EQ(exponent, 4);
+
+    auto pi_r7 = bd::rescale(pi, 7);
+    exponent = get_exponent(pi_r7);
+    std::println("val: {}, exp: {}", pi_r7, exponent);
+    EXPECT_EQ(exponent, 6);
+}
+
 class BoxesBasicFunctionality : public Test
 {
 };
@@ -468,6 +513,7 @@ TEST_F(BoxesBasicFunctionality, Constructors) // NOLINT
     EXPECT_TRUE(boxes.GetBoxSize() == -1);
 
     Boxes boxes2{Decimal{10}};
+
     EXPECT_TRUE(boxes2.GetBoxSize() == 10);
 }
 
@@ -566,7 +612,7 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes) // NOLINT
     // EXPECT_EQ(box, Decimal("515.151"));
     EXPECT_EQ(box, Decimal("515.150")); // mpdecimal rounding is different
 
-    // std::cout << boxes << std::endl;
+    std::cout << boxes << std::endl;
     // test going smaller
 
     Boxes boxes2{500, 0.01, BoxScale::e_Percent};
@@ -666,6 +712,7 @@ TEST_F(Combinatorial, BasicFunctionlity) // NOLINT
     ASSERT_EQ(rng::size(abc), 18);
 }
 
+#if 0
 class ColumnFunctionality10X1 : public Test
 {
 };
