@@ -424,8 +424,8 @@ TEST_F(DecimalBasicFunctionality, Constructors) // NOLINT
     Decimal x7{std::string{"5.0"}};
 
     EXPECT_EQ(x2, 5);
-    EXPECT_EQ(x3, Decimal("1234.3"));
-    EXPECT_NE(x4, Decimal("1.257"));
+    EXPECT_EQ(x3, Decimal{"1234.3"_DD});
+    EXPECT_NE(x4, Decimal{"1.257"_DD});
     EXPECT_NE(x4, x5);
 
     // test that this works
@@ -439,10 +439,10 @@ TEST_F(DecimalBasicFunctionality, SimpleArithmetic) // NOLINT
     auto x1_result = x1 + 5;
     EXPECT_EQ(x1_result, 10);
 
-    Decimal x2("1.23457");
+    Decimal x2{"1.23457"};
     auto x2_result = x2 * 2;
-    EXPECT_EQ(x2_result, Decimal("2.46914"_DD));
-    EXPECT_TRUE(x2_result == Decimal("2.46914"_DD));
+    EXPECT_EQ(x2_result, Decimal{"2.46914"_DD});
+    EXPECT_TRUE(x2_result == Decimal{"2.46914"_DD});
 }
 
 TEST_F(DecimalBasicFunctionality, SimpleLog_nUsage) // NOLINT
@@ -450,32 +450,39 @@ TEST_F(DecimalBasicFunctionality, SimpleLog_nUsage) // NOLINT
     Decimal x1{"500.5"};
     auto x1_ln = bd::log(x1);
     auto x1_dec = bd::exp(x1_ln);
-    EXPECT_EQ(bd::rescale(x1, -3), bd::rescale(x1_dec, -3));
+    EXPECT_EQ(bd::rescale(x1, 3), bd::rescale(x1_dec, 3));
 
-    Decimal x2("1.23457");
+    Decimal x2{"1.23457"};
     auto x2_result = x2 * 2;
-    EXPECT_EQ(x2_result, Decimal("2.46914"_DD));
-}
-
-int get_exponent(const Decimal &val)
-{
-    return -(static_cast<int>(bd::quantexp(val)) - bd::detail::bias_v<Decimal>);
+    EXPECT_EQ(x2_result, Decimal{"2.46914"_DD});
 }
 
 TEST_F(DecimalBasicFunctionality, Exponents) // NOLINT
 {
 
     Decimal x0{"0.010"_DD};
-    int exponent = get_exponent(x0);
-    std::println("val: {}, exp: {}", x0, exponent);
+    int exponent = GetExponent(x0);
+    // std::println("val: {}, exp: {}", x0, exponent);
 
     EXPECT_EQ(exponent, 3);
 
     Decimal x1{"500.1"_DD};
-    exponent = get_exponent(x1);
-    std::println("val: {}, exp: {}", x1, exponent);
+    exponent = GetExponent(x1);
+    // std::println("val: {}, exp: {}", x1, exponent);
 
     EXPECT_EQ(exponent, 1);
+
+    Decimal x1_a{"500"_DD};
+    exponent = GetExponent(x1_a);
+    // std::println("val: {}, exp: {}", x1_a, exponent);
+
+    EXPECT_EQ(exponent, 0);
+
+    Decimal x5{"500.1234"_DD};
+    exponent = GetExponent(x5);
+    // std::println("val: {}, exp: {}", x5, exponent);
+
+    EXPECT_EQ(exponent, 4);
 
     // Pi-based tests: rescale pi to various decimal places and verify exponent matches
     // Note: rescale rounds then drops trailing zeros from storage
@@ -483,23 +490,23 @@ TEST_F(DecimalBasicFunctionality, Exponents) // NOLINT
     Decimal pi = bd::numbers::pi;
 
     auto pi_r0 = bd::rescale(pi, 0);
-    exponent = get_exponent(pi_r0);
-    std::println("val: {}, exp: {}", pi_r0, exponent);
+    exponent = GetExponent(pi_r0);
+    // std::println("val: {}, exp: {}", pi_r0, exponent);
     EXPECT_EQ(exponent, 0);
 
     auto pi_r3 = bd::rescale(pi, 3);
-    exponent = get_exponent(pi_r3);
-    std::println("val: {}, exp: {}", pi_r3, exponent);
+    exponent = GetExponent(pi_r3);
+    // std::println("val: {}, exp: {}", pi_r3, exponent);
     EXPECT_EQ(exponent, 2);
 
     auto pi_r5 = bd::rescale(pi, 5);
-    exponent = get_exponent(pi_r5);
-    std::println("val: {}, exp: {}", pi_r5, exponent);
+    exponent = GetExponent(pi_r5);
+    // std::println("val: {}, exp: {}", pi_r5, exponent);
     EXPECT_EQ(exponent, 4);
 
     auto pi_r7 = bd::rescale(pi, 7);
-    exponent = get_exponent(pi_r7);
-    std::println("val: {}, exp: {}", pi_r7, exponent);
+    exponent = GetExponent(pi_r7);
+    // std::println("val: {}, exp: {}", pi_r7, exponent);
     EXPECT_EQ(exponent, 6);
 }
 
@@ -547,8 +554,10 @@ TEST_F(BoxesBasicFunctionality, GenerateLinearBoxes) // NOLINT
     auto howmany2 = boxes.GetBoxList().size();
     EXPECT_EQ(howmany, howmany2);
 
-    Boxes boxes2{10.0};
-    box = boxes2.FindBox(Decimal("95.5"));
+    Boxes boxes2{10};
+    box = boxes2.FindBox(Decimal{"95.5"_DD});
+    // std::print("{}", boxes2);
+
     EXPECT_EQ(box, 96); // box will be integral, so rounds .5 up
 
     // test going smaller
@@ -593,26 +602,26 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes) // NOLINT
     Boxes boxes{500, 0.010, BoxScale::e_Percent};
 
     Boxes::Box box = boxes.FindBox(500);
-    EXPECT_EQ(box, Decimal("500.00"));
+    EXPECT_EQ(box, Decimal{"500.00"});
 
     box = boxes.FindBox(506);
-    EXPECT_EQ(box, Decimal("505.00"));
+    EXPECT_EQ(box, Decimal{"505.00"});
 
     box = boxes.FindBox(511);
-    EXPECT_EQ(box, Decimal("510.050"));
+    EXPECT_EQ(box, Decimal{"510.050"});
 
     box = boxes.FindBox(516);
-    // EXPECT_EQ(box, Decimal("515.151"));
-    EXPECT_EQ(box, Decimal("515.150")); // mpdecimal rounding is different
+    // EXPECT_EQ(box, Decimal{"515.151"});
+    EXPECT_EQ(box, Decimal{"515.150"}); // mpdecimal rounding is different
 
     box = boxes.FindBox(532);
-    EXPECT_EQ(box, Decimal("530.760"));
+    EXPECT_EQ(box, Decimal{"530.760"});
 
     box = boxes.FindBox(520);
-    // EXPECT_EQ(box, Decimal("515.151"));
-    EXPECT_EQ(box, Decimal("515.150")); // mpdecimal rounding is different
+    // EXPECT_EQ(box, Decimal{"515.151"});
+    EXPECT_EQ(box, Decimal{"515.150"}); // mpdecimal rounding is different
 
-    std::cout << boxes << std::endl;
+    // std::cout << boxes << std::endl;
     // test going smaller
 
     Boxes boxes2{500, 0.01, BoxScale::e_Percent};
@@ -621,14 +630,15 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes) // NOLINT
     EXPECT_EQ(box, 505);
 
     box = boxes2.FindBox(500);
-    EXPECT_EQ(box, Decimal("499.95"));
+    // std::cout << boxes2 << std::endl;
+    EXPECT_EQ(box, Decimal{"499.95"});
 }
 
 TEST_F(BoxesBasicFunctionality, PercentBoxesNextandPrev) // NOLINT
 {
     Boxes boxes{500, 0.01, BoxScale::e_Percent};
     Boxes::Box box = boxes.FindBox(500);
-    EXPECT_EQ(box, Decimal("500.00"));
+    EXPECT_EQ(box, Decimal{"500.00"});
 
     box = boxes.FindNextBox(500);
     EXPECT_EQ(box, 505);
@@ -650,17 +660,20 @@ TEST_F(BoxesBasicFunctionality, BoxesToAndFromJson) // NOLINT
 
     auto prices = values | vws::transform([](const auto &a_value) {
                       Decimal result{a_value};
+                      // std::println("val: {}", result);
                       return result;
                   });
 
     Boxes boxes{500, 0.01, BoxScale::e_Percent};
+    // std::println("empty boxes: {}", boxes);
 
     rng::for_each(prices, [&boxes](const auto &x) { boxes.FindBox(x); });
+    // std::println("found boxes: {}", boxes);
 
     const auto json = boxes.ToJSON();
-
+    // std::cout << json << std::endl;
     Boxes boxes2{json};
-
+    // std::println("boxes: {}\nboxes2: {}", boxes, boxes2);
     ASSERT_EQ(boxes, boxes2);
 }
 
