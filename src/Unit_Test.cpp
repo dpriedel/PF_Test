@@ -69,9 +69,6 @@ namespace vws = std::ranges::views;
 // #include <range/v3/range/conversion.hpp>
 
 #include <boost/decimal.hpp>
-// #include <boost/decimal/numbers.hpp>
-// #include <boost/decimal/cmath.hpp>
-// #include <boost/decimal/format.hpp>
 
 namespace bd = boost::decimal;
 using Decimal = bd::decimal64_t;
@@ -85,11 +82,11 @@ namespace fs = std::filesystem;
 using namespace testing;
 
 #include "Boxes.h"
+#include "PF_Column.h"
 #if 0
 
 #include "ConstructChartGraphic.h"
 #include "PF_Chart.h"
-#include "PF_Column.h"
 #include "PF_Signals.h"
 #include "PointAndFigureDB.h"
 
@@ -450,7 +447,7 @@ TEST_F(DecimalBasicFunctionality, SimpleLog_nUsage) // NOLINT
     Decimal x1{"500.5"};
     auto x1_ln = bd::log(x1);
     auto x1_dec = bd::exp(x1_ln);
-    EXPECT_EQ(bd::rescale(x1, 3), bd::rescale(x1_dec, 3));
+    EXPECT_EQ(rescale_dpr(x1, 3), rescale_dpr(x1_dec, 3));
 
     Decimal x2{"1.23457"};
     auto x2_result = x2 * 2;
@@ -489,25 +486,25 @@ TEST_F(DecimalBasicFunctionality, Exponents) // NOLINT
 
     Decimal pi = bd::numbers::pi;
 
-    auto pi_r0 = bd::rescale(pi, 0);
+    auto pi_r0 = rescale_dpr(pi, 0);
     exponent = GetExponent(pi_r0);
     // std::println("val: {}, exp: {}", pi_r0, exponent);
     EXPECT_EQ(exponent, 0);
 
-    auto pi_r3 = bd::rescale(pi, 3);
+    auto pi_r3 = rescale_dpr(pi, 3);
     exponent = GetExponent(pi_r3);
     // std::println("val: {}, exp: {}", pi_r3, exponent);
-    EXPECT_EQ(exponent, 2);
+    EXPECT_EQ(exponent, 3);
 
-    auto pi_r5 = bd::rescale(pi, 5);
+    auto pi_r5 = rescale_dpr(pi, 5);
     exponent = GetExponent(pi_r5);
     // std::println("val: {}, exp: {}", pi_r5, exponent);
-    EXPECT_EQ(exponent, 4);
+    EXPECT_EQ(exponent, 5);
 
-    auto pi_r7 = bd::rescale(pi, 7);
+    auto pi_r7 = rescale_dpr(pi, 7);
     exponent = GetExponent(pi_r7);
     // std::println("val: {}, exp: {}", pi_r7, exponent);
-    EXPECT_EQ(exponent, 6);
+    EXPECT_EQ(exponent, 7);
 }
 
 class BoxesBasicFunctionality : public Test
@@ -599,7 +596,9 @@ TEST_F(BoxesBasicFunctionality, GeneratePercentBoxes) // NOLINT
     // I'm not sure how du Plessis is doing his rounding (p. 492) but
     // I'm using round half up to 3 decimals.
 
-    Boxes boxes{500, 0.010, BoxScale::e_Percent};
+    // specify a max exponent = 3 to match what du Plessis apparantly used in his book.
+
+    Boxes boxes{500, 0.010, BoxScale::e_Percent, 3};
 
     Boxes::Box box = boxes.FindBox(500);
     EXPECT_EQ(box, Decimal{"500.00"});
@@ -725,7 +724,6 @@ TEST_F(Combinatorial, BasicFunctionlity) // NOLINT
     ASSERT_EQ(rng::size(abc), 18);
 }
 
-#if 0
 class ColumnFunctionality10X1 : public Test
 {
 };
@@ -1119,10 +1117,10 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     PF_Column col{&boxes, 0, 1};
     PF_Column::TmPt the_time = std::chrono::utc_clock::now();
 
-    auto a_value = prices.begin();
+    auto a_value = prices.cbegin();
 
     //    std::cout << "first value: " << *a_value << '\n';
-    auto status = col.AddValue(dbl2dec(*a_value), the_time);
+    auto status = col.AddValue(*a_value, the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -1130,7 +1128,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
 
     the_time = std::chrono::utc_clock::now();
     //    std::cout << "second value: " << *(++a_value) << '\n';
-    status = col.AddValue(dbl2dec(*(++a_value)), the_time);
+    status = col.AddValue(*(++a_value), the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_Ignored);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Unknown);
     EXPECT_EQ(col.GetTop(), 1100);
@@ -1138,7 +1136,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
 
     the_time = std::chrono::utc_clock::now();
     //    std::cout << "third value: " << *(++a_value) << '\n';
-    status = col.AddValue(dbl2dec(*(++a_value)), the_time);
+    status = col.AddValue(*(++a_value), the_time);
     EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), 1110);
@@ -1147,7 +1145,7 @@ TEST_F(ColumnFunctionalityFractionalBoxes10X1, InitialColumnConstructionInitialV
     the_time = std::chrono::utc_clock::now();
     while (++a_value != prices.end())
     {
-        status = col.AddValue(dbl2dec(*a_value), the_time);
+        status = col.AddValue(*a_value, the_time);
     }
     EXPECT_EQ(status.first, PF_Column::Status::e_Accepted);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
@@ -1401,10 +1399,11 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     // do a simplified ATR calculation
 
-    Decimal box_size{
-        dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
-                static_cast<double>(value_differences.size()))};
-    box_size = bd::rescale(box_size, -5);
+    Decimal box_size{static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
+                     static_cast<double>(value_differences.size())};
+    std::println("box size before rescale: {}", box_size);
+    box_size = rescale_dpr(box_size, 5);
+    std::println("box size after rescale: {}", box_size);
 
     EXPECT_EQ(box_size, Decimal("12.91837"));
 
@@ -1426,8 +1425,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
             continue;
         }
         const auto fields = split_string<std::string_view>(record, ",");
-        auto [status, new_col] =
-            col.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+        auto [status, new_col] = col.AddValue(fields[close_col], fields[date_col]);
         if (status == PF_Column::Status::e_Reversal)
         {
             columns.push_back(col);
@@ -1435,10 +1433,11 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
             // now continue on processing the value.
 
-            status = col.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
+            status = col.AddValue(fields[close_col], fields[date_col]).first;
         }
     };
 
+    std::println("col: {}", col);
     EXPECT_EQ(col.GetDirection(), PF_Column::Direction::e_Up);
     EXPECT_EQ(col.GetTop(), Decimal("1151.67348"));
     EXPECT_EQ(col.GetBottom(), Decimal("1125.83674"));
@@ -1456,7 +1455,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
 
-    Boxes boxes{10, 0.01, BoxScale::e_Percent};
+    Boxes boxes{10, 0.01, BoxScale::e_Percent, 3};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1471,8 +1470,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
             continue;
         }
         const auto fields = split_string<std::string_view>(record, ",");
-        auto [status, new_col] =
-            col.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+        auto [status, new_col] = col.AddValue(fields[close_col], fields[date_col]);
 
         if (status == PF_Column::Status::e_Reversal)
         {
@@ -1481,7 +1479,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithFractiona
 
             // now continue on processing the value.
 
-            status = col.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
+            status = col.AddValue(fields[close_col], fields[date_col]).first;
         }
     };
 
@@ -1503,16 +1501,15 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
     const auto value_differences =
         values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
 
-    Decimal atr =
-        dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0.0)) /
-                static_cast<double>(value_differences.size()));
+    Decimal atr{static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0.0)) /
+                static_cast<double>(value_differences.size())};
     // Decimal average_price = static_cast<double>(rng::accumulate(values_ints, 0.0)) /
-    // static_cast<double>(values_ints.size()); Decimal box_size = atr / average_price; box_size.Rescale(-5);
+    // static_cast<double>(values_ints.size()); Decimal box_size = atr / average_price; box_size.rescale_dpr(5);
 
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
 
-    Boxes boxes{atr, Decimal("0.01"), BoxScale::e_Percent};
+    Boxes boxes{atr, Decimal("0.01"), BoxScale::e_Percent, 3};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1527,8 +1524,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
             continue;
         }
         const auto fields = split_string<std::string_view>(record, ",");
-        auto [status, new_col] =
-            col.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+        auto [status, new_col] = col.AddValue(fields[close_col], fields[date_col]);
 
         if (status == PF_Column::Status::e_Reversal)
         {
@@ -1537,7 +1533,7 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
             // now continue on processing the value.
 
-            status = col.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col])).first;
+            status = col.AddValue(fields[close_col], fields[date_col]).first;
         }
     };
 
@@ -1567,7 +1563,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData) // NOLINT
     //    rng::for_each(values, [](const auto& x) { std::cout << x << "  "; });
     //    std::cout << '\n';
 
-    Boxes boxes{500, 0.01, BoxScale::e_Percent};
+    Boxes boxes{500, 0.01, BoxScale::e_Percent, 3};
     PF_Column col{&boxes, 0, 2};
 
     std::vector<PF_Column> columns;
@@ -1595,6 +1591,7 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData) // NOLINT
     EXPECT_EQ(col.GetBottom(), Decimal("500.00"));
 }
 
+#if 0
 class ChartFunctionality10X2 : public Test
 {
 };
@@ -1884,7 +1881,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ComputeATRBoxSizeForFirstSetOfTestData) //
 
     Decimal atr = dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
                            static_cast<double>(value_differences.size()));
-    atr = bd::rescale(atr, -5);
+    atr = rescale_dpr(atr, 5);
     //    std::cout << "atr: " << atr << '\n';
 
     EXPECT_EQ(atr, Decimal("12.91837"));
@@ -1902,7 +1899,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
 
     Decimal atr = dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
                            static_cast<double>(value_differences.size()));
-    atr = bd::rescale(atr, -5);
+    atr = rescale_dpr(atr, -5);
     //    std::cout << "atr: " << atr << '\n';
 
     EXPECT_EQ(atr, Decimal("12.91837"));
@@ -2351,7 +2348,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     // static_cast<double>(values_ints.size());
 
     // Decimal box_size = atr / average_price;
-    // box_size.Rescale(-5);
+    // box_size.rescale_dpr(-5);
 
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
@@ -2622,7 +2619,7 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDataFromDB) // NOLINT
 
     // results won't be exactly equal due to small differences in least
     // significant decimal digits of prices between tiingo and EODData
-    EXPECT_EQ(bd::rescale(atr, -3), Decimal{"3.211"});
+    EXPECT_EQ(rescale_dpr(atr, -3), Decimal{"3.211"});
 }
 
 TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB) // NOLINT
@@ -2655,7 +2652,7 @@ TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB) // NOLINT
 
     // results won't be exactly equal due to small differences in least
     // significant decimal digits of prices between tiingo and EODData
-    EXPECT_EQ(bd::rescale(close_range, -3), Decimal{"125.918"});
+    EXPECT_EQ(rescale_dpr(close_range, -3), Decimal{"125.918"});
 }
 
 class PlotChartsWithChartDirector : public Test
@@ -2894,7 +2891,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     auto atr = ComputeATR("AAPL", converted_history, history.size() - 1);
 
     //    std::cout << "ATR: " << atr << '\n';
-    atr = bd::rescale(atr, -2);
+    atr = rescale_dpr(atr, -2);
     //    std::cout << "ATR: " << atr << '\n';
 
     // // compute box size as a percent of ATR, eg. 0.1
@@ -2902,7 +2899,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     // Decimal box_size = atr * 0.1;
     //
     // std::cout << "box size: " << box_size << '\n';
-    // box_size.Rescale(-5);
+    // box_size.rescale_dpr(-5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
     PF_Chart chart("AAPL", atr, 3, 0, BoxScale::e_Linear);
@@ -3249,7 +3246,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
 
     auto eod_atr = ComputeATR("AAPL", eod_history, eod_history_size);
     // std::cout << "296758 ATR using 20 days: " << atr << '\n';
-    EXPECT_EQ(bd::rescale(eod_atr, -3), Decimal{"3.211"});
+    EXPECT_EQ(rescale_dpr(eod_atr, -3), Decimal{"3.211"});
 
     // next, I need to compute my average closing price over the interval
     // but excluding the 'extra' value included for computing the ATR
@@ -3261,7 +3258,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
     Decimal eod_box_size = eod_atr / (eod_sum / eod_history_size);
 
     // std::cout << "eod atr: " << eod_atr << '\n';
-    eod_box_size = bd::rescale(eod_box_size, -5);
+    eod_box_size = rescale_dpr(eod_box_size, -5);
     // std::cout << "rescaled eod box size: " << eod_box_size << '\n';
 
     // std::cout << "Tried Eod. Trying Tiingo...\n";
@@ -3280,7 +3277,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
     //
     // auto tiingo_atr = ComputeATR("AAPL", tiingo_history, tiingo_history_size);
     // // std::cout << "296758 ATR using 20 days: " << atr << '\n';
-    // EXPECT_EQ(tiingo_atr.rescale(-3), Decimal{"3.211"});
+    // EXPECT_EQ(tiingo_atr.rescale_dpr(-3), Decimal{"3.211"});
     //
     // // next, I need to compute my average closing price over the interval
     // // but excluding the 'extra' value included for computing the ATR
@@ -3293,7 +3290,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
     // Decimal tiingo_box_size = tiingo_atr / (tiingo_sum / tiingo_history_size);
     //
     // std::cout << "tiingo atr: " << tiingo_atr << '\n';
-    // tiingo_box_size = tiingo_box_size.rescale(-5);
+    // tiingo_box_size = tiingo_box_size.rescale_dpr(-5);
     // std::cout << "rescaled tiingo box size: " << tiingo_box_size << '\n';
     //
     // EXPECT_EQ(eod_atr, tiingo_atr);
@@ -3350,7 +3347,7 @@ TEST_F(StreamerATR, DISABLED_ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentV
     // Decimal box_size = atr / (sum / history_size);
 
     //    std::cout << "box size: " << box_size << '\n';
-    // box_size.Rescale(-5);
+    // box_size.rescale_dpr(-5);
     //    std::cout << "rescaled box size: " << box_size << '\n';
 
     PF_Chart chart("AAPL", atr, 2, Decimal(".01"), BoxScale::e_Percent);
