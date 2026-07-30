@@ -49,16 +49,16 @@ SRCS1 := $(SDIR1)/Unit_Test.cpp
 
 SDIR2 := ../point_figure/src
 SRCS2 := $(SDIR2)/Boxes.cpp \
-		$(SDIR2)/PF_Column.cpp 
-# 		$(SDIR2)/PF_Chart.cpp  \
-# 		$(SDIR2)/ConstructChartGraphic.cpp  \
-# 		$(SDIR2)/PF_Signals.cpp  \
-# 		$(SDIR2)/PointAndFigureDB.cpp \
-# 		$(SDIR2)/Tiingo.cpp \
-# 		$(SDIR2)/Eodhd.cpp \
-# 		$(SDIR2)/Streamer.cpp
-#
-#
+		$(SDIR2)/PF_Column.cpp \
+		$(SDIR2)/PF_Chart.cpp  \
+		$(SDIR2)/ConstructChartGraphic.cpp  \
+		$(SDIR2)/PF_Signals.cpp  \
+		$(SDIR2)/PointAndFigureDB.cpp 
+		# $(SDIR2)/Tiingo.cpp \
+		# $(SDIR2)/Eodhd.cpp \
+		# $(SDIR2)/Streamer.cpp
+
+
 SDIR4 := $(UTILITYDIR)/src
 SRCS4 := $(SDIR4)/utilities.cpp \
 		 $(SDIR4)/us_holidays.cpp \
@@ -92,8 +92,6 @@ CFG_LIB := -L/usr/local/lib \
 		-lstdc++ \
 		-lstdc++exp \
 		-L/usr/lib \
-		-lmpdec++ \
-		-lmpdec \
 		-lcurl \
 		-lssl -lcrypto \
 		-ljsoncpp 

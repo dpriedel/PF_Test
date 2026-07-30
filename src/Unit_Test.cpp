@@ -82,14 +82,14 @@ namespace fs = std::filesystem;
 using namespace testing;
 
 #include "Boxes.h"
+#include "PF_Chart.h"
 #include "PF_Column.h"
-#if 0
 
 #include "ConstructChartGraphic.h"
-#include "PF_Chart.h"
 #include "PF_Signals.h"
 #include "PointAndFigureDB.h"
 
+#if 0
 #include "Eodhd.h"
 // #include "Tiingo.h"
 
@@ -1591,7 +1591,6 @@ TEST_F(ColumnFunctionalityPercentX1, SimpleAscendingData) // NOLINT
     EXPECT_EQ(col.GetBottom(), Decimal("500.00"));
 }
 
-#if 0
 class ChartFunctionality10X2 : public Test
 {
 };
@@ -1794,7 +1793,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts) // NOL
         fs::remove("/tmp/candlestick12.svg");
     }
 
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
@@ -1817,7 +1816,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsInts) // NOL
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSON) // NOLINT
 {
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
@@ -1838,7 +1837,7 @@ TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSON) 
 
 TEST_F(ChartFunctionality10X2, ProcessFileWithFractionalDataButUseAsIntsToJSONFromJSON) // NOLINT
 {
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
@@ -1879,8 +1878,8 @@ TEST_F(ChartFunctionalitySimpleATRX2, ComputeATRBoxSizeForFirstSetOfTestData) //
     EXPECT_EQ(value_differences[6], 15);
     EXPECT_EQ(value_differences[value_differences.size() - 1], 9);
 
-    Decimal atr = dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
-                           static_cast<double>(value_differences.size()));
+    Decimal atr = Decimal{static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
+                          static_cast<double>(value_differences.size())};
     atr = rescale_dpr(atr, 5);
     //    std::cout << "atr: " << atr << '\n';
 
@@ -1897,9 +1896,11 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     const auto value_differences =
         values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
 
-    Decimal atr = dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
-                           static_cast<double>(value_differences.size()));
-    atr = rescale_dpr(atr, -5);
+    // std::println("deltas: {}", value_differences);
+
+    Decimal atr = Decimal{static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
+                          static_cast<double>(value_differences.size())};
+    atr = rescale_dpr(atr, 5);
     //    std::cout << "atr: " << atr << '\n';
 
     EXPECT_EQ(atr, Decimal("12.91837"));
@@ -1921,7 +1922,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
             continue;
         }
         const auto fields = split_string<std::string_view>(record, ",");
-        auto result = chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+        auto result = chart.AddValue(fields[close_col], fields[date_col], "%Y-%m-%d");
     };
 
     // std::print("{}\n", chart);
@@ -2036,14 +2037,14 @@ TEST_F(MiscChartFunctionality, TestChartBoxFiltersWithColumns) // NOLINT
 }
 TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV) // NOLINT
 {
-    fs::path symbol_file_name{"./test_files/SPY_1.json"};
+    fs::path symbol_file_name{"./test_files/test_files1/SPY_1.json"};
 
     PF_Chart new_chart;
     PF_Chart::LoadChartFromJSONPF_ChartFile(new_chart, symbol_file_name);
 
     //    std::cout << new_chart << '\n';
 
-    fs::path csv_file_name{"./test_files3/SPY.csv"};
+    fs::path csv_file_name{"./test_files/test_files3/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
     const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
@@ -2064,14 +2065,14 @@ TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileThenAddDataFromCSV) // N
                       const auto fields = split_string<std::string_view>(record, ",");
                       //            std::cout << "close value: " << fields[close_col] << " date value: " <<
                       //            fields[date_col] << " record: \n" << record << '\n';
-                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                      new_chart.AddValue(fields[close_col], fields[date_col], "%Y-%m-%d");
                   });
     //    std::cout << "new chart at AFTER adding new data: \n\n" << new_chart << "\n\n";
 }
 
 TEST_F(MiscChartFunctionality, LoadDataFromJSONChartFileWithMissingValues)
 {
-    fs::path symbol_file_name{"./test_files_update_charts/AIA_0.1X1_linear_eod.json"};
+    fs::path symbol_file_name{"./test_files/test_files_update_charts/AIA_0.1X1_linear_eod.json"};
     PF_Chart new_chart;
     EXPECT_NO_THROW(PF_Chart::LoadChartFromJSONPF_ChartFile(new_chart, symbol_file_name));
 
@@ -2088,7 +2089,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB) // NO
         fs::remove("/tmp/candlestick6.svg");
     }
 
-    fs::path csv_file_name{"./test_files/SPY.csv"};
+    fs::path csv_file_name{"./test_files/test_files1/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
     const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
@@ -2107,7 +2108,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB) // NO
     rng::for_each(symbol_data_records | vws::drop(1),
                   [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
-                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                      new_chart.AddValue(fields[close_col], fields[date_col], "%Y-%m-%d");
                   });
     //    std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
@@ -2152,7 +2153,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenAddDataFromPricesDB) // NO
             time_stream.str(std::string{date});
             std::chrono::from_stream(time_stream, "%F", tp);
             std::chrono::utc_time<std::chrono::utc_clock::duration> tp1{tp.time_since_epoch()};
-            db_data.emplace_back(DB_data{.tp = tp1, .price = sv2dec(split_adj_close)});
+            db_data.emplace_back(DB_data{.tp = tp1, .price = Decimal(split_adj_close)});
         }
         trxn.commit();
 
@@ -2182,7 +2183,7 @@ TEST_F(MiscChartFunctionality, LoadDataFromCSVFileThenMakeChartThenExportCSV) //
         fs::remove("/tmp/SPY_chart.svg");
     }
 
-    fs::path csv_file_name{"./test_files/SPY.csv"};
+    fs::path csv_file_name{"./test_files/test_files1/SPY.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
     const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
@@ -2342,13 +2343,13 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
         values_ints | vws::slide(2) | vws::transform([](const auto x) { return abs(x[1] - x[0]); });
 
     Decimal atr =
-        dbl2dec(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0.0)) /
+        Decimal(static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0.0)) /
                 static_cast<double>(value_differences.size()));
     // Decimal average_price = static_cast<double>(rng::accumulate(values_ints, 0.0)) /
     // static_cast<double>(values_ints.size());
 
     // Decimal box_size = atr / average_price;
-    // box_size.rescale_dpr(-5);
+    // box_size.rescale_dpr(5);
 
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
@@ -2367,6 +2368,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     EXPECT_EQ(chart[8].GetHadReversal(), false);
 }
 
+#if 0
 class ChartSignals10X3 : public Test
 {
 };
@@ -2529,7 +2531,7 @@ public:
 
 TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB) // NOLINT
 {
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
@@ -2550,7 +2552,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDB)
 
 TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBThenRetrieveIntoJson) // NOLINT
 {
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_close.dat"};
 
     std::ifstream prices{file_name, std::ios::in | std::ios::binary};
 
@@ -2574,7 +2576,7 @@ TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataButUseAsIntsStoreInDBT
 
 TEST_F(TestChartDBFunctions, ProcessFileWithFractionalDataStoreInDBThenRetrieveIntoJson) // NOLINT
 {
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
@@ -2619,7 +2621,7 @@ TEST_F(TestChartDBFunctions, ComputeATRUsingDataFromDB) // NOLINT
 
     // results won't be exactly equal due to small differences in least
     // significant decimal digits of prices between tiingo and EODData
-    EXPECT_EQ(rescale_dpr(atr, -3), Decimal{"3.211"});
+    EXPECT_EQ(rescale_dpr(atr, 3), Decimal{"3.211"});
 }
 
 TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB) // NOLINT
@@ -2652,7 +2654,7 @@ TEST_F(TestChartDBFunctions, ComputeBoxsizeUsingMinMaxDataFromDB) // NOLINT
 
     // results won't be exactly equal due to small differences in least
     // significant decimal digits of prices between tiingo and EODData
-    EXPECT_EQ(rescale_dpr(close_range, -3), Decimal{"125.918"});
+    EXPECT_EQ(rescale_dpr(close_range, 3), Decimal{"125.918"});
 }
 
 class PlotChartsWithChartDirector : public Test
@@ -2836,7 +2838,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalData) // NOLINT
     {
         fs::remove("/tmp/candlestick2.svg");
     }
-    const fs::path file_name{"./test_files/AAPL_close.dat"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_close.dat"};
 
     std::ifstream prices{file_name};
 
@@ -2891,7 +2893,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     auto atr = ComputeATR("AAPL", converted_history, history.size() - 1);
 
     //    std::cout << "ATR: " << atr << '\n';
-    atr = rescale_dpr(atr, -2);
+    atr = rescale_dpr(atr, 2);
     //    std::cout << "ATR: " << atr << '\n';
 
     // // compute box size as a percent of ATR, eg. 0.1
@@ -2899,7 +2901,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     // Decimal box_size = atr * 0.1;
     //
     // std::cout << "box size: " << box_size << '\n';
-    // box_size.rescale_dpr(-5);
+    // box_size.rescale_dpr(5);
     // std::cout << "rescaled box size: " << box_size << '\n';
 
     PF_Chart chart("AAPL", atr, 3, 0, BoxScale::e_Linear);
@@ -3246,7 +3248,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
 
     auto eod_atr = ComputeATR("AAPL", eod_history, eod_history_size);
     // std::cout << "296758 ATR using 20 days: " << atr << '\n';
-    EXPECT_EQ(rescale_dpr(eod_atr, -3), Decimal{"3.211"});
+    EXPECT_EQ(rescale_dpr(eod_atr, 3), Decimal{"3.211"});
 
     // next, I need to compute my average closing price over the interval
     // but excluding the 'extra' value included for computing the ATR
@@ -3258,7 +3260,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
     Decimal eod_box_size = eod_atr / (eod_sum / eod_history_size);
 
     // std::cout << "eod atr: " << eod_atr << '\n';
-    eod_box_size = rescale_dpr(eod_box_size, -5);
+    eod_box_size = rescale_dpr(eod_box_size, 5);
     // std::cout << "rescaled eod box size: " << eod_box_size << '\n';
 
     // std::cout << "Tried Eod. Trying Tiingo...\n";
@@ -3277,7 +3279,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
     //
     // auto tiingo_atr = ComputeATR("AAPL", tiingo_history, tiingo_history_size);
     // // std::cout << "296758 ATR using 20 days: " << atr << '\n';
-    // EXPECT_EQ(tiingo_atr.rescale_dpr(-3), Decimal{"3.211"});
+    // EXPECT_EQ(tiingo_atr.rescale_dpr(3), Decimal{"3.211"});
     //
     // // next, I need to compute my average closing price over the interval
     // // but excluding the 'extra' value included for computing the ATR
@@ -3290,7 +3292,7 @@ TEST_F(StreamerATR, ComputeATRThenBoxSizeBasedOn20DataPoints) // NOLINT
     // Decimal tiingo_box_size = tiingo_atr / (tiingo_sum / tiingo_history_size);
     //
     // std::cout << "tiingo atr: " << tiingo_atr << '\n';
-    // tiingo_box_size = tiingo_box_size.rescale_dpr(-5);
+    // tiingo_box_size = tiingo_box_size.rescale_dpr(5);
     // std::cout << "rescaled tiingo box size: " << tiingo_box_size << '\n';
     //
     // EXPECT_EQ(eod_atr, tiingo_atr);
@@ -3347,7 +3349,7 @@ TEST_F(StreamerATR, DISABLED_ComputeATRThenBoxSizeBasedOn20DataPointsUsePercentV
     // Decimal box_size = atr / (sum / history_size);
 
     //    std::cout << "box size: " << box_size << '\n';
-    // box_size.rescale_dpr(-5);
+    // box_size.rescale_dpr(5);
     //    std::cout << "rescaled box size: " << box_size << '\n';
 
     PF_Chart chart("AAPL", atr, 2, Decimal(".01"), BoxScale::e_Percent);
