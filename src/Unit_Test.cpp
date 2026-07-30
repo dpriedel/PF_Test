@@ -61,15 +61,10 @@ namespace vws = std::ranges::views;
 #include <gtest/gtest.h>
 #include <spdlog/spdlog.h>
 
-// #include <fmt/format.h>
-// #include <fmt/ranges.h>
-
 #include <pqxx/pqxx>
 #include <pqxx/transaction.hxx>
-// #include <range/v3/range/conversion.hpp>
 
 #include <boost/decimal.hpp>
-
 namespace bd = boost::decimal;
 using Decimal = bd::decimal64_t;
 
@@ -89,11 +84,8 @@ using namespace testing;
 #include "PF_Signals.h"
 #include "PointAndFigureDB.h"
 
-#if 0
 #include "Eodhd.h"
 // #include "Tiingo.h"
-
-#endif
 
 #include "utilities.h"
 // NOLINTBEGIN(*-magic-numbers)
@@ -552,7 +544,7 @@ TEST_F(BoxesBasicFunctionality, GenerateLinearBoxes) // NOLINT
     EXPECT_EQ(howmany, howmany2);
 
     Boxes boxes2{10};
-    box = boxes2.FindBox(Decimal{"95.5"_DD});
+    box = boxes2.FindBox("95.5"_DD);
     // std::print("{}", boxes2);
 
     EXPECT_EQ(box, 96); // box will be integral, so rounds .5 up
@@ -1401,9 +1393,9 @@ TEST_F(ColumnFunctionality10X2, ProcessCompletelyFirstSetOfTestDataWithATRFracti
 
     Decimal box_size{static_cast<double>(std::accumulate(value_differences.begin(), value_differences.end(), 0)) /
                      static_cast<double>(value_differences.size())};
-    std::println("box size before rescale: {}", box_size);
+    // std::println("box size before rescale: {}", box_size);
     box_size = rescale_dpr(box_size, 5);
-    std::println("box size after rescale: {}", box_size);
+    // std::println("box size after rescale: {}", box_size);
 
     EXPECT_EQ(box_size, Decimal("12.91837"));
 
@@ -1908,7 +1900,7 @@ TEST_F(ChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestDataWithATR
     std::string test_data = MakeSimpleTestData(
         values_ints, std::chrono::year_month_day{2015y / std::chrono::March / std::chrono::Monday[1]});
 
-    PF_Chart chart("GOOG", atr, 2, 0, BoxScale::e_Linear);
+    PF_Chart chart("GOOG", atr, 2, 0.0, BoxScale::e_Linear);
 
     // do it manually so can watch chart formation
 
@@ -2356,7 +2348,7 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
 
     std::istringstream prices{test_data};
 
-    PF_Chart chart("GOOG", atr, 2, Decimal(".01"), BoxScale::e_Percent);
+    PF_Chart chart("GOOG", atr, 2, ".01"_DD, BoxScale::e_Percent, 0, 3);
     chart.BuildChartFromCSVStream(&prices, "%Y-%m-%d", ",");
 
     // std::print("Chart: {}\n", chart);
@@ -2368,7 +2360,6 @@ TEST_F(PercentChartFunctionalitySimpleATRX2, ProcessCompletelyFirstSetOfTestData
     EXPECT_EQ(chart[8].GetHadReversal(), false);
 }
 
-#if 0
 class ChartSignals10X3 : public Test
 {
 };
@@ -2400,7 +2391,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart) // NOLINT
         fs::remove("/tmp/candlestick7.svg");
     }
 
-    const fs::path csv_file_name{"./test_files/SPY_streaming_1min_2022-10-07.csv"};
+    const fs::path csv_file_name{"./test_files/test_files1/SPY_streaming_1min_2022-10-07.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
     const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
@@ -2414,12 +2405,12 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart) // NOLINT
     BOOST_ASSERT_MSG(close_column.has_value(),
                      std::format("Can't find price field: 'Close' in header record: {}.", header_record).c_str());
 
-    PF_Chart chart{"SPY", Decimal(".01"), 3};
+    PF_Chart chart{"SPY", ".01"_DD, 3, 0.0};
 
     rng::for_each(symbol_data_records | vws::drop(1),
                   [&chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
-                      chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%F %X%z", fields[date_col]));
+                      chart.AddValue(fields[close_col], fields[date_col], "%F %X%z");
                   });
     // std::cout << "chart at after loading initial data: \n\n" << chart << "\n\n";
 
@@ -2433,7 +2424,7 @@ TEST_F(ChartSignals10X3, FindDoubleTopBuyAndDrawChart) // NOLINT
     EXPECT_TRUE(fs::exists("/tmp/candlestick7.svg"));
     // std::cout << chart << '\n';
     //
-    // ASSERT_EQ(chart.GetSignals()[0].box_, 1140);
+    ASSERT_EQ(chart.GetSignals()[0].box_, Decimal{368.485});
 }
 
 class TestDBFunctions : public Test
@@ -2746,7 +2737,7 @@ TEST_F(PlotChartsWithChartDirector, PlotChartWithStreamedPricesAndSignals) // NO
         fs::remove("/tmp/candlestick1_b.svg");
     }
 
-    const fs::path csv_file_name{"./test_files/SPY_streaming_1min_2022-10-07.csv"};
+    const fs::path csv_file_name{"./test_files/test_files1/SPY_streaming_1min_2022-10-07.csv"};
     const std::string file_content_csv = LoadDataFileForUse(csv_file_name);
 
     const auto symbol_data_records = split_string<std::string_view>(file_content_csv, "\n");
@@ -2762,18 +2753,18 @@ TEST_F(PlotChartsWithChartDirector, PlotChartWithStreamedPricesAndSignals) // NO
 
     StreamedPrices streamed_prices;
 
-    PF_Chart chart{"SPY", Decimal(".01"), 3, 0, BoxScale::e_Linear, 30};
+    PF_Chart chart{"SPY", ".01"_DD, 3, 0, BoxScale::e_Linear, 30};
     rng::for_each(symbol_data_records | vws::drop(1),
                   [&streamed_prices, &chart, close_col = close_column.value(),
                    date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
-                       Decimal new_value{std::string{fields[1]}};
+                      Decimal new_value{std::string{fields[1]}};
                       auto timept = StringToUTCTimePoint("%F %X%z", fields[0]);
 
                       auto chart_changed = chart.AddValue(new_value, timept);
                       streamed_prices.timestamp_seconds_.push_back(
                           std::chrono::duration_cast<std::chrono::nanoseconds>(timept.time_since_epoch()).count());
-                      streamed_prices.price_.push_back(dec2dbl(new_value));
+                      streamed_prices.price_.push_back(static_cast<double>(new_value));
                       streamed_prices.signal_type_.push_back(
                           chart_changed == PF_Column::Status::e_AcceptedWithSignal
                               ? std::to_underlying(chart.GetSignals().back().signal_type_)
@@ -2866,7 +2857,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingComputedAT
     {
         fs::remove("/tmp/candlestick3.svg");
     }
-    const fs::path file_name{"./test_files/AAPL_short.json"};
+    const fs::path file_name{"./test_files/test_files1/AAPL_short.json"};
 
     const std::string hist = LoadDataFileForUse(file_name);
     //    std::cout << "history length: " << hist.size() << '\n';
@@ -2947,7 +2938,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
         fs::remove("/tmp/candlestick9.svg");
     }
 
-    const std::string hist = LoadDataFileForUse("./test_files/YAHOO.json");
+    const std::string hist = LoadDataFileForUse("./test_files/test_files1/YAHOO.json");
     //    std::cout << "history length: " << hist.size() << '\n';
 
     const std::regex source{R"***("(open|high|low|close|adjOpen|adjHigh|adjLow|adjClose)":([0-9]*\.[0-9]*))***"};
@@ -2968,7 +2959,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
     Decimal box_size{".1"};
 
     // PF_Chart chart("YHOO", box_size, 3, BoxType::e_fractional);
-    PF_Chart chart("YHOO", 1, 3, box_size, BoxScale::e_Linear, 150);
+    PF_Chart chart("YHOO", Decimal{1}, 3, box_size, BoxScale::e_Linear, 150);
 
     // rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
     rng::for_each(history | vws::reverse | vws::take(history.size() - 1), [&chart](const auto &e) {
@@ -2989,7 +2980,7 @@ TEST_F(PlotChartsWithChartDirector, ProcessFileWithFractionalDataUsingBothArithm
 
     EXPECT_TRUE(fs::exists("/tmp/candlestick8.svg"));
 
-    PF_Chart chart_percent("YHOO", 1, 3, box_size, BoxScale::e_Percent);
+    PF_Chart chart_percent("YHOO", Decimal{1}, 3, box_size, BoxScale::e_Percent);
 
     // rng::for_each(*const_cast<const Json::Value*>(&history) | vws::reverse | vws::take(history.size() - 1),
     rng::for_each(history | vws::reverse | vws::take(history.size() - 1), [&chart_percent](const auto &e) {
@@ -3726,8 +3717,6 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     // EXPECT_TRUE(streamer_context2.streamed_data_.empty()); // we need an actual test here
 }
 // NOLINTEND(*-magic-numbers)
-
-#endif
 
 //===  FUNCTION  ======================================================================
 //        Name:  InitLogging
