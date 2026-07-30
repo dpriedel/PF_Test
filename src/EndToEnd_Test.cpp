@@ -34,8 +34,8 @@
 
 #include "loader/PF_LoaderApp.h"
 #include "scanner/PF_ScannerApp.h"
-#include "updater/PF_UpdaterApp.h"
 #include "streamer/PF_StreamerApp.h"
+#include "updater/PF_UpdaterApp.h"
 #include "utilities.h"
 
 namespace rng = std::ranges;
@@ -52,8 +52,8 @@ using namespace std::string_literals;
 
 namespace fs = std::filesystem;
 
-const fs::path APPL_EOD_CSV{"./test_files/AAPL_close.dat"};
-const fs::path SPY_EOD_CSV{"./test_files/SPY.csv"};
+const fs::path APPL_EOD_CSV{"./test_files/test_files1/AAPL_close.dat"};
+const fs::path SPY_EOD_CSV{"./test_files/test_files1/SPY.csv"};
 
 using namespace testing;
 
@@ -106,7 +106,7 @@ TEST_F(ProgramOptions, TestMixAndMatchOptions) // NOLINT
         "-s", "aapL",
         "--symbol", "IWr",
         "--new-data-source", "file",
-        "--new-data-dir", "./test_files",
+        "--new-data-dir", "./test_files/test_files1",
         "--source-format", "csv",
 
         "--interval", "eod",
@@ -168,7 +168,7 @@ TEST_F(ProgramOptions, TestProblemOptions) // NOLINT
         // "--streaming-host", "ws.eodhistoricaldata.com",
         // "--streaming-data-source", "Eodhd",
         "--streaming-api-key", "Eodhd_key.dat",
-        "--new-data-dir", "./test_files",
+        "--new-data-dir", "./test_files/test_files1",
         "--source-format", "csv",
 
         "--interval", "live",
@@ -231,7 +231,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "-s", "qqqq",
         "-s", "spy",
         "--new-data-source", "streaming",
-        "--new-data-dir", "./test_files",
+        "--new-data-dir", "./test_files/test_files1",
         "--source-format", "csv",
 
         "--interval", "live",
@@ -280,7 +280,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "-s", "qqqq",
         "-s", "spy",
         "--new-data-source", "streaming",
-        "--new-data-dir", "./test_files",
+        "--new-data-dir", "./test_files/test_files1",
         "--source-format", "csv",
 
         "--interval", "live",
@@ -330,7 +330,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "--new-data-source", "database",
         "--db-user", "data_updater_pg",
         "--db-name", "finance",
-        // "--new-data-dir", "./test_files",
+        // "--new-data-dir", "./test_files/test_files1",
         // "--source-format", "csv",
 
         "--interval", "eod",
@@ -382,7 +382,7 @@ TEST_F(ProgramOptions, TestMinMaxOptions) // NOLINT
         "--db-name", "finance",
         "--stock-db-data-source", "new_stock_data.current_data",
         "--begin-date", "2017-01-01",
-        // "--new-data-dir", "./test_files",
+        // "--new-data-dir", "./test_files/test_files1",
         // "--source-format", "csv",
 
         "--interval", "eod",
@@ -545,7 +545,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanLoadCSVDataAndSaveToChartFile) // NOLINT
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
-        "--new-data-dir", "./test_files3",
+        "--new-data-dir", ".//test_files/test_files3",
         "--source-format", "csv",
         "--interval", "eod",
         "--scale", "linear",
@@ -611,7 +611,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
-        "--new-data-dir", "./test_files",
+        "--new-data-dir", "./test_files/test_files1",
         "--source-format", "csv",
 
         "--interval", "eod",
@@ -666,7 +666,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
 	std::vector<std::string> tokens2{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
-        "--new-data-dir", "./test_files2",
+        "--new-data-dir", "./test_files/test_files2",
         "--source-format", "csv",
 
         "--interval", "eod",
@@ -721,7 +721,7 @@ TEST_F(SingleFileEndToEnd, VerifyCanConstructChartFileFromPieces) // NOLINT
 	std::vector<std::string> tokens3{"the_program",
         "--symbol", "SPY",
         "--new-data-source", "file",
-        "--new-data-dir", "./test_files3",
+        "--new-data-dir", "./test_files/test_files3",
         "--chart-data-dir", "/tmp/test_charts2",
         "--source-format", "csv",
 
@@ -797,7 +797,7 @@ TEST_F(LoadAndUpdate, VerifyUpdateWorksWhenNoPreviousChartData) // NOLINT
         "--quote-data-source", "Eodhd",
         "--quote-api-key", "Eodhd_key.dat",
         "--config-dir", "/home/dpriedel/.config/PF_CollectData",
-        "--new-data-dir", "./test_files_update_EOD",
+        "--new-data-dir", "./test_files/test_files_update_EOD",
         "--source-format", "csv",
         "--interval", "eod",
         "--scale", "linear",
@@ -1062,7 +1062,7 @@ TEST_F(Database, UpdateUsingDataFromDB) // NOLINT
     rng::for_each(symbol_data_records | vws::drop(1),
                   [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
-                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                      new_chart.AddValue(fields[close_col], fields[date_col], "%Y-%m-%d");
                   });
     // std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
@@ -1165,7 +1165,7 @@ TEST_F(Database, UpdateDatainDBUsingNewDataFromDB) // NOLINT
     rng::for_each(symbol_data_records | vws::drop(1),
                   [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
-                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                      new_chart.AddValue(fields[close_col], fields[date_col], "%Y-%m-%d");
                   });
     // std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
@@ -1490,7 +1490,7 @@ TEST_F(Database, DailyScan) // NOLINT
     rng::for_each(symbol_data_records | vws::drop(1),
                   [&new_chart, close_col = close_column.value(), date_col = date_column.value()](const auto record) {
                       const auto fields = split_string<std::string_view>(record, ",");
-                      new_chart.AddValue(sv2dec(fields[close_col]), StringToUTCTimePoint("%Y-%m-%d", fields[date_col]));
+                      new_chart.AddValue(fields[close_col], fields[date_col], "%Y-%m-%d");
                   });
     // std::cout << "new chart at after loading initial data: \n\n" << new_chart << "\n\n";
 
@@ -2025,33 +2025,32 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
                                      "ws.eodhistoricaldata.com",
                                      "--streaming-data-source",
                                      "Eodhd",
-                                      "--streaming-api-key",
-                                      "Eodhd_key.dat",
-                                      "--config-dir",
-                                      "/home/dpriedel/.config/PF_CollectData",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--config-dir",
+                                     "/home/dpriedel/.config/PF_CollectData",
 
-
-                                      "--interval",
-                                      "live",
-                                      "--scale",
-                                      "linear",
-                                      "--price-fld-name",
-                                      "close",
-                                      "--destination",
-                                      "file",
-                                      "--output-chart-dir",
-                                      test_dir,
-                                      "--output-graph-dir",
-                                      test_dir,
-                                      "--use-ATR",
-                                      "--boxsize",
-                                      "0.01",
-                                      "--reversal",
-                                      "1",
-                                      "-l",
-                                      "debug",
-                                      "--log-path",
-                                      "/tmp/PF_Collect/resume_test01_phase1.log"};
+                                     "--interval",
+                                     "live",
+                                     "--scale",
+                                     "linear",
+                                     "--price-fld-name",
+                                     "close",
+                                     "--destination",
+                                     "file",
+                                     "--output-chart-dir",
+                                     test_dir,
+                                     "--output-graph-dir",
+                                     test_dir,
+                                     "--use-ATR",
+                                     "--boxsize",
+                                     "0.01",
+                                     "--reversal",
+                                     "1",
+                                     "-l",
+                                     "debug",
+                                     "--log-path",
+                                     "/tmp/PF_Collect/resume_test01_phase1.log"};
 
     try
     {
@@ -2141,34 +2140,33 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
                                      "ws.eodhistoricaldata.com",
                                      "--streaming-data-source",
                                      "Eodhd",
-                                      "--streaming-api-key",
-                                      "Eodhd_key.dat",
-                                      "--config-dir",
-                                      "/home/dpriedel/.config/PF_CollectData",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--config-dir",
+                                     "/home/dpriedel/.config/PF_CollectData",
 
-
-                                      "--interval",
-                                      "live",
-                                      "--scale",
-                                      "linear",
-                                      "--price-fld-name",
-                                      "close",
-                                      "--destination",
-                                      "file",
-                                      "--output-chart-dir",
-                                      test_dir,
-                                      "--output-graph-dir",
-                                      test_dir,
-                                      "--use-ATR",
-                                      "--boxsize",
-                                      "0.01",
-                                      "--reversal",
-                                      "1",
-                                      "--resume",
-                                      "-l",
-                                      "debug",
-                                      "--log-path",
-                                      "/tmp/PF_Collect/resume_test01_phase2.log"};
+                                     "--interval",
+                                     "live",
+                                     "--scale",
+                                     "linear",
+                                     "--price-fld-name",
+                                     "close",
+                                     "--destination",
+                                     "file",
+                                     "--output-chart-dir",
+                                     test_dir,
+                                     "--output-graph-dir",
+                                     test_dir,
+                                     "--use-ATR",
+                                     "--boxsize",
+                                     "0.01",
+                                     "--reversal",
+                                     "1",
+                                     "--resume",
+                                     "-l",
+                                     "debug",
+                                     "--log-path",
+                                     "/tmp/PF_Collect/resume_test01_phase2.log"};
 
     try
     {
@@ -2180,8 +2178,8 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
             auto now2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then2 = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                     floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                         RESUME_CHECK_DURATION);
+                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                        RESUME_CHECK_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2243,48 +2241,47 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
     std::string symbols = GetSymbolListString();
 
     std::vector<std::string> tokens{"the_program",
-                                     "--symbol-list",
-                                     symbols,
-                                     "--new-data-source",
-                                     "streaming",
-                                     "--quote-host",
-                                     "eodhd.com",
-                                     "--quote-data-source",
-                                     "Eodhd",
-                                     "--quote-api-key",
-                                     "Eodhd_key.dat",
-                                     "--streaming-host",
-                                     "ws.eodhistoricaldata.com",
-                                     "--streaming-data-source",
-                                     "Eodhd",
-                                     "--streaming-api-key",
-                                     "Eodhd_key.dat",
-                                     "--config-dir",
-                                     "/home/dpriedel/.config/PF_CollectData",
+                                    "--symbol-list",
+                                    symbols,
+                                    "--new-data-source",
+                                    "streaming",
+                                    "--quote-host",
+                                    "eodhd.com",
+                                    "--quote-data-source",
+                                    "Eodhd",
+                                    "--quote-api-key",
+                                    "Eodhd_key.dat",
+                                    "--streaming-host",
+                                    "ws.eodhistoricaldata.com",
+                                    "--streaming-data-source",
+                                    "Eodhd",
+                                    "--streaming-api-key",
+                                    "Eodhd_key.dat",
+                                    "--config-dir",
+                                    "/home/dpriedel/.config/PF_CollectData",
 
-
-                                     "--interval",
-                                     "live",
-                                     "--scale",
-                                     "linear",
-                                     "--price-fld-name",
-                                     "close",
-                                     "--destination",
-                                     "file",
-                                     "--output-chart-dir",
-                                     "/tmp/test_resume_test02/",
-                                     "--output-graph-dir",
-                                     "/tmp/test_resume_test02/",
-                                     "--use-ATR",
-                                     "--boxsize",
-                                     "0.01",
-                                     "--reversal",
-                                     "1",
-                                     "--resume",
-                                     "-l",
-                                     "debug",
-                                     "--log-path",
-                                     "/tmp/PF_Collect/resume_test02.log"};
+                                    "--interval",
+                                    "live",
+                                    "--scale",
+                                    "linear",
+                                    "--price-fld-name",
+                                    "close",
+                                    "--destination",
+                                    "file",
+                                    "--output-chart-dir",
+                                    "/tmp/test_resume_test02/",
+                                    "--output-graph-dir",
+                                    "/tmp/test_resume_test02/",
+                                    "--use-ATR",
+                                    "--boxsize",
+                                    "0.01",
+                                    "--reversal",
+                                    "1",
+                                    "--resume",
+                                    "-l",
+                                    "debug",
+                                    "--log-path",
+                                    "/tmp/PF_Collect/resume_test02.log"};
 
     try
     {
@@ -2294,10 +2291,10 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                        STREAM_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       STREAM_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2369,13 +2366,12 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
                                           "ws.eodhistoricaldata.com",
                                           "--streaming-data-source",
                                           "Eodhd",
-                                      "--streaming-api-key",
-                                      "Eodhd_key.dat",
-                                      "--config-dir",
-                                      "/home/dpriedel/.config/PF_CollectData",
+                                          "--streaming-api-key",
+                                          "Eodhd_key.dat",
+                                          "--config-dir",
+                                          "/home/dpriedel/.config/PF_CollectData",
 
-
-                                      "--interval",
+                                          "--interval",
                                           "live",
                                           "--scale",
                                           "linear",
@@ -2405,9 +2401,9 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 60s);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 60s);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2462,22 +2458,21 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
                                     "ws.eodhistoricaldata.com",
                                     "--streaming-data-source",
                                     "Eodhd",
-                                     "--streaming-api-key",
-                                     "Eodhd_key.dat",
-                                     "--config-dir",
-                                     "/home/dpriedel/.config/PF_CollectData",
+                                    "--streaming-api-key",
+                                    "Eodhd_key.dat",
+                                    "--config-dir",
+                                    "/home/dpriedel/.config/PF_CollectData",
 
-
-                                     "--interval",
-                                     "live",
-                                     "--scale",
-                                     "linear",
-                                     "--price-fld-name",
-                                     "close",
-                                     "--destination",
-                                     "file",
-                                     "--output-chart-dir",
-                                     "/tmp/test_resume_test03/",
+                                    "--interval",
+                                    "live",
+                                    "--scale",
+                                    "linear",
+                                    "--price-fld-name",
+                                    "close",
+                                    "--destination",
+                                    "file",
+                                    "--output-chart-dir",
+                                    "/tmp/test_resume_test03/",
                                     "--output-graph-dir",
                                     "/tmp/test_resume_test03/",
                                     "--use-ATR",
@@ -2531,22 +2526,21 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
                                     "ws.eodhistoricaldata.com",
                                     "--streaming-data-source",
                                     "Eodhd",
-                                     "--streaming-api-key",
-                                     "Eodhd_key.dat",
-                                     "--config-dir",
-                                     "/home/dpriedel/.config/PF_CollectData",
+                                    "--streaming-api-key",
+                                    "Eodhd_key.dat",
+                                    "--config-dir",
+                                    "/home/dpriedel/.config/PF_CollectData",
 
-
-                                     "--interval",
-                                     "live",
-                                     "--scale",
-                                     "linear",
-                                     "--price-fld-name",
-                                     "close",
-                                     "--destination",
-                                     "file",
-                                     "--output-chart-dir",
-                                     "/tmp/test_resume_test04/",
+                                    "--interval",
+                                    "live",
+                                    "--scale",
+                                    "linear",
+                                    "--price-fld-name",
+                                    "close",
+                                    "--destination",
+                                    "file",
+                                    "--output-chart-dir",
+                                    "/tmp/test_resume_test04/",
                                     "--output-graph-dir",
                                     "/tmp/test_resume_test04/",
                                     "--use-ATR",
@@ -2567,10 +2561,10 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                        STREAM_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       STREAM_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2630,27 +2624,26 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
     std::string symbols = GetSymbolListString();
 
     std::vector<std::string> tokens1{"the_program",
-                                      "--symbol-list",
-                                      symbols,
-                                      "--new-data-source",
-                                      "streaming",
-                                      "--quote-host",
-                                      "eodhd.com",
-                                      "--quote-data-source",
-                                      "Eodhd",
-                                      "--quote-api-key",
-                                      "Eodhd_key.dat",
-                                      "--streaming-host",
-                                      "ws.eodhistoricaldata.com",
-                                      "--streaming-data-source",
-                                      "Eodhd",
-                                      "--streaming-api-key",
-                                      "Eodhd_key.dat",
-                                      "--config-dir",
-                                      "/home/dpriedel/.config/PF_CollectData",
+                                     "--symbol-list",
+                                     symbols,
+                                     "--new-data-source",
+                                     "streaming",
+                                     "--quote-host",
+                                     "eodhd.com",
+                                     "--quote-data-source",
+                                     "Eodhd",
+                                     "--quote-api-key",
+                                     "Eodhd_key.dat",
+                                     "--streaming-host",
+                                     "ws.eodhistoricaldata.com",
+                                     "--streaming-data-source",
+                                     "Eodhd",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--config-dir",
+                                     "/home/dpriedel/.config/PF_CollectData",
 
-
-                                      "--interval",
+                                     "--interval",
                                      "live",
                                      "--scale",
                                      "linear",
@@ -2680,10 +2673,10 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                        STREAM_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       STREAM_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
@@ -2725,27 +2718,26 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
 
     // Second run: With resume
     std::vector<std::string> tokens2{"the_program",
-                                      "--symbol-list",
-                                      symbols,
-                                      "--new-data-source",
-                                      "streaming",
-                                      "--quote-host",
-                                      "eodhd.com",
-                                      "--quote-data-source",
-                                      "Eodhd",
-                                      "--quote-api-key",
-                                      "Eodhd_key.dat",
-                                      "--streaming-host",
-                                      "ws.eodhistoricaldata.com",
-                                      "--streaming-data-source",
-                                      "Eodhd",
-                                      "--streaming-api-key",
-                                      "Eodhd_key.dat",
-                                      "--config-dir",
-                                      "/home/dpriedel/.config/PF_CollectData",
+                                     "--symbol-list",
+                                     symbols,
+                                     "--new-data-source",
+                                     "streaming",
+                                     "--quote-host",
+                                     "eodhd.com",
+                                     "--quote-data-source",
+                                     "Eodhd",
+                                     "--quote-api-key",
+                                     "Eodhd_key.dat",
+                                     "--streaming-host",
+                                     "ws.eodhistoricaldata.com",
+                                     "--streaming-data-source",
+                                     "Eodhd",
+                                     "--streaming-api-key",
+                                     "Eodhd_key.dat",
+                                     "--config-dir",
+                                     "/home/dpriedel/.config/PF_CollectData",
 
-
-                                      "--interval",
+                                     "--interval",
                                      "live",
                                      "--scale",
                                      "linear",
@@ -2776,10 +2768,10 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
         if (startup_OK)
         {
             auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                                                  floor<std::chrono::seconds>(std::chrono::system_clock::now()));
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
-                                                        RESUME_CHECK_DURATION);
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       RESUME_CHECK_DURATION);
 
             auto timer = [](const auto &stop_at) {
                 while (true)
