@@ -44,7 +44,7 @@ CFG_INC := -I${HOME}/projects/PF_Project/point_figure/src \
 
 RPATH_LIB := -Wl,-rpath,$(GCCDIR)/lib64 -Wl,-rpath,$(BOOSTDIR)/lib -Wl,-rpath,/usr/local/lib -Wl,-rpath,/usr/local/lib/ChartDirector
 
-SDIR1 := .
+SDIR1 := src
 SRCS1 := $(SDIR1)/EndToEnd_Test.cpp
 
 SDIR2 := ../point_figure/src
@@ -88,8 +88,6 @@ CFG_LIB := -L../lib_PF_Chart \
 		-lstdc++ \
 		-lstdc++exp \
 		-L/usr/lib \
-		-lmpdec++ \
-		-lmpdec \
 		-lssl -lcrypto \
 		-ljsoncpp #\
 		# -L$(BOOSTDIR)/lib \
@@ -118,7 +116,7 @@ $(OUTDIR)/%.o : %.cpp
 $(OUTDIR)/%.o : %.c
 	$(CCOMPILE)
 
-$(OUTFILE): $(OUTDIR) $(OBJS1) $(OBJS2) $(OBJS4) ../lib_PF_Chart/libPF_Chart.a
+$(OUTFILE): $(OUTDIR) $(OBJS1) $(OBJS2) ../lib_PF_Chart/libPF_Chart.a
 	$(LINK)
 
 -include $(DEPS)
