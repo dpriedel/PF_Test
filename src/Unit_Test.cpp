@@ -3433,14 +3433,15 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
         return;
     }
 
-    bool time_to_stop = false;
+    std::atomic<bool> time_to_stop{false};
 
     const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
     Eodhd eod_quotes{Eodhd::Host{"ws.eodhistoricaldata.com"}, Eodhd::Port{"443"}, Eodhd::APIKey{eod_key},
                      Eodhd::Prefix{"/ws/us?api_token="s + eod_key}};
 
-    eod_quotes.UseSymbols({"aapl", "msft", "tsla"});
+    std::vector<std::string> symbols = {"AAPL", "MSFT", "TSLA", "GOOG", "SPY"};
+    eod_quotes.UseSymbols(symbols);
 
     RemoteDataSource::StreamerContext streamer_context;
 
@@ -3453,7 +3454,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
 
     eod_streaming_task.get();
 
-    EXPECT_TRUE(!streamer_context.streamed_data_.empty()); // we need an actual test here
+    EXPECT_FALSE(streamer_context.streamed_data_.empty()); // we need an actual test here
 
     while (!streamer_context.streamed_data_.empty())
     {
@@ -3604,7 +3605,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
         return;
     }
 
-    bool time_to_stop = false;
+    std::atomic<bool> time_to_stop{false};
 
     const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
