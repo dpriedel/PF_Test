@@ -1589,7 +1589,6 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--symbol", "AAPL",
-        "--new-data-source", "streaming",
         "--quote-host", "eodhd.com",
         "--quote-data-source", "Eodhd",
         "--quote-api-key", "Eodhd_key.dat",
@@ -1597,11 +1596,6 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
         "--streaming-data-source", "Eodhd",
         "--streaming-api-key", "Eodhd_key.dat",
         "--config-dir", "/home/dpriedel/.config/PF_CollectData",
-
-        "--interval", "live",
-        "--scale", "linear",
-        "--price-fld-name", "close",
-        "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts_Eodhd",
         "--boxsize", "0.1",
         "--boxsize", "0.05",
@@ -1618,31 +1612,29 @@ TEST_F(StreamEodhdData, VerifyConnectAndDisconnect) // NOLINT
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
-        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
-
-        int counter = 0;
-        auto timer = [&counter](const auto &stop_at) {
-            while (true)
-            {
-                std::cout << "ding...\n";
-                ++counter;
-                auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-                if (now.get_sys_time() >= stop_at.get_sys_time())
-                {
-                    PF_StreamerApp::SetSignal();
-                    break;
-                }
-                std::this_thread::sleep_for(1s);
-            }
-        };
-
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+
+            int counter = 0;
+            auto timer = [&counter, &myApp](const auto &stop_at) {
+                while (true)
+                {
+                    std::cout << "ding...\n";
+                    ++counter;
+                    auto now = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (now.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        myApp.SignalShutdown();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
             // add an external timer here.
             auto timer_task = std::async(std::launch::async, timer, then);
 
@@ -1688,7 +1680,6 @@ TEST_F(StreamTiingoData, DISABLED_VerifyConnectAndDisconnect) // NOLINT
 	std::vector<std::string> tokens{"the_program",
         "--symbol", "SPY",
         "--symbol", "AAPL",
-        "--new-data-source", "streaming",
         "--quote-host", "api.tiingo.com",
         "--quote-data-source", "Tiingo",
         "--quote-api-key", "Tiingo_key.dat",
@@ -1697,12 +1688,8 @@ TEST_F(StreamTiingoData, DISABLED_VerifyConnectAndDisconnect) // NOLINT
         "--streaming-data-source", "Tiingo",
         "--streaming-api-key", "Tiingo_key.dat",
         "--config-dir", "/home/dpriedel/.config/PF_CollectData",
-
-
-        "--interval", "live",
         "--scale", "linear",
         "--price-fld-name", "close",
-        "--destination", "file",
         "--output-chart-dir", "/tmp/test_charts_T",
         "--boxsize", "0.1",
         "--boxsize", "0.05",
@@ -1720,31 +1707,29 @@ TEST_F(StreamTiingoData, DISABLED_VerifyConnectAndDisconnect) // NOLINT
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
-        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
-
-        int counter = 0;
-        auto timer = [&counter](const auto &stop_at) {
-            while (true)
-            {
-                std::cout << "ding...\n";
-                ++counter;
-                auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-                if (now.get_sys_time() >= stop_at.get_sys_time())
-                {
-                    PF_StreamerApp::SetSignal();
-                    break;
-                }
-                std::this_thread::sleep_for(1s);
-            }
-        };
-
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+
+            int counter = 0;
+            auto timer = [&counter, &myApp](const auto &stop_at) {
+                while (true)
+                {
+                    std::cout << "ding...\n";
+                    ++counter;
+                    auto now = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (now.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        myApp.SignalShutdown();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
             // add an external timer here.
             auto timer_task = std::async(std::launch::async, timer, then);
 
@@ -1878,30 +1863,28 @@ TEST_F(StreamTiingoData, DISABLED_TryLogarithmicCharts) // NOLINT
 
         bool startup_OK = myApp.Startup();
 
-        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                               floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
-
-        int counter = 0;
-        auto timer = [&counter](const auto &stop_at) {
-            while (true)
-            {
-                std::cout << "ding...\n";
-                ++counter;
-                auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                                      floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-                if (now.get_sys_time() >= stop_at.get_sys_time())
-                {
-                    PF_StreamerApp::SetSignal();
-                    break;
-                }
-                std::this_thread::sleep_for(1s);
-            }
-        };
-
         if (startup_OK)
         {
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 15s);
+
+            int counter = 0;
+            auto timer = [&counter, &myApp](const auto &stop_at) {
+                while (true)
+                {
+                    std::cout << "ding...\n";
+                    ++counter;
+                    auto now = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (now.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        myApp.SignalShutdown();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
             // add an external timer here.
             auto timer_task = std::async(std::launch::async, timer, then);
 
@@ -1913,8 +1896,6 @@ TEST_F(StreamTiingoData, DISABLED_TryLogarithmicCharts) // NOLINT
             std::cout << "Problems starting program.  No processing done.\n";
         }
     }
-
-    // catch any problems trying to setup application
 
     catch (const std::exception &theProblem)
     {
@@ -2059,29 +2040,27 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
         const auto *test_info = UnitTest::GetInstance()->current_test_info();
         spdlog::info(std::format("\n\nTest: {}  test case: {} \n\n", test_info->name(), test_info->test_suite_name()));
 
-        auto now = std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                              floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-        auto then =
-            std::chrono::zoned_seconds(std::chrono::current_zone(),
-                                       floor<std::chrono::seconds>(std::chrono::system_clock::now()) + STREAM_DURATION);
-
-        auto timer = [](const auto &stop_at) {
-            while (true)
-            {
-                auto current = std::chrono::zoned_seconds(
-                    std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
-                if (current.get_sys_time() >= stop_at.get_sys_time())
-                {
-                    PF_StreamerApp::SetSignal();
-                    break;
-                }
-                std::this_thread::sleep_for(1s);
-            }
-        };
-
         bool startup_OK = myApp.Startup();
         if (startup_OK)
         {
+            auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                   floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
+                                                       STREAM_DURATION);
+
+            auto timer = [&myApp](const auto &stop_at) {
+                while (true)
+                {
+                    auto current = std::chrono::zoned_seconds(
+                        std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+                    if (current.get_sys_time() >= stop_at.get_sys_time())
+                    {
+                        myApp.SignalShutdown();
+                        break;
+                    }
+                    std::this_thread::sleep_for(1s);
+                }
+            };
+
             auto timer_task = std::async(std::launch::async, timer, then);
             myApp.Run();
             myApp.Shutdown();
@@ -2181,14 +2160,14 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
                                                     floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
                                                         RESUME_CHECK_DURATION);
 
-            auto timer = [](const auto &stop_at) {
+            auto timer = [&myApp](const auto &stop_at) {
                 while (true)
                 {
                     auto current = std::chrono::zoned_seconds(
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_StreamerApp::SetSignal();
+                        myApp.SignalShutdown();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2296,14 +2275,14 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
                                                        STREAM_DURATION);
 
-            auto timer = [](const auto &stop_at) {
+            auto timer = [&myApp](const auto &stop_at) {
                 while (true)
                 {
                     auto current = std::chrono::zoned_seconds(
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_StreamerApp::SetSignal();
+                        myApp.SignalShutdown();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2405,14 +2384,14 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
             auto then = std::chrono::zoned_seconds(std::chrono::current_zone(),
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) + 60s);
 
-            auto timer = [](const auto &stop_at) {
+            auto timer = [&myApp_setup](const auto &stop_at) {
                 while (true)
                 {
                     auto current = std::chrono::zoned_seconds(
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_StreamerApp::SetSignal();
+                        myApp_setup.SignalShutdown();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2566,14 +2545,14 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
                                                        STREAM_DURATION);
 
-            auto timer = [](const auto &stop_at) {
+            auto timer = [&myApp](const auto &stop_at) {
                 while (true)
                 {
                     auto current = std::chrono::zoned_seconds(
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_StreamerApp::SetSignal();
+                        myApp.SignalShutdown();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2678,14 +2657,14 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
                                                        STREAM_DURATION);
 
-            auto timer = [](const auto &stop_at) {
+            auto timer = [&myApp](const auto &stop_at) {
                 while (true)
                 {
                     auto current = std::chrono::zoned_seconds(
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_StreamerApp::SetSignal();
+                        myApp.SignalShutdown();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
@@ -2773,14 +2752,14 @@ TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
                                                    floor<std::chrono::seconds>(std::chrono::system_clock::now()) +
                                                        RESUME_CHECK_DURATION);
 
-            auto timer = [](const auto &stop_at) {
+            auto timer = [&myApp](const auto &stop_at) {
                 while (true)
                 {
                     auto current = std::chrono::zoned_seconds(
                         std::chrono::current_zone(), floor<std::chrono::seconds>(std::chrono::system_clock::now()));
                     if (current.get_sys_time() >= stop_at.get_sys_time())
                     {
-                        PF_StreamerApp::SetSignal();
+                        myApp.SignalShutdown();
                         break;
                     }
                     std::this_thread::sleep_for(1s);
