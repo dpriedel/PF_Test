@@ -3433,7 +3433,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
         return;
     }
 
-    std::atomic<bool> time_to_stop{false};
+    std::atomic<ShutdownReason> shutdown_reason{ShutdownReason::None};
 
     const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
@@ -3446,10 +3446,10 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
     RemoteDataSource::StreamerContext streamer_context;
 
     auto eod_streaming_task =
-        std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, std::ref(streamer_context));
+        std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &shutdown_reason, std::ref(streamer_context));
 
-    std::this_thread::sleep_for(5s);
-    time_to_stop = true;
+    std::this_thread::sleep_for(10s);
+    shutdown_reason.store(ShutdownReason::Signal);
     // eod_quotes.RequestStop();
 
     eod_streaming_task.get();
@@ -3474,14 +3474,14 @@ TEST_F(StreamerWebSocket, ConnectAndStreamData) // NOLINT
     //
     // RemoteDataSource::StreamerContext streamer_context2;
     //
-    // time_to_stop = false;
+    // shutdown_reason.store(ShutdownReason::None);
     //
     // auto tiingo_streaming_task =
-    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop,
+    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &shutdown_reason,
     //     std::ref(streamer_context2));
     //
     // std::this_thread::sleep_for(5s);
-    // time_to_stop = true;
+    // shutdown_reason.store(ShutdownReason::Signal);
     // // tiingo_quotes.RequestStop();
     // tiingo_streaming_task.get();
     //
@@ -3605,7 +3605,7 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
         return;
     }
 
-    std::atomic<bool> time_to_stop{false};
+    std::atomic<ShutdownReason> shutdown_reason{ShutdownReason::None};
 
     const auto eod_key = LoadApiKey("Eodhd_key.dat");
 
@@ -3644,10 +3644,10 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     auto parsing_task = std::async(std::launch::async, &parser, &eod_quotes, std::ref(streamer_context),
                                    std::ref(processor_contexts), std::ref(symbol_to_context_map));
     auto eod_streaming_task =
-        std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &time_to_stop, std::ref(streamer_context));
+        std::async(std::launch::async, &Eodhd::StreamData, &eod_quotes, &shutdown_reason, std::ref(streamer_context));
 
     std::this_thread::sleep_for(5s);
-    time_to_stop = true;
+    shutdown_reason.store(ShutdownReason::Signal);
     // eod_quotes.RequestStop();
 
     eod_streaming_task.get();
@@ -3688,16 +3688,16 @@ TEST_F(StreamerWebSocket, ConnectAndStreamAndProcessData) // NOLINT
     //     processor_threads.emplace_back(&processor_task, std::ref(context));
     // }
     //
-    // time_to_stop = false;
+    // shutdown_reason.store(ShutdownReason::None);
     //
     // auto parsing_task2 = std::async(std::launch::async, &parser, &tiingo_quotes, std::ref(streamer_context2),
     //                                 std::ref(processor_contexts2), std::ref(symbol_to_context_map));
     // auto tiingo_streaming_task =
-    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &time_to_stop,
+    //     std::async(std::launch::async, &Tiingo::StreamData, &tiingo_quotes, &shutdown_reason,
     //     std::ref(streamer_context2));
     //
     // std::this_thread::sleep_for(5s);
-    // time_to_stop = true;
+    // shutdown_reason.store(ShutdownReason::Signal);
     // // tiingo_quotes.RequestStop();
     // tiingo_streaming_task.get();
     //
