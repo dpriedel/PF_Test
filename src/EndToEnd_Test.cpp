@@ -1980,6 +1980,17 @@ protected:
 
 TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
 {
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                         floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
+                                            current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    if (!can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
+
     std::cout << "\n=== Test: ResumeWithAllFilesPresent ===" << std::endl;
     std::cout << "Phase 1: Run streaming mode without resume (creates files)" << std::endl;
 
@@ -2191,6 +2202,17 @@ TEST_F(ResumeModeTests, ResumeWithAllFilesPresent)
 
 TEST_F(ResumeModeTests, ResumeWithPartialFiles)
 {
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                         floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
+                                            current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    if (!can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
+
     std::cout << "\n=== Test: ResumeWithPartialFiles ===" << std::endl;
     std::cout << "Setup: Copy chart files from test01 (no streamed prices/summary)" << std::endl;
 
@@ -2301,6 +2323,17 @@ TEST_F(ResumeModeTests, ResumeWithPartialFiles)
 
 TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
 {
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                         floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
+                                            current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    if (!can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
+
     std::cout << "\n=== Test: ResumeWithCorruptFiles ===" << std::endl;
     std::cout << "Setup: Create valid files, then corrupt one" << std::endl;
 
@@ -2446,6 +2479,17 @@ TEST_F(ResumeModeTests, ResumeWithCorruptFiles)
 
 TEST_F(ResumeModeTests, NormalModeNoResume)
 {
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                         floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
+                                            current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    if (!can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
+
     std::cout << "\n=== Test: NormalModeNoResume ===" << std::endl;
     std::cout << "Running streaming mode WITHOUT resume flag" << std::endl;
 
@@ -2550,6 +2594,17 @@ TEST_F(ResumeModeTests, NormalModeNoResume)
 
 TEST_F(ResumeModeTests, ShutdownAndResumeCycle)
 {
+    auto current_local_time = std::chrono::zoned_seconds(std::chrono::current_zone(),
+                                                         floor<std::chrono::seconds>(std::chrono::system_clock::now()));
+    auto can_we_stream = GetUS_MarketStatus(std::string_view{std::chrono::current_zone()->name()},
+                                            current_local_time.get_local_time()) == US_MarketStatus::e_OpenForTrading;
+
+    if (!can_we_stream)
+    {
+        std::cout << "Market not open for trading now so we can't stream quotes.\n";
+        return;
+    }
+
     std::cout << "\n=== Test: ShutdownAndResumeCycle ===" << std::endl;
     std::cout << "Phase 1: Run streaming, shutdown, then resume" << std::endl;
 
